@@ -198,7 +198,7 @@ function Controller(setup, truthTable) {
 		
 			if (event.button == 2) {				// if the click was a right click
 				// show menu to delete the gate
-				showDeleteMenu(gate);
+				showDeleteMenu(event, gate);
 				return;
 			}
 			// check to see if the clicked gate has an output; if it does, disconnect the output and return
@@ -1137,7 +1137,7 @@ function Controller(setup, truthTable) {
 			probe(gate);
 		});
 		deletePopup.setSize(140, 0);
-		deletePopup.show();
+		deletePopup.show(event);
 	}
 	
 	function removeComp(comp) {
