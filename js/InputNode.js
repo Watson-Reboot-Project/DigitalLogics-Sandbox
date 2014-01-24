@@ -39,7 +39,7 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 	this.evaluate = evaluate;
 	this.probe = probe;
 	this.updateScale = updateScale;
-	this.redraw = redraw;
+	this.setPlugColor = setPlugColor;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -97,7 +97,7 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 			x : scale * initX,
 			y : scale * initY,
 			rotationDeg : 0,
-			draggable : false
+			draggable : true
 		});
 	
 	// add cursor styling when the user mouseovers the group
@@ -119,18 +119,6 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 		group.add(transFg);		// and finally the transparent foreground
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();			// call draw on the stage to redraw its components
-	}
-	
-	function redraw() {
-		updateScale();
-		stage.remove(group); group.destroy();
-		compShape = new Kinetic.Rect({ x: scale * 15, y: scale * 20, width: scale * 10,  height: scale * 10, fill: 'black', stroke: 'black', strokeWidth: 1 });
-		if (setText.length == 1) text = new Kinetic.Text({ x: scale * 0,	y: scale * 14,	text: setText,	fontSize: scale * 20, fontFamily: 'Calibri',fill: 'black'});
-		else text = new Kinetic.Text({	x: scale * -10,	y: scale * 14,	text: setText, fontSize: scale * 20,	fontFamily: 'Calibri',	fill: 'black' });
-		plugout = new Kinetic.Line({points : [scale * 25, scale * 25, scale * 40, scale * 25],stroke : 'black',strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
-		transFg = new Kinetic.Rect({x: scale * 0,y: scale * 15,width: scale * 50,height: scale * 25});
-		group = new Kinetic.Group({	x : scale * initX,	y : scale * initY,	rotationDeg : 0,draggable : false });
-		draw();
 	}
 	
 	function getName() { return name; }
@@ -177,4 +165,9 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 	}
 	
 	function updateScale() { scale = setup.getGScale(); }
+	
+	function setPlugColor(plugStr, color) { 
+		plugout.setStroke("black");
+		if (plugStr == "plugout") plugout.setStroke("green");
+	}
 }

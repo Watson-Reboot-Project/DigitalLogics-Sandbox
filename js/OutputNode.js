@@ -38,7 +38,7 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 	this.evaluate = evaluate;
 	this.probe = probe;
 	this.updateScale = updateScale;
-	this.redraw = redraw;
+	this.setPlugColor = setPlugColor;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -84,7 +84,7 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 			x : scale * initX,
 			y : scale * initY,
 			rotationDeg : 0,
-			draggable : false
+			draggable : true
 		});
 	
 	// add cursor styling when the user mouseovers the group
@@ -106,17 +106,6 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 		group.add(transFg);		// and finally the transparent foreground
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();			// call draw on the stage to redraw its components
-	}
-	
-	function redraw() {
-		updateScale();
-		stage.remove(group); group.destroy();
-		compShape = new Kinetic.Rect({x: scale * 15, y: scale * 20, width: scale * 10, height: scale * 10, fill: 'black', stroke: 'black', strokeWidth: 1 });
-		text = new Kinetic.Text({ x: scale * 15, y: scale * 0, text: setText, fontSize: scale * 20,	fontFamily: 'Calibri', fill: 'black' });
-		plugin = new Kinetic.Line({	points : [scale * 0, scale * 25, scale * 15, scale * 25], stroke : 'black',	strokeWidth : 1, lineCap : 'round',	lineJoin : 'round' });
-		transFg = new Kinetic.Rect({ x: scale * 0, y: scale * 0, width: scale * 25,	height: scale * 40 });
-		group = new Kinetic.Group({	x : scale * initX,	y : scale * initY,	rotationDeg : 0, draggable : false });
-		draw();
 	}
 	
 	function getName() { return name; }
@@ -172,4 +161,9 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 	}
 	
 	function updateScale() { scale = setup.getGScale(); }
+	
+	function setPlugColor(plugStr, color) { 
+		plugin.setStroke("black");
+		if (plugStr == "plugin") plugin.setStroke("green");
+	}
 }

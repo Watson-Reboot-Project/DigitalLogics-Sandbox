@@ -56,6 +56,7 @@ function Connector(initX, initY, setName, id, setup) {
 	this.getPlugoutToComp = getPlugoutToComp;
 	this.getPlugoutComp = getPlugoutComp;
 	this.setPlugoutComp = setPlugoutComp;
+	this.setPlugoutCompNull = setPlugoutCompNull;
 	this.getPlugoutWire = getPlugoutWire;
 	this.setPlugoutWire = setPlugoutWire;
 	this.getSelectedPlugout = getSelectedPlugout;
@@ -65,6 +66,7 @@ function Connector(initX, initY, setName, id, setup) {
 	this.setPluginVal = setPluginVal;
 	this.evaluate = evaluate;
 	this.probe = probe;
+	this.setPlugColor = setPlugColor;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -248,6 +250,14 @@ function Connector(initX, initY, setName, id, setup) {
 		evaluate();
 	}
 	
+	function setPlugoutCompNull(comp) {
+		if (plugout1Comp == comp) plugout1Comp = null;
+		else if (plugout2Comp == comp) plugout2Comp = null;
+		else if (plugout3Comp == comp) plguout3Comp = null;
+		
+		evaluate();
+	}
+	
 	// get the plugout that is currently selected
 	function getSelectedPlugout() {
 		return selectedPlugout;
@@ -296,5 +306,18 @@ function Connector(initX, initY, setName, id, setup) {
 			return str;
 		}
 		else return null;
+	}
+	
+	function setPlugColor(plugStr, color) { 
+		plugin.setStroke("black");
+		plugout1.setStroke("black");
+		plugout2.setStroke("black");
+		plugout3.setStroke("black");
+		
+		if (plugStr == "all") return;
+		else if (plugStr == "plugin") plugin.setStroke(color);
+		else if (plugStr == "plugout1") plugout1.setStroke(color);
+		else if (plugStr == "plugout2") plugout2.setStroke(color);
+		else if (plugStr == "plugout3") plugout3.setStroke(color);
 	}
 }

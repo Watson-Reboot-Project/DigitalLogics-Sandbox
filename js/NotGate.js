@@ -18,6 +18,7 @@ function NotGate(initX, initY, setName, id, setup) {
 	var plugin = null;				// the line associated with the NOT gate's input
 	var pluginVal = -1;
 	var pluginComp = null;			// the component that is connected to the NOT gate's input (the component before the NOT gate)
+	var connectorPlugin;
 
 	var plugout = null;				// the line associated with the NOT gate's output
 	var plugoutComp = null;			// the component that the NOT gate's output is connected to
@@ -54,6 +55,9 @@ function NotGate(initX, initY, setName, id, setup) {
 	this.setPluginVal = setPluginVal;
 	this.evaluate = evaluate;
 	this.probe = probe;
+	this.setPlugColor = setPlugColor;
+	this.getConnectorPlugin = getConnectorPlugin;
+	this.setConnectorPlugin = setConnectorPlugin;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	// make a custom shape for the triangle; just three lines
@@ -180,6 +184,15 @@ function NotGate(initX, initY, setName, id, setup) {
 	// accessor for the wire (line) that connects the plugout to a component for output
 	function getPlugoutWire() { return plugoutWire;	}
 	
+	function setPlugColor(plugStr, color) { 
+		plugin.setStroke("black");
+		plugout.setStroke("black");
+		
+		if (plugStr == "all") return;
+		else if (plugStr == "plugin") plugin.setStroke(color);
+		else if (plugStr == "plugout") plugout.setStroke(color);
+	}
+	
 	// mutator for the wire (line) that connects the plugout to a component for output
 	function setPlugoutWire(line) { plugoutWire = line;	}
 	
@@ -221,4 +234,8 @@ function NotGate(initX, initY, setName, id, setup) {
 		}
 		else return null;
 	}
+	
+	function getConnectorPlugin() { return connectorPlugin; }
+	
+	function setConnectorPlugin(num) { connectorPlugin = num; }
 }

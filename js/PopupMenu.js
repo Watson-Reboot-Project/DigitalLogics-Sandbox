@@ -87,7 +87,6 @@ PopupMenu.prototype = {
     show: function(e) {
         if (PopupMenu.current && PopupMenu.current != this) return;
 		if (!e) e = window.event;
-		console.log(e);
         PopupMenu.current = this;
         if (this.element) {
             this.setPos(e);

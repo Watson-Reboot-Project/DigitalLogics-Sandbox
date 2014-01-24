@@ -63,6 +63,7 @@ function OrGate(initX, initY, setName, id, setup) {
 	this.setPluginVal = setPluginVal;
 	this.evaluate = evaluate;
 	this.probe = probe;
+	this.setPlugColor = setPlugColor;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -205,7 +206,7 @@ function OrGate(initX, initY, setName, id, setup) {
 	// return the line for the plugout in GLOBAL coordinates; same concept as plugin lines
 	function getPlugout() {
 		var line = new Kinetic.Line({
-			points: [group.getX() + plugout.getPoints()[0].x, group.getY() + plugout.getPoints()[0].x, group.getX() + plugout.getPoints()[1].x, group.getY() + plugout.getPoints()[1].y]
+			points: [group.getX() + plugout.getPoints()[0].x, group.getY() + plugout.getPoints()[0].y, group.getX() + plugout.getPoints()[1].x, group.getY() + plugout.getPoints()[1].y]
 		});
 				
 		return line;
@@ -281,5 +282,16 @@ function OrGate(initX, initY, setName, id, setup) {
 		return str;
 	}
 	else return null;
+	}
+	
+	function setPlugColor(plugStr, color) { 
+		plugin1.setStroke("black");
+		plugin2.setStroke("black");
+		plugout.setStroke("black");
+		
+		if (plugStr == "all") return;
+		else if (plugStr == "plugin1") plugin1.setStroke(color);
+		else if (plugStr == "plugin2") plugin2.setStroke(color);
+		else if (plugStr == "plugout") plugout.setStroke(color);
 	}
 }
