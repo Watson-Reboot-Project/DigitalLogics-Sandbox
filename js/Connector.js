@@ -16,6 +16,7 @@ function Connector(initX, initY, setName, id, setup) {
 	var plugin = null;				// the line associated with the input
 	var pluginVal = -1;
 	var pluginComp = null;			// the component connected to this connector's input
+	var connectorPlugin;
 
 	var plugout1 = null;			// the line associated with the first (top) plugin
 	var plugout1Wire = null;		// the wire (line) that connects the connector at the component connected to the first plugin
@@ -36,15 +37,23 @@ function Connector(initX, initY, setName, id, setup) {
 	var compShape;					// the shape of the connector (square)
 	var group;						// the group that will be composed of the connector's components
 	var transFg;					// the transparent foreground that makes it easy for users to click the connector
+	var inputBox;
+	var output1Box;
+	var output2Box;
+	var output3Box;
 	
 	var scale = setup.getGScale();
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
 	var thisObj = this;
+	var mouseOver = 'pointer';
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
 	this.draw = draw;
+	this.drawBoxes = drawBoxes;
+	this.getInputBox = getInputBox;
+	this.getOutputBox = getOutputBox;
 	this.getType = getType;
 	this.getID = getID;
 	this.getFunc = getFunc;
@@ -67,6 +76,9 @@ function Connector(initX, initY, setName, id, setup) {
 	this.evaluate = evaluate;
 	this.probe = probe;
 	this.setPlugColor = setPlugColor;
+	this.deleteOutputConnection = deleteOutputConnection;
+	this.setPlugoutWireColor = setPlugoutWireColor;
+	this.setMouseOver = setMouseOver;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -135,10 +147,10 @@ function Connector(initX, initY, setName, id, setup) {
 	
 	// add cursor styling when the user mouseovers the group
 	group.on('mouseover', function () {
-		document.body.style.cursor = 'pointer';
+		document.body.style.cursor = mouseOver;
 	});
 	group.on('mouseout', function () {
-		document.body.style.cursor = 'default';
+		if (mouseOver !== "crosshair") document.body.style.cursor = 'default';
 	});
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION IMPLEMENTATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -154,7 +166,77 @@ function Connector(initX, initY, setName, id, setup) {
 		group.add(transFg);		// and finally the transparent foreground
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();			// call draw on the stage to redraw its components
+		drawBoxes();
 	}
+	
+	function drawBoxes() {
+		var plug;
+		if (inputBox) {
+			plug = getPlugin();
+			inputBox.setPosition(plug.getPoints()[0].x - 16, plug.getPoints()[0].y - 10);
+			plug = getPlugout(1);
+			output1Box.setPosition(plug.getPoints()[0].x - 10, plug.getPoints()[0].y - 27);
+			plug = getPlugout(2);
+			output2Box.setPosition(plug.getPoints()[0].x + 8, plug.getPoints()[0].y - 10);
+			plug = getPlugout(3);
+			output3Box.setPosition(plug.getPoints()[0].x - 10, plug.getPoints()[0].y + 6);
+		}
+		else {
+			plug = getPlugin();
+			inputBox = new Kinetic.Rect({
+				x: plug.getPoints()[0].x - 16,
+				y: plug.getPoints()[0].y - 10,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 8,
+				height: 18
+				//fill : 'black'
+			});
+			
+			plug = getPlugout(1);
+			output1Box = new Kinetic.Rect({
+				x: plug.getPoints()[0].x - 10,
+				y: plug.getPoints()[0].y - 27,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 20,
+				height: 20
+				//fill : 'black'
+			});
+			
+			plug = getPlugout(2);
+			output2Box = new Kinetic.Rect({
+				x: plug.getPoints()[0].x + 8,
+				y: plug.getPoints()[0].y - 10,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 8,
+				height: 18
+				//fill : 'black'
+			});
+			
+			plug = getPlugout(3);
+			output3Box = new Kinetic.Rect({
+				x: plug.getPoints()[0].x - 10,
+				y: plug.getPoints()[0].y + 6,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 20,
+				height: 20
+				//fill : 'black'
+			});
+			
+			mainLayer.add(inputBox);
+			mainLayer.add(output1Box);
+			mainLayer.add(output2Box);
+			mainLayer.add(output3Box);
+			stage.draw();
+		}
+	}
+	
+	function getInputBox() {
+		return inputBox;
+	}
+	
+	function getOutputBox(outputNum) {
+		if (outputNum == 1) return output1Box;
+		else if (outputNum == 2) return output2Box;
+		else if (outputNum == 3) return output3Box;
+	}
+	
+	function setMouseOver(str) { mouseOver = str; }
 	
 	// accessor for this gate's type
 	function getType() { return "connector"; }
@@ -308,16 +390,82 @@ function Connector(initX, initY, setName, id, setup) {
 		else return null;
 	}
 	
-	function setPlugColor(plugStr, color) { 
+	function setPlugoutWireColor(plugoutNum, color) { 
+		if (plugoutNum == 1) plugout1Wire.setStroke(color);
+		else if (plugoutNum == 2) plugout2Wire.setStroke(color);
+		else if (plugoutNum == 3) plugout3Wire.setStroke(color);
+	}
+	
+	function setPlugColor(plugStr, color) {
+		if (plugStr == "plugin") plugin.setStroke(color);
+		else if (plugStr == "plugout1") plugout1.setStroke(color);
+		else if (plugStr == "plugout2") plugout2.setStroke(color);
+		else if (plugStr == "plugout3") plugout3.setStroke(color);
+	}
+	
+	function setPlugColor1(plugStr, color) { 
 		plugin.setStroke("black");
 		plugout1.setStroke("black");
 		plugout2.setStroke("black");
 		plugout3.setStroke("black");
+		if (pluginComp !== null) pluginComp.setPlugoutWireColor("black", connectorPlugin);
+		if (plugout1Comp !== null) plugout1Wire.setStroke("black");
+		if (plugout2Comp !== null) plugout2Wire.setStroke("black");
+		if (plugout3Comp !== null) plugout3Wire.setStroke("black");
 		
 		if (plugStr == "all") return;
-		else if (plugStr == "plugin") plugin.setStroke(color);
-		else if (plugStr == "plugout1") plugout1.setStroke(color);
-		else if (plugStr == "plugout2") plugout2.setStroke(color);
-		else if (plugStr == "plugout3") plugout3.setStroke(color);
+		else if (plugStr == "plugin") {
+			if (pluginComp !== null && color == "green") return false;
+			else if (pluginComp !== null && color == "yellow") {
+				pluginComp.setPlugoutWireColor("yellow", connectorPlugin);
+				return pluginComp.getPlugoutWire(connectorPlugin);
+			}
+			else plugin.setStroke(color);
+		}
+		else if (plugStr == "plugout1") {
+			if (plugout1Comp !== null && color == "green") return false;
+			else if (plugout1Comp !== null && color == "yellow") {
+				plugout1Wire.setStroke("yellow");
+				return plugout1;
+			}
+			else plugout1.setStroke(color);
+		}
+		else if (plugStr == "plugout2") {
+			if (plugout2Comp !== null && color == "green") return false;
+			else if (plugout2Comp !== null && color == "yellow") {
+				plugout2Wire.setStroke("yellow");
+				return plugout2;
+			}
+			else plugout2.setStroke(color);
+		}
+		else if (plugStr == "plugout3") {
+			if (plugout3Comp !== null && color == "green") return false;
+			else if (plugout3Comp !== null && color == "yellow") {
+				plugout3Wire.setStroke("yellow");
+				return plugout3;
+			}
+			else plugout3.setStroke(color);
+		}
+	}
+	
+	function deleteOutputConnection(plugoutNum) {
+		var plugoutComp;
+		var plugoutWire;
+		if (plugoutNum == 1) { plugoutComp = plugout1Comp; plugout1Comp = null; plugout1Wire.disableStroke(); plugout1Wire = null }
+		else if (plugoutNum == 2) { plugoutComp = plugout2Comp; plugout2Comp = null; plugout2Wire.disableStroke(); plugout2Wire = null }
+		else if (plugoutNum == 3) { plugoutComp = plugout3Comp; plugout3Comp = null; plugout3Wire.disableStroke(); plugout3Wire = null }
+		
+		if (plugoutComp.getType() == "not" || plugoutComp.getType() == "output" || plugoutComp.getType == "connector") {
+			if (plugoutComp.getType() != "output") plugoutComp.setConnectorPlugin(-1);
+			plugoutComp.setPluginCompNull();
+		}
+		else {
+			var pluginNum;
+			if (plugoutComp.getConnectorPlugin(1) == plugoutNum) pluginNum = 1
+			else pluginNum = 2;
+			console.log("Plugin Num: " + pluginNum);
+			plugoutComp.setConnectorPlugin(pluginNum, -1);
+			plugoutComp.setPluginComp(pluginNum, null);
+		}
 	}
 }

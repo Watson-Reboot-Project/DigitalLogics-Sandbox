@@ -8,7 +8,9 @@
 	td { padding-left: 10px; padding-right: 10px }
   </style>
   <!-- <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> -->
-  <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.7.4.min.js"></script>
+	<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.7.4.min.js"></script>
+	<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+	<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 </head>
 <body oncontextmenu="return false;">
 	
@@ -25,12 +27,18 @@
 	<script src="js/Setup.js"></script>
 	<script src="js/DigitalLogicsLab.js"></script>
 	
+	<!-- <div id="tableDiv"> -->
 	<div id="container1">
 		<div id="tableDiv">
 	</div>
 
 	<script>
 		var lab = new DigitalLogicsLab("container1", screen.availWidth, screen.availHeight);
+		
+		$(function() {
+			$( "#table1" ).draggable();
+		});
+		
 	</script>
 </body>
 </html>

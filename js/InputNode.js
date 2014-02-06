@@ -10,6 +10,7 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 	var name = setName;				// the name of the connector
 	var ID = id;					// the ID of the connector
 	var compShape;					// the shape of the connector (square)
+	var outputBox;
 	var text;
 	var group;						// the group that will be composed of the connector's components
 	var transFg;					// the transparent foreground that makes it easy for users to click the connector
@@ -18,6 +19,7 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
 	var thisObj = this;
+	var mouseOver = 'pointer';
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -26,9 +28,12 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 	this.setPlugoutComp = setPlugoutComp;
 	this.setPlugoutWire = setPlugoutWire;
 	this.getPlugoutWire = getPlugoutWire;
+	this.setPlugoutWireColor = setPlugoutWireColor;
 	this.setValue = setValue;
 	
 	this.draw = draw;
+	this.drawBoxes = drawBoxes;
+	this.getOutputBox = getOutputBox;
 	this.getID = getID;
 	this.getName = getName;
 	this.getType = getType;
@@ -40,6 +45,8 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 	this.probe = probe;
 	this.updateScale = updateScale;
 	this.setPlugColor = setPlugColor;
+	this.deleteOutputConnection = deleteOutputConnection;
+	this.setMouseOver = setMouseOver;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -102,10 +109,10 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 	
 	// add cursor styling when the user mouseovers the group
 	group.on('mouseover', function () {
-		document.body.style.cursor = 'pointer';
+		document.body.style.cursor = mouseOver;
 	});
 	group.on('mouseout', function () {
-		document.body.style.cursor = 'default';
+		if (mouseOver !== "crosshair") document.body.style.cursor = 'default';
 	});
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION IMPLEMENTATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -116,9 +123,37 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 		group.add(compShape);	// the shape
 		group.add(text);
 		group.add(plugout);		// ... the plugin line
-		group.add(transFg);		// and finally the transparent foreground
+		//group.add(transFg);		// and finally the transparent foreground
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();			// call draw on the stage to redraw its components
+		drawBoxes();
+	}
+	
+	function drawBoxes() {
+		var plug;
+		if (outputBox) {
+			plug = getPlugout();
+			outputBox.setPosition(plug.getPoints()[0].x + 3, plug.getPoints()[0].y - 20);
+		}
+		else {
+			plug = getPlugout();
+			outputBox = new Kinetic.Rect({
+				x: plug.getPoints()[0].x + 3,
+				y: plug.getPoints()[0].y - 20,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				height: 40
+				//fill : 'black'
+			});
+			
+			mainLayer.add(outputBox);
+			stage.draw();
+		}
+	}
+	
+	function setMouseOver(str) { mouseOver = str; }
+	
+	function getOutputBox() {
+		return outputBox;
 	}
 	
 	function getName() { return name; }
@@ -153,6 +188,8 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 	
 	function setPlugoutWire(line) { plugoutWire = line; }
 	
+	function setPlugoutWireColor(color) { plugoutWire.setStroke(color); }
+	
 	function evaluate() {
 		if (plugoutComp !== null) {
 			plugoutComp.setPluginVal(thisObj, value);
@@ -166,8 +203,28 @@ function InputNode(initX, initY, setText, setValue, setName, id, setup) {
 	
 	function updateScale() { scale = setup.getGScale(); }
 	
-	function setPlugColor(plugStr, color) { 
+	function setPlugColor(plugStr, color) {
+		if (plugStr == "plugout") plugout.setStroke(color);
+	}
+	
+	function setPlugColor1(plugStr, color) { 
 		plugout.setStroke("black");
-		if (plugStr == "plugout") plugout.setStroke("green");
+		if (plugoutComp !== null) plugoutWire.setStroke("black");
+
+		if (plugStr == "plugout") {
+			if (plugoutComp !== null && color == "green") return false;
+			else if (plugoutComp !== null && color == "yellow") {
+				plugoutWire.setStroke("yellow");
+				return plugoutWire;
+			}
+			else plugout.setStroke(color);
+		}
+	}
+	
+	function deleteOutputConnection() {
+		plugoutComp.setPluginCompNull(thisObj);
+		plugoutWire.disableStroke();
+		plugoutComp = null;
+		plugoutWire = null;
 	}
 }

@@ -84,6 +84,26 @@ PopupMenu.prototype = {
         this.element.style.top  = y + 'px';
         this.element.style.left = x + 'px';
     },
+	setManPos: function(e, pos) {
+        if (!this.element) return;
+        if (!e) e = window.event;
+
+        this.element.style.top  = pos.y + 'px';
+        this.element.style.left = pos.x + 'px';
+    },
+	showMenu: function(e, pos) {
+        if (PopupMenu.current && PopupMenu.current != this) return;
+		if (!e) e = window.event;
+        PopupMenu.current = this;
+        if (this.element) {
+            this.setManPos(e, pos);
+            this.element.style.display = '';
+        } else {
+            this.element = this.createMenu(this.items);
+            this.setManPos(e, pos);
+            document.body.appendChild(this.element);
+        }
+    },
     show: function(e) {
         if (PopupMenu.current && PopupMenu.current != this) return;
 		if (!e) e = window.event;

@@ -35,12 +35,17 @@ function AndGate(initX, initY, setName, id, setup) {
 	
 	var group;						// the group that all of the AND gate's components are added to
 	var gateShape;					// the custom shape for the AND gate
-	var transFg;					// a transparent foreground for the AND gate
+	var input1Box;
+	var input2Box;
+	var outputBox;
+	
+	//var transFg;					// a transparent foreground for the AND gate
 	
 	var scale = setup.getGScale();
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
 	var thisObj = this;
+	var mouseOver = 'pointer';
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -65,6 +70,13 @@ function AndGate(initX, initY, setName, id, setup) {
 	this.evaluate = evaluate;
 	this.probe = probe;
 	this.setPlugColor = setPlugColor;
+	this.deleteOutputConnection = deleteOutputConnection;
+	this.deleteInputConnection = deleteInputConnection;
+	this.setPlugoutWireColor = setPlugoutWireColor;
+	this.drawBoxes = drawBoxes;
+	this.getInputBox = getInputBox;
+	this.getOutputBox = getOutputBox;
+	this.setMouseOver = setMouseOver;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -83,7 +95,6 @@ function AndGate(initX, initY, setName, id, setup) {
 				// KineticJS specific context method
 				context.fillStrokeShape(this);
 			},
-			fill : 'blue',
 			stroke : 'black',
 			strokeWidth : 1,
 		});
@@ -133,10 +144,10 @@ function AndGate(initX, initY, setName, id, setup) {
 
 	// add cursor styling when the user mouseovers the group
 	group.on('mouseover', function () {
-		document.body.style.cursor = 'pointer';
+		document.body.style.cursor = mouseOver;
 	});
 	group.on('mouseout', function () {
-		document.body.style.cursor = 'default';
+		if (mouseOver !== "crosshair") document.body.style.cursor = 'default';
 	});
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION IMPLEMENTATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -151,6 +162,64 @@ function AndGate(initX, initY, setName, id, setup) {
 		group.add(transFg);		// and finally the transparent foreground
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();					// call draw on the stage to redraw its components
+		drawBoxes();
+	}
+	
+	function drawBoxes() {
+		var plug;
+		if (input1Box) {
+			plug = getPlugin(1);
+			input1Box.setPosition(plug.getPoints()[0].x - 10, plug.getPoints()[0].y - 15);
+			plug = getPlugin(2);
+			input2Box.setPosition(plug.getPoints()[0].x - 10, plug.getPoints()[0].y - 9);
+			plug = getPlugout();
+			outputBox.setPosition(plug.getPoints()[0].x - 0, plug.getPoints()[0].y - 20);
+		}
+		else {
+			plug = getPlugin(1);
+			input1Box = new Kinetic.Rect({
+				x: plug.getPoints()[0].x - 10,
+				y: plug.getPoints()[0].y - 15,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				height: 24
+				//fill : 'black'
+			});
+			
+			plug = getPlugin(2);
+			input2Box = new Kinetic.Rect({
+				x: plug.getPoints()[0].x - 10,
+				y: plug.getPoints()[0].y - 9,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				height: 24
+				//fill : 'black'
+			});
+			
+			plug = getPlugout();
+			outputBox = new Kinetic.Rect({
+				x: plug.getPoints()[0].x - 0,
+				y: plug.getPoints()[0].y - 20,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				height: 40
+				//fill : 'black'
+			});
+			
+			
+			mainLayer.add(input1Box);
+			mainLayer.add(input2Box);
+			mainLayer.add(outputBox);
+			stage.draw();
+		}
+	}
+
+	function setMouseOver(str) { mouseOver = str; console.log("Mouse over: " + str); }
+	
+	function getInputBox(num) {
+		if (num == 1) return input1Box;
+		else if (num == 2) return input2Box;
+	}
+	
+	function getOutputBox() {
+		return outputBox;
 	}
 	
 	// accessor for the gate type
@@ -247,7 +316,7 @@ function AndGate(initX, initY, setName, id, setup) {
 		if (num == 1) plugin1Comp = comp;
 		else if (num == 2) plugin2Comp = comp;
 		
-		comp.evaluate();
+		if (comp !== null) comp.evaluate();
 	}
 	
 	// add a value to this AND gate's input values (used in computing the output of the circuit); these two values will be OR'ed together
@@ -286,14 +355,69 @@ function AndGate(initX, initY, setName, id, setup) {
 		else return null;
 	}
 	
-	function setPlugColor(plugStr, color) { 
+	function setPlugoutWireColor(color) { plugoutWire.setStroke(color); }
+	
+	function setPlugColor(plugStr, color) {
+		if (plugStr == "plugin1") plugin1.setStroke(color);
+		else if (plugStr == "plugin2") plugin2.setStroke(color);
+		else if (plugStr == "plugout") plugout.setStroke(color);
+	}
+	
+	function setPlugColor1(plugStr, color) { 
 		plugin1.setStroke("black");
 		plugin2.setStroke("black");
 		plugout.setStroke("black");
+		if (plugin1Comp !== null) plugin1Comp.setPlugoutWireColor("black", connectorPlugin1);
+		if (plugin2Comp !== null) plugin2Comp.setPlugoutWireColor("black", connectorPlugin2);
+		if (plugoutComp !== null) plugoutWire.setStroke("black");
 		
 		if (plugStr == "all") return;
-		else if (plugStr == "plugin1") plugin1.setStroke(color);
-		else if (plugStr == "plugin2") plugin2.setStroke(color);
-		else if (plugStr == "plugout") plugout.setStroke(color);
+		else if (plugStr == "plugin1") {
+			if (plugin1Comp !== null && color == "green") return false;
+			else if (plugin1Comp !== null && color == "yellow") {
+				plugin1Comp.setPlugoutWireColor("yellow", connectorPlugin1);
+				return plugin1Comp.getPlugoutWire(connectorPlugin1);
+			}
+			else plugin1.setStroke(color);
+		}
+		else if (plugStr == "plugin2") {
+			if (plugin2Comp !== null && color == "green") return false;
+			else if (plugin2Comp !== null && color == "yellow") {
+				plugin2Comp.setPlugoutWireColor("yellow", connectorPlugin2);
+				return plugin2Comp.getPlugoutWire(connectorPlugin2);
+			}
+			else plugin2.setStroke(color);
+		}
+		else if (plugStr == "plugout") {
+			if (plugoutComp !== null && color == "green") return false;
+			else if (plugoutComp !== null && color == "yellow") {
+				plugoutWire.setStroke("yellow");
+				return plugoutWire;
+			}
+			else plugout.setStroke(color);
+		}
+	}
+	
+	function deleteInputConnection(pluginNum) {
+		if (pluginNum == 1) {
+			connectorPlugin1 = -1;
+			plugin1Comp = null;
+		}
+		else if (pluginNum == 2) {
+			connectorPlugin2 = -1;
+			plugin2Comp = null;
+		}
+	}
+	
+	function deleteOutputConnection() {
+		plugoutComp.setPluginCompNull(thisObj);
+		plugoutWire.disableStroke();
+		plugoutComp = null;
+		plugoutWire = null;
+	}
+	
+	function setPluginWireColor(comp, color) {
+		if (plugin1Comp == comp) { /*set plugin1 to color*/ }
+		if (plugin2Comp == comp) { /*set plugin2 to color*/ }
 	}
 }

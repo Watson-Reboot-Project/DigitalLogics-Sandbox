@@ -34,11 +34,13 @@ function Setup(container, width, height) {
 	var truthTable = new TruthTable(container);
 	var controller = new Controller(this, truthTable);
 	var exercises = new Exercises(this, truthTable, controller);
-	
+		
 	var curExercise = 1;
 	
 	setStageDimensions(width, height);
 	exercises.setExercise(curExercise);
+	
+	truthTable.setLeftOffset(50);
 	
 	function setStageDimensions(width) {
 		var scale = exercises.resizeExercise(curExercise, width);

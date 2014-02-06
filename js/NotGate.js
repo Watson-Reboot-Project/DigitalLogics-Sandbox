@@ -30,12 +30,15 @@ function NotGate(initX, initY, setName, id, setup) {
 	var group;						// the group that all of the NOT gate's components will be added to
 	var gateShapeTriangle;			// the triangle that is used to draw the NOT gate
 	var gateShapeCircle;			// the circle that is used to draw the NOT gate
+	var inputBox;
+	var outputBox;
 	var transFg;					// a transparent foreground that makes the NOT gate easier to click
 	
 	var scale = setup.getGScale();
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
 	var thisObj = this;
+	var mouseOver = 'pointer';
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	this.getType = getType;
@@ -58,6 +61,13 @@ function NotGate(initX, initY, setName, id, setup) {
 	this.setPlugColor = setPlugColor;
 	this.getConnectorPlugin = getConnectorPlugin;
 	this.setConnectorPlugin = setConnectorPlugin;
+	this.drawBoxes = drawBoxes;
+	this.getInputBox = getInputBox;
+	this.getOutputBox = getOutputBox;
+	this.deleteInputConnection = deleteInputConnection;
+	this.deleteOutputConnection = deleteOutputConnection;
+	this.setPlugoutWireColor = setPlugoutWireColor;
+	this.setMouseOver = setMouseOver;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	// make a custom shape for the triangle; just three lines
@@ -74,7 +84,6 @@ function NotGate(initX, initY, setName, id, setup) {
 				// KineticJS specific context method
 				context.fillStrokeShape(this);
 			},
-			fill : 'blue',
 			stroke : 'black',
 			strokeWidth : 1
 		});
@@ -84,7 +93,6 @@ function NotGate(initX, initY, setName, id, setup) {
         x: scale * 93,
         y: scale * 20,
         radius: scale * 7,
-        fill: 'blue',
         stroke: 'black',
         strokeWidth: 1
       });
@@ -125,10 +133,10 @@ function NotGate(initX, initY, setName, id, setup) {
 
 	// add cursor styling when the user mouseovers the group
 	group.on('mouseover', function () {
-		document.body.style.cursor = 'pointer';
+		document.body.style.cursor = mouseOver;
 	});
 	group.on('mouseout', function () {
-		document.body.style.cursor = 'default';
+		if (mouseOver !== "crosshair") document.body.style.cursor = 'default';
 	});
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION IMPLEMENTATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -141,9 +149,54 @@ function NotGate(initX, initY, setName, id, setup) {
 		group.add(gateShapeCircle);		// ... the circle
 		group.add(plugin);				// ... the plugin line
 		group.add(plugout);				// ... the plugout line
-		group.add(transFg);				// and finally the transparent foreground
+		//group.add(transFg);				// and finally the transparent foreground
 		mainLayer.add(group);			// add this group to the main layer
 		stage.draw();					// call draw on the stage to redraw its components
+		drawBoxes();
+	}
+	
+	function drawBoxes() {
+		var plug;
+		if (inputBox) {
+			plug = getPlugin();
+			inputBox.setPosition(plug.getPoints()[0].x - 10, plug.getPoints()[0].y - 20);
+			plug = getPlugout();
+			outputBox.setPosition(plug.getPoints()[0].x + 3, plug.getPoints()[0].y - 20);
+		}
+		else {
+			plug = getPlugin();
+			inputBox = new Kinetic.Rect({
+				x: plug.getPoints()[0].x - 10,
+				y: plug.getPoints()[0].y - 20,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				height: 40
+				//fill : 'black'
+			});
+			
+			plug = getPlugout();
+			outputBox = new Kinetic.Rect({
+				x: plug.getPoints()[0].x + 3,
+				y: plug.getPoints()[0].y - 20,
+				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				height: 40
+				//fill : 'black'
+			});
+			
+			
+			mainLayer.add(inputBox);
+			mainLayer.add(outputBox);
+			stage.draw();
+		}
+	}
+	
+	function setMouseOver(str) { mouseOver = str; }
+	
+	function getInputBox() {
+		return inputBox;
+	}
+	
+	function getOutputBox() {
+		return outputBox;
 	}
 	
 	// accessor for this gate's type
@@ -184,13 +237,36 @@ function NotGate(initX, initY, setName, id, setup) {
 	// accessor for the wire (line) that connects the plugout to a component for output
 	function getPlugoutWire() { return plugoutWire;	}
 	
-	function setPlugColor(plugStr, color) { 
+	function setPlugoutWireColor(color) { plugoutWire.setStroke(color); }
+	
+	function setPlugColor(plugStr, color) {
+		if (plugStr == "plugin") plugin.setStroke(color);
+		else if (plugStr == "plugout") plugout.setStroke(color);
+	}
+	
+	function setPlugColor1(plugStr, color) { 
 		plugin.setStroke("black");
 		plugout.setStroke("black");
+		if (pluginComp !== null) pluginComp.setPlugoutWireColor("black", connectorPlugin);
+		if (plugoutComp !== null) plugoutWire.setStroke("black");
 		
 		if (plugStr == "all") return;
-		else if (plugStr == "plugin") plugin.setStroke(color);
-		else if (plugStr == "plugout") plugout.setStroke(color);
+		else if (plugStr == "plugin") {
+			if (pluginComp !== null && color == "green") return false;
+			else if (pluginComp !== null && color == "yellow") {
+				pluginComp.setPlugoutWireColor("yellow", connectorPlugin);
+				return pluginComp.getPlugoutWire(connectorPlugin);
+			}
+			else plugin.setStroke(color);
+		}
+		else if (plugStr == "plugout") {
+			if (plugoutComp !== null && color == "green") return false;
+			else if (plugoutComp !== null && color == "yellow") {
+				plugoutWire.setStroke("yellow");
+				return plugoutWire;
+			}
+			else plugout.setStroke(color);
+		}
 	}
 	
 	// mutator for the wire (line) that connects the plugout to a component for output
@@ -218,7 +294,12 @@ function NotGate(initX, initY, setName, id, setup) {
 	// evaluate this gate; AND the two values in pluginVals, and send the output to the next component
 	function evaluate() {
 		var res = 0;
-		if (pluginVal == 0) res = 1;
+		if (pluginVal == 0) {
+			res = 1;
+			// set plugout color red
+			// set output wire color red
+			// set plougout component's input wire red
+		}
 		else if(pluginVal == -1) res = -1;
 		
 		if (plugoutComp !== null) {
@@ -238,4 +319,16 @@ function NotGate(initX, initY, setName, id, setup) {
 	function getConnectorPlugin() { return connectorPlugin; }
 	
 	function setConnectorPlugin(num) { connectorPlugin = num; }
+	
+	function deleteInputConnection() {
+		connectorPlugin = -1;
+		pluginComp = null;
+	}
+	
+	function deleteOutputConnection() {
+		plugoutComp.setPluginCompNull(thisObj);
+		plugoutWire.disableStroke();
+		plugoutComp = null;
+		plugoutWire = null;
+	}
 }
