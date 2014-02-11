@@ -34,11 +34,12 @@ function NotGate(initX, initY, setName, id, setup) {
 	var outputBox;
 	var transFg;					// a transparent foreground that makes the NOT gate easier to click
 	
-	var scale = setup.getGScale();
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
 	var thisObj = this;
 	var mouseOver = 'pointer';
+	var deleteImg;
+	var scale = 0.75;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	this.getType = getType;
@@ -64,10 +65,12 @@ function NotGate(initX, initY, setName, id, setup) {
 	this.drawBoxes = drawBoxes;
 	this.getInputBox = getInputBox;
 	this.getOutputBox = getOutputBox;
-	this.deleteInputConnection = deleteInputConnection;
 	this.deleteOutputConnection = deleteOutputConnection;
 	this.setPlugoutWireColor = setPlugoutWireColor;
 	this.setMouseOver = setMouseOver;
+	this.toggleDeleteIcon = toggleDeleteIcon;
+	this.setPluginColor = setPluginColor;
+	this.deleteSelf = deleteSelf;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	// make a custom shape for the triangle; just three lines
@@ -75,10 +78,10 @@ function NotGate(initX, initY, setName, id, setup) {
 			drawFunc : function (context) {
 				// begin custom shape
 				context.beginPath();
-				context.moveTo(scale * 50, scale * 0);
+				context.moveTo(scale * 50,  0);
 				context.lineTo(scale * 50, scale * 40);
 				context.lineTo(scale * 85, scale * 20);
-				context.lineTo(scale * 50, scale * 0);
+				context.lineTo(scale * 50,  0);
 				// complete custom shape
 				context.closePath();
 				// KineticJS specific context method
@@ -90,9 +93,9 @@ function NotGate(initX, initY, setName, id, setup) {
 		
 	 // create the circle
 	 gateShapeCircle = new Kinetic.Circle({
-        x: scale * 93,
-        y: scale * 20,
-        radius: scale * 7,
+        x:  scale * 93,
+        y:  scale * 20,
+        radius:  scale * 7,
         stroke: 'black',
         strokeWidth: 1
       });
@@ -117,10 +120,10 @@ function NotGate(initX, initY, setName, id, setup) {
 
 	// the transparent rectangle
 	transFg = new Kinetic.Rect({
-		x: scale * 23,
-		y: scale * 0,
+		x:  23,
+		y:  0,
 		width: plugout.getPoints()[1].x - plugin.getPoints()[0].x,
-		height: scale * 50
+		height:  50
 	});
 
 	// create the group at the x,y coords passed to this object
@@ -130,6 +133,20 @@ function NotGate(initX, initY, setName, id, setup) {
 			rotationDeg : 0,
 			draggable : true
 		});
+		
+	deleteImg = new Image();
+	deleteImg.onload = function() {
+		var deleteIco = new Kinetic.Image({
+			x: scale * 75,
+			y: scale * -5,
+			image: deleteImg,
+			scale: 0.3
+		});
+
+		// add the shape to the layer
+		group.add(deleteIco);
+		mainLayer.draw();
+	};
 
 	// add cursor styling when the user mouseovers the group
 	group.on('mouseover', function () {
@@ -155,30 +172,36 @@ function NotGate(initX, initY, setName, id, setup) {
 		drawBoxes();
 	}
 	
+	function deleteSelf() {
+		group.remove();
+		inputBox.remove();
+		outputBox.remove();
+	}
+	
 	function drawBoxes() {
 		var plug;
 		if (inputBox) {
 			plug = getPlugin();
-			inputBox.setPosition(plug.getPoints()[0].x - 10, plug.getPoints()[0].y - 20);
+			inputBox.setPosition(plug.getPoints()[0].x - scale * 10, plug.getPoints()[0].y - scale * 20);
 			plug = getPlugout();
-			outputBox.setPosition(plug.getPoints()[0].x + 3, plug.getPoints()[0].y - 20);
+			outputBox.setPosition(plug.getPoints()[0].x + scale * 3, plug.getPoints()[0].y - scale * 20);
 		}
 		else {
 			plug = getPlugin();
 			inputBox = new Kinetic.Rect({
-				x: plug.getPoints()[0].x - 10,
-				y: plug.getPoints()[0].y - 20,
+				x: plug.getPoints()[0].x - scale * 10,
+				y: plug.getPoints()[0].y - scale * 20,
 				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
-				height: 40
+				height: scale * 40
 				//fill : 'black'
 			});
 			
 			plug = getPlugout();
 			outputBox = new Kinetic.Rect({
-				x: plug.getPoints()[0].x + 3,
-				y: plug.getPoints()[0].y - 20,
+				x: plug.getPoints()[0].x + scale * 3,
+				y: plug.getPoints()[0].y - scale * 20,
 				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
-				height: 40
+				height: scale * 40
 				//fill : 'black'
 			});
 			
@@ -190,6 +213,13 @@ function NotGate(initX, initY, setName, id, setup) {
 	}
 	
 	function setMouseOver(str) { mouseOver = str; }
+	
+	function toggleDeleteIcon(bool) {
+		if (bool) deleteImg.src = "delete.ico";
+		else deleteImg.src = "";
+		
+		mainLayer.draw();
+	}
 	
 	function getInputBox() {
 		return inputBox;
@@ -237,36 +267,26 @@ function NotGate(initX, initY, setName, id, setup) {
 	// accessor for the wire (line) that connects the plugout to a component for output
 	function getPlugoutWire() { return plugoutWire;	}
 	
-	function setPlugoutWireColor(color) { plugoutWire.setStroke(color); }
+	function setPlugoutWireColor(color) {
+		if (color != "default") plugoutWire.setStroke(color);
+		else evaluate();
+	}
 	
 	function setPlugColor(plugStr, color) {
 		if (plugStr == "plugin") plugin.setStroke(color);
 		else if (plugStr == "plugout") plugout.setStroke(color);
 	}
 	
-	function setPlugColor1(plugStr, color) { 
-		plugin.setStroke("black");
-		plugout.setStroke("black");
-		if (pluginComp !== null) pluginComp.setPlugoutWireColor("black", connectorPlugin);
-		if (plugoutComp !== null) plugoutWire.setStroke("black");
-		
-		if (plugStr == "all") return;
-		else if (plugStr == "plugin") {
-			if (pluginComp !== null && color == "green") return false;
-			else if (pluginComp !== null && color == "yellow") {
-				pluginComp.setPlugoutWireColor("yellow", connectorPlugin);
-				return pluginComp.getPlugoutWire(connectorPlugin);
-			}
+	function setPlugColor(plugStr, color) {
+		if (plugStr == "plugin") {
+			if (color == "default" && pluginComp !== null) pluginComp.evaluate();
+			else if (color == "default" && pluginComp === null) plugin.setStroke("black");
 			else plugin.setStroke(color);
 		}
 		else if (plugStr == "plugout") {
-			if (plugoutComp !== null && color == "green") return false;
-			else if (plugoutComp !== null && color == "yellow") {
-				plugoutWire.setStroke("yellow");
-				return plugoutWire;
-			}
+			if (color == "default") evaluate();
 			else plugout.setStroke(color);
-		}
+		}	
 	}
 	
 	// mutator for the wire (line) that connects the plugout to a component for output
@@ -279,11 +299,20 @@ function NotGate(initX, initY, setName, id, setup) {
 	function setPlugoutComp(comp) { plugoutComp = comp; evaluate();	}
 	
 	// set the plugin component to NULL (used in disconnection)
-	function setPluginCompNull() { pluginComp = null; pluginVal = -1; evaluate(); }
+	function setPluginCompNull() {
+		pluginComp = null;
+		pluginVal = -1;
+		plugin.setStroke("black");
+		evaluate();
+	}
 	
 	// set the plugin component to the component passed as parameter
 	this.setPluginComp = setPluginComp;
-	function setPluginComp(comp) { pluginComp = comp; comp.evaluate(); }
+	function setPluginComp(comp) {
+		pluginComp = comp;
+		if (comp !== null) comp.evaluate();
+		else { pluginVal = -1; evaluate(); }
+	}
 	
 	// add a value to this AND gate's input values (used in computing the output of the circuit); these two values will be OR'ed together
 	function setPluginVal(comp, val) {
@@ -291,20 +320,36 @@ function NotGate(initX, initY, setName, id, setup) {
 		evaluate();
 	}
 	
+	function setPluginColor(comp, color) {
+		if (comp == pluginComp) plugin.setStroke(color);
+		mainLayer.draw();
+	}
+	
 	// evaluate this gate; AND the two values in pluginVals, and send the output to the next component
 	function evaluate() {
 		var res = 0;
 		if (pluginVal == 0) {
 			res = 1;
-			// set plugout color red
-			// set output wire color red
-			// set plougout component's input wire red
 		}
-		else if(pluginVal == -1) res = -1;
+		else if (pluginVal == -1) res = -1;
 		
+		var color = "blue";
+		if (res == 1) color = "red";
+		else if (res == -1) color = "black";
+			
 		if (plugoutComp !== null) {
+			setPlugColor("plugout", color);
+			plugoutWire.setStroke(color);
+			plugoutComp.setPluginColor(thisObj, color);
 			plugoutComp.setPluginVal(thisObj, res);
 		}
+		else {
+			setPlugColor("plugout", color);
+		}
+		
+		if (color == "black") color = "#ffffff";
+		gateShapeTriangle.setFill(color);
+		gateShapeCircle.setFill(color);
 	}
 
 	function probe() {
@@ -319,11 +364,6 @@ function NotGate(initX, initY, setName, id, setup) {
 	function getConnectorPlugin() { return connectorPlugin; }
 	
 	function setConnectorPlugin(num) { connectorPlugin = num; }
-	
-	function deleteInputConnection() {
-		connectorPlugin = -1;
-		pluginComp = null;
-	}
 	
 	function deleteOutputConnection() {
 		plugoutComp.setPluginCompNull(thisObj);

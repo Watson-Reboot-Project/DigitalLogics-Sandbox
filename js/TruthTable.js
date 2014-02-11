@@ -16,6 +16,7 @@ function TruthTable(container) {
 	this.toggleVisible = toggleVisible;
 	
 	function checkTruthTable(resultTruthTable) {
+		if (expectedTruthTable.length == 0) return; // no truth table set; scratch pad mode
 		var correct = true;
 		for (var i = 0; i < resultTruthTable.length; i++) {
 			for (var j = 0; j < resultTruthTable[i].length; j++) {
@@ -45,7 +46,8 @@ function TruthTable(container) {
 		var body = document.getElementById(container).childNodes[0];							// grab the div element for the table
 		//var body = document.getElementById('tableDiv');
 		var tbl = document.createElement('table');								// create a table element
-		tbl.id=tableName;														// set its ID
+		tbl.id=tableName;				
+		// set its ID
 		tbl.style.position='absolute';
 		//tbl.style.width = '10%';
 		tbl.border='2';	

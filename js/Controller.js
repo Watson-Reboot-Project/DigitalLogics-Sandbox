@@ -26,7 +26,7 @@
 *								in terms of digital circuits.
 ***************************************************************************************/
 
-function Controller(setup, truthTable) {
+function Controller(setup, truthTable, numInputs, numOutputs) {
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS/DEFINITIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -50,8 +50,8 @@ function Controller(setup, truthTable) {
 	var warningWire = null;
 	var selectedPlugNum = 0;
 	var deleteMode = false;
-	
-	var scale = setup.getGScale();
+	var haltMenu = false;
+
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
 	var bg = setup.getBG();
@@ -120,7 +120,7 @@ function Controller(setup, truthTable) {
 	//	stageClick(event);
 	//});
 	
-	bg.on('click touch', function(event) {
+	bg.on('click tap', function(event) {
 		bgClick(event);
 	});
 
@@ -134,22 +134,25 @@ function Controller(setup, truthTable) {
 	
 	var wrenchImg = new Image();
 	  wrenchImg.onload = function() {
+		//var scalarWidth = stage.getWidth() * (1 - stage.getScale().x);
+		
 		var wrench = new Kinetic.Image({
-		  x: stage.getWidth() - 300,
-		  y: 5,
+		  //x: ((stage.getWidth() - 43) + (stage.getWidth() * stage.getScale())),
+		  x: 725,
+		  y: 10,
 		  image: wrenchImg,
 		  scale: 0.3
 		  //width: 106,
 		  //height: 118
 		});
 		
-		wrench.on('click touch', function() {
+		wrench.on('click tap', function(event) {
 			if (wrenchPopup !== null) return;
 			
 			var mPos = stage.getPointerPosition();
 			mPos.x = mPos.x - 100;
 			mPos.y = mPos.y + 15;
-			showWrenchMenu(mPos);
+			showWrenchMenu(event, mPos);
 		});
 
 		// add the shape to the layer
@@ -160,19 +163,23 @@ function Controller(setup, truthTable) {
 	
 	var trashImg = new Image();
 	  trashImg.onload = function() {
+		//var scalarWidth = stage.getWidth() * (1 - stage.getScale().x);
+		//var scalarHeight = stage.getHeight() * (1 - stage.getScale().y);
+		
 		var trash = new Kinetic.Image({
-		  x: stage.getWidth() - 310,
-		  y: (stage.getHeight() / 2) + 100,
+		  x: 725,
+		  y: stage.getHeight() - 55,
 		  image: trashImg,
 		  scale: 0.3
 		  //width: 106,
 		  //height: 118
 		});
 		
-		trash.on('click touch', function() {
+		trash.on('click tap', function() {
 			
-			if (deleteMode == false) { trashImg.src = "trash_open.bmp"; deleteMode = true; }
-			else { trashImg.src = "trash_closed.bmp"; deleteMode = false; }
+			if (deleteMode == false) { trashImg.src = "trash_open.bmp"; deleteMode = true; toggleComponentDeleteIcons(true); }
+			else { trashImg.src = "trash_closed.bmp"; deleteMode = false; toggleComponentDeleteIcons(false); }
+			
 			mainLayer.draw();
 		});
 
@@ -183,6 +190,8 @@ function Controller(setup, truthTable) {
 	  
 	trashImg.src = "trash_closed.bmp";
 	
+	this.initTruthTableListeners = initTruthTableListeners;
+
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION IMPLEMENTATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -234,6 +243,10 @@ function Controller(setup, truthTable) {
 			
 			comp.getGroup().on('dragmove touchmove', function() {
 				connectorDrag(comp);
+			});
+			
+			comp.getGroup().on('click tap', function() {
+				connectorClick(comp);
 			});
 		}
 		// if the component is a gate, set gate event listeners
@@ -353,6 +366,9 @@ function Controller(setup, truthTable) {
 			comp.getGroup().on('dragmove touchmove', function() {
 				nodeDrag(comp);
 			});
+			comp.getGroup().on('click tap', function() {
+				nodeClick(comp);
+			});
 		}
 		/*
 		comp.getGroup().on('mouseover', function() {
@@ -444,12 +460,11 @@ function Controller(setup, truthTable) {
 				}
 			}
 			
-			if (pluginNum == 0) gate.setPlugColor("plugin", "black");
-			else gate.setPlugColor("plugin" + pluginNum, "black");
+			if (pluginNum == 0) gate.setPlugColor("plugin", "default");
+			else gate.setPlugColor("plugin" + pluginNum, "default");
 		}
 		
 		tempLine = null;
-		mainLayer.drawScene();	// redraw the scene to draw any changes
 		connecting = false;		// we are no longer in connection mode
 		selectedComp = null;	// null the selected component
 		mainLayer.draw();
@@ -473,6 +488,7 @@ function Controller(setup, truthTable) {
 					}
 				}
 			}
+			mainLayer.draw();
 		}
 		else {
 			if (comp.getPluginComp(inputNum) === null) {
@@ -491,34 +507,34 @@ function Controller(setup, truthTable) {
 					}
 				}
 			}
+			
+			mainLayer.draw();
 		}
-		
-		mainLayer.draw();
 	}
 	
 	function gateInputBoxMouseLeave(event, comp, inputNum) {
 		if (inputNum == 0) {
-			comp.setPlugColor("plugin", "black");
+			comp.setPlugColor("plugin", "default");
 			if (connecting) tempLine.setStroke("black");
 			else {
 				if (comp.getPluginComp() !== null) {
-					if (comp.getPluginComp().getType() != "connector") comp.getPluginComp().setPlugoutWireColor("black");
+					if (comp.getPluginComp().getType() != "connector") comp.getPluginComp().setPlugoutWireColor("default");
 					else {
 						var plugoutNum = comp.getConnectorPlugin();
-						comp.getPluginComp().setPlugoutWireColor(plugoutNum, "black");
+						comp.getPluginComp().setPlugoutWireColor(plugoutNum, "default");
 					}
 				}
 			}
 		}
 		else {
-			comp.setPlugColor("plugin" + inputNum, "black");
+			comp.setPlugColor("plugin" + inputNum, "default");
 			if (connecting) tempLine.setStroke("black");
 			else {
 				if (comp.getPluginComp(inputNum) !== null) {
-					if (comp.getPluginComp(inputNum).getType() != "connector") comp.getPluginComp(inputNum).setPlugoutWireColor("black");
+					if (comp.getPluginComp(inputNum).getType() != "connector") comp.getPluginComp(inputNum).setPlugoutWireColor("default");
 					else {
 						var plugoutNum = comp.getConnectorPlugin(inputNum);
-						comp.getPluginComp(inputNum).setPlugoutWireColor(plugoutNum, "black");
+						comp.getPluginComp(inputNum).setPlugoutWireColor(plugoutNum, "default");
 					}
 				}
 			}
@@ -542,7 +558,7 @@ function Controller(setup, truthTable) {
 			mainLayer.add(tempLine);		// add this line to the main layer so it can be drawn
 			selectedComp = gate;			// set this gate as the selected component
 			selectedPlug = "plugout";
-			gate.setPlugColor("plugout", "black");
+			gate.setPlugColor("plugout", "default");
 		}
 	}
 	
@@ -569,7 +585,7 @@ function Controller(setup, truthTable) {
 				setWireFromGateToGate(gate, selectedComp, pluginNum);
 			}
 		
-			gate.setPlugColor("plugout", "black");
+			gate.setPlugColor("plugout", "default");
 		}
 		
 		tempLine = null;
@@ -595,11 +611,11 @@ function Controller(setup, truthTable) {
 	}
 	
 	function gateOutputBoxMouseLeave(event, comp) {
-		comp.setPlugColor("plugout", "black");
+		comp.setPlugColor("plugout", "default");
 		if (connecting) tempLine.setStroke("black");
 		else {
 			if (comp.getPlugoutComp() !== null) {
-				comp.setPlugoutWireColor("black");
+				comp.setPlugoutWireColor("default");
 			}
 		}
 		mainLayer.draw();
@@ -782,7 +798,7 @@ function Controller(setup, truthTable) {
 			}
 			else {
 				highlightPlug = null;
-				mouseOverComp.setPlugColor("all", "black");
+				mouseOverComp.setPlugColor("all", "default");
 			}
 			
 			mainLayer.draw();
@@ -1032,14 +1048,14 @@ function Controller(setup, truthTable) {
 	}
 	
 	function connectorInputBoxMouseLeave(event, comp) {
-		comp.setPlugColor("plugin", "black");
+		comp.setPlugColor("plugin", "default");
 		if (connecting) tempLine.setStroke("black");
 		else {
 			if (comp.getPluginComp() !== null) {
-				if (comp.getPluginComp().getType() != "connector") comp.getPluginComp().setPlugoutWireColor("black");
+				if (comp.getPluginComp().getType() != "connector") comp.getPluginComp().setPlugoutWireColor("default");
 				else {
 					var plugoutNum = comp.getConnectorPlugin();
-					comp.getPluginComp().setPlugoutWireColor(plugoutNum, "black");
+					comp.getPluginComp().setPlugoutWireColor(plugoutNum, "default");
 				}
 			}
 		}
@@ -1107,12 +1123,18 @@ function Controller(setup, truthTable) {
 	}
 	
 	function connectorOutputBoxMouseLeave(event, comp, plugoutNum) {
-		comp.setPlugColor("plugout" + plugoutNum, "black");
+		comp.setPlugColor("plugout" + plugoutNum, "default");
 		if (connecting) tempLine.setStroke("black");
 		else {
-			if (comp.getPlugoutComp(plugoutNum) !== null) comp.setPlugoutWireColor(plugoutNum, "black");
+			if (comp.getPlugoutComp(plugoutNum) !== null) comp.setPlugoutWireColor(plugoutNum, "default");
 		}
 		mainLayer.draw();
+	}
+	
+	function connectorClick(connect) {
+		if (addPopup !== null) { addPopup.hide(); addPopup = null; return; }
+		if (deletePopup !== null) { deletePopup.hide(); deletePopup = null; return; }
+		if (deleteMode == true) deleteConnector(connect);
 	}
 	
 	/*
@@ -1302,6 +1324,13 @@ function Controller(setup, truthTable) {
 	//--------- NODE LISTENERS -----------
 	//------------------------------------
 	
+	function nodeClick(node) {
+		if (node.getType() == "input") {
+			node.toggleOutputValue();
+			mainLayer.draw();
+		}
+	}
+	
 	function nodeOutputBoxMouseDown(event, node) {
 		if (!connecting) {
 			if (node.getPlugoutWire() !== null) {
@@ -1355,10 +1384,10 @@ function Controller(setup, truthTable) {
 	}
 	
 	function nodeOutputBoxMouseLeave(event, node) {
-		node.setPlugColor("plugout", "black");
-		if (connecting) tempLine.setStroke("plugout", "black");
+		node.setPlugColor("plugout", "default");
+		if (connecting) tempLine.setStroke("plugout", "default");
 		else {
-			if (node.getPlugoutComp() !== null) node.setPlugoutWireColor("black");
+			if (node.getPlugoutComp() !== null) node.setPlugoutWireColor("default");
 		}
 		mainLayer.draw();
 	}
@@ -1374,9 +1403,9 @@ function Controller(setup, truthTable) {
 				}
 				else connComp.deleteOutputConnection();
 			}
-			else {
-				points = [node.getPlugin().getPoints()[0].x, node.getPlugin().getPoints()[0].y, node.getPlugin().getPoints()[0].x, node.getPlugin().getPoints()[0].y];
-			}
+			
+			points = [node.getPlugin().getPoints()[0].x, node.getPlugin().getPoints()[0].y, node.getPlugin().getPoints()[0].x, node.getPlugin().getPoints()[0].y];
+			
 			
 			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
 			mainLayer.add(tempLine);		// add this line to the main layer so it can be drawn
@@ -1397,7 +1426,7 @@ function Controller(setup, truthTable) {
 				setWireFromConnectorToGate(selectedComp, node, plugoutNum, 0);
 			}
 			
-			node.setPlugColor("plugin", "black");
+			node.setPlugColor("plugin", "default");
 			connecting = false;
 			selectedComp = null;
 			mainLayer.drawScene();
@@ -1411,6 +1440,7 @@ function Controller(setup, truthTable) {
 				node.setPlugColor("plugin", "green");
 				tempLine.setStroke("green");
 			}
+			mainLayer.draw();
 		}
 		else {
 			if (!connecting) {
@@ -1420,23 +1450,27 @@ function Controller(setup, truthTable) {
 					node.getPluginComp().setPlugoutWireColor(plugoutNum, "yellow");
 				}
 			}
+			
+			mainLayer.draw();
 		}
-		mainLayer.draw();
 	}
 	
 	function nodeInputBoxMouseLeave(event, node) {
-		node.setPlugColor("plugin", "black");
-		if (connecting) tempLine.setStroke("plugin", "black");
+		node.setPlugColor("plugin", "default");
+		if (connecting) {
+			tempLine.setStroke("plugin", "black");
+			mainLayer.draw();
+		}
 		else {
 			if (node.getPluginComp() !== null) {
-				if (node.getPluginComp().getType() != "connector") node.getPluginComp().setPlugoutWireColor("black");
+				if (node.getPluginComp().getType() != "connector") node.getPluginComp().setPlugoutWireColor("default");
 				else {
 					var plugoutNum = node.getConnectorPlugin();
-					node.getPluginComp().setPlugoutWireColor(plugoutNum, "black");
+					node.getPluginComp().setPlugoutWireColor(plugoutNum, "default");
 				}
 			}
+			mainLayer.draw();
 		}
-		mainLayer.draw();
 	}
 	
 	function nodeMouseDown(event, node) {
@@ -1565,11 +1599,24 @@ function Controller(setup, truthTable) {
 		if (deletePopup !== null) { deletePopup.hide(); deletePopup = null; return; }
 		if (wrenchPopup !== null) { wrenchPopup.hide(); wrenchPopup = null; return; }
 		if (probeMode == true) { probeMode = false; setComponentMouseOver("default"); return; }
-		if (deleteMode == true) { deleteMode = false; trashImg.src = "trash_closed.bmp"; return; }
-		
-		if (!connecting) {
-			showAddMenu(event, stage.getPointerPosition());
+		if (deleteMode == true) { 
+			if (haltMenu == true) {
+				truthTable.toggleVisible("table1");
+				haltMenu = false;
+				return;
+			}
+			deleteMode = false;
+			toggleComponentDeleteIcons(false);
+			trashImg.src = "trash_closed.bmp";
+			haltMenu = false;
+			return;
 		}
+		
+		if (!connecting && haltMenu == false) {
+			showAddMenu(event, getPosition(event));
+		}
+		else if (haltMenu == true) haltMenu = false;
+		
 		if (connecting) {							// if we are in connecting mode
 			tempLine.disableStroke();				// disable the tempLine's stroke
 			tempLine = null;						// set the tempLine to NULL
@@ -1580,6 +1627,34 @@ function Controller(setup, truthTable) {
 
 		evaluateCircuit();
 	}
+	
+	function getPosition(e) {
+		var x;
+		var y;
+		if (e.pageX || e.pageY) { 
+		  x = e.pageX;
+		  y = e.pageY;
+		}
+		else { 
+		  x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft; 
+		  y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop; 
+		} 
+		
+		
+		return { x: x, y: y }
+	}
+	
+	function getRelativePointerPosition() {
+		var pointer = stage.getPointerPosition();
+		var pos = stage.getPosition();
+		var offset = stage.getOffset();
+		var scale = stage.getScale();
+		
+		return {
+			x : ((pointer.x - pos.x + offset.x) / scale.x),
+			y : ((pointer.y - pos.y + offset.y) / scale.y)
+		};
+}
 	
 	//------------------------------------
 	//--------- STAGE LISTENERS ----------
@@ -1602,7 +1677,7 @@ function Controller(setup, truthTable) {
 		if (connecting) {		// if we are in connecting mode
 			var selPlugout;
 			
-			var mPos = stage.getPointerPosition();
+			var mPos = getRelativePointerPosition();
 			mPos.x = mPos.x;
 			mPos.y = mPos.y - 5;
 			
@@ -1671,11 +1746,12 @@ function Controller(setup, truthTable) {
 		
 		if (pluginNum == 0) toGate.setPluginComp(fromGate);				// if the plugin number is 0, the component is a NOT gate (only one input for a not gate)
 		else toGate.setPluginComp(pluginNum, fromGate);					// else, call setPluginComp on the component with the plugin number provided and the selected component
-		fromGate.setPlugoutComp(toGate);									// set the plugoutComp for the selectedComp
+		
 		
 		// make a new line with the points computed earlier
 		var line = new Kinetic.Line({points : points, stroke : "black", strokeWidth : 1, lineCap : 'round', lineJoin : 'round'});
 		fromGate.setPlugoutWire(line);	// set the plugoutWire of the selectedComp to this new line
+		fromGate.setPlugoutComp(toGate);									// set the plugoutComp for the selectedComp
 		
 		if (tempLine !== null) {		// if the tempLine does not equal null, disable it and set it null
 			tempLine.disableStroke();
@@ -1697,11 +1773,11 @@ function Controller(setup, truthTable) {
 		end = toConnect.getPlugin().getPoints()[0];				// get the start point of the end line
 		points = getWirePoints(start, end);		// get the wire points
 		toConnect.setPluginComp(fromGate);	// set the plugin component of the connector to the selected gate
-		fromGate.setPlugoutComp(toConnect);	// set the plugout component of the selected gate to this connector
 		
 		// make the line with the points computed earlier
 		var line = new Kinetic.Line({points : points, stroke : "black", strokeWidth : 1, lineCap : 'round', lineJoin : 'round'});
 		fromGate.setPlugoutWire(line);	// set the plugout wire to this line of the selected gate
+		fromGate.setPlugoutComp(toConnect);	// set the plugout component of the selected gate to this connector
 		
 		if (tempLine !== null) {		// if temp line does not equal null, make it null and disable it
 			tempLine.disableStroke();
@@ -1736,11 +1812,10 @@ function Controller(setup, truthTable) {
 			toGate.setPluginComp(pluginNum, fromConnect);					// set the plugin component of the gate
 		}
 		
-		fromConnect.setPlugoutComp(plugoutNum, toGate);						// set the plugout component of the connector to the gate
-		
 		// make the line with the points computed earlier
 		var line = new Kinetic.Line({points : points, stroke : "black", strokeWidth : 1, lineCap : 'round', lineJoin : 'round'});
 		fromConnect.setPlugoutWire(plugoutNum, line);	// set plugout wire of the connector to this line
+		fromConnect.setPlugoutComp(plugoutNum, toGate);						// set the plugout component of the connector to the gate
 		
 		if (tempLine !== null) {		// if the temp line is not null, disable it
 			tempLine.disableStroke();
@@ -1854,6 +1929,7 @@ function Controller(setup, truthTable) {
 		
 		evaluateCircuit();
 		stage.draw();
+		document.body.style.cursor = "default";
 	}
 	
 	function deleteANDORGate(gate) {
@@ -1869,6 +1945,7 @@ function Controller(setup, truthTable) {
 							comp.getPlugoutWire(plugoutNum[j]).disableStroke();
 							comp.setPlugoutWire(plugoutNum[j], null);
 							comp.setPlugoutComp(plugoutNum[j], null);
+							comp.evaluate();
 							flag = true;
 						}
 					}
@@ -1876,6 +1953,7 @@ function Controller(setup, truthTable) {
 						comp.getPlugoutWire(plugoutNum[0]).disableStroke();
 						comp.setPlugoutWire(plugoutNum[0], null);
 						comp.setPlugoutComp(plugoutNum[0], null);
+						comp.evaluate();
 					}
 				}
 				else {
@@ -1883,6 +1961,7 @@ function Controller(setup, truthTable) {
 					comp.setPlugoutWire(null);
 					comp.setPlugoutComp(null);
 				}
+				comp.evaluate();
 			}
 			
 			if (flag) break;
@@ -1899,9 +1978,8 @@ function Controller(setup, truthTable) {
 			gate.getPlugoutWire().disableStroke();
 		}
 		
+		gate.deleteSelf();
 		removeComp(gate);
-		stopListeners(gate);
-		gate.getGroup().destroy();
 		mainLayer.drawScene();
 	}
 	
@@ -1913,11 +1991,13 @@ function Controller(setup, truthTable) {
 				comp.getPlugoutWire(plugout).disableStroke();
 				comp.setPlugoutWire(plugout, null);
 				comp.setPlugoutComp(plugout, null);
+				comp.evaluate();
 			}
 			else {
 				comp.getPlugoutWire().disableStroke();
 				comp.setPlugoutWire(null);
 				comp.setPlugoutComp(null);
+				comp.evaluate();
 			}
 		}
 		
@@ -1929,12 +2009,12 @@ function Controller(setup, truthTable) {
 			else {
 				comp.setPluginCompNull();
 			}
+			comp.evaluate();
 			gate.getPlugoutWire().disableStroke();
 		}
 		
+		gate.deleteSelf();
 		removeComp(gate);
-		stopListeners(gate);
-		gate.getGroup().destroy();
 		mainLayer.drawScene();
 	}
 	
@@ -1952,6 +2032,7 @@ function Controller(setup, truthTable) {
 				comp.setPlugoutWire(null);
 				comp.setPlugoutComp(null);
 			}
+			comp.evaluate();
 		}
 		
 		for (var i = 0; i < 3; i++) {
@@ -1964,12 +2045,12 @@ function Controller(setup, truthTable) {
 					comp.setPluginCompNull();
 				}
 				connect.getPlugoutWire(i).disableStroke();
+				comp.evaluate();
 			}
 		}
 		
+		connect.deleteSelf();
 		removeComp(connect);
-		stopListeners(connect);
-		connect.getGroup().destroy();
 		mainLayer.drawScene();
 		evaluateCircuit();
 		stage.draw();
@@ -2029,19 +2110,35 @@ function Controller(setup, truthTable) {
 	
 	// simply compute the Euclidean distance between points p1 and p2
 	function distance(p1, p2) {
-		return Math.sqrt(Math.pow(p2.y * scale - p1.y * scale, 2) + Math.pow(p2.x * scale - p1.x * scale, 2));
+		return Math.sqrt(Math.pow(p2.y - p1.y, 2) + Math.pow(p2.x - p1.x, 2));
 	}
 	
 	function stopListeners(comp) {
-		comp.getGroup().off('click');
-		comp.getGroup().off('dragmove');
-		comp.getGroup().off('mouseover');
-		comp.getGroup().off('mouseout');
+		if (comp.getType() == "and" || comp.getType() == "or") {
+			for (var i = 1; i < 3; i++) {
+				comp.getInputBox(i).off('mouseenter');
+				comp.getInputBox(i).off('mouseleave');
+				comp.getInputBox(i).off('mousedown touchstart');
+				comp.getInputBox(i).off('mouseup toundend');
+			}
+			comp.getOutputBox().off('mouseenter');
+			comp.getOutputBox().off('mouseleave');
+			comp.getOutputBox().off('mousedown touchstart');
+			comp.getOutputBox().off('mouseup toundend');
+		}
+		
+		comp.getGroup().off('click touch');
+		comp.getGroup().off('click touch');
+		comp.getGroup().off('dragmove touchmove');
+		comp.getGroup().off('mouseup touchend');
 	}
 	
 	function evaluateCircuit() {
 		var flag = false;
 		var truthTableArr = [];
+		var inputValSave = [];
+		
+		for (var i = 0; i < inputs.length; i++) inputValSave.push(inputs[i].getValue());
 		
 		var numRows = Math.pow(2, inputs.length);
 		
@@ -2071,6 +2168,10 @@ function Controller(setup, truthTable) {
 				
 				if (outputs[j].getResult() != -1) flag = true;
 			}
+		}
+		
+		for (var i = 0; i < inputs.length; i++) {
+			if (inputValSave[i] != inputs[i].getValue()) inputs[i].toggleOutputValue();
 		}
 		
 		truthTable.setTable(truthTableArr);
@@ -2113,16 +2214,47 @@ function Controller(setup, truthTable) {
 		deletePopup.show(event);
 	}
 	
-	function showWrenchMenu(pos) {
+	function showWrenchMenu(event, pos) {
 		wrenchPopup = new PopupMenu();
 		wrenchPopup.add('Boolean Probe', function(target) {
 			probeMode = true;
 			setComponentMouseOver("crosshair");
 			wrenchPopup = null;
 		});
-		wrenchPopup.addSeparator();
 		wrenchPopup.add('Truth Table', function(target) {
 			truthTable.toggleVisible("table1");
+			wrenchPopup = null;
+		});
+		wrenchPopup.add('Number of Inputs', function(target) {
+			if (components.length != (numInputs + numOutputs)) {
+				var r = confirm("You have already began building a circuit. This action will reset the Scratch Pad which would result in work being lost.\n\nDo you wish to continue?");
+				if (r == true) {
+					updateNumberOfInputs();
+				}
+				else {
+					wrenchPopup = null;
+					return;
+				}
+			}
+			else {
+				updateNumberOfInputs();
+			}
+			wrenchPopup = null;
+		});
+		wrenchPopup.add('Number of Outputs', function(target) {
+			if (components.length != (numInputs + numOutputs)) {
+				var r = confirm("You have already began building a circuit. This action will reset the Scratch Pad which would result in work being lost.\n\nDo you wish to continue?");
+				if (r == true) {
+					updateNumberOfOutputs();
+				}
+				else {
+					wrenchPopup = null;
+					return;
+				}
+			}
+			else {
+				updateNumberOfOutputs();
+			}
 			wrenchPopup = null;
 		});
 		wrenchPopup.setSize(140, 0);
@@ -2139,5 +2271,35 @@ function Controller(setup, truthTable) {
 		for (var i = 0; i < components.length; i++) {
 			components[i].setMouseOver(str);
 		}
+	}
+	
+	function toggleComponentDeleteIcons(bool) {
+		for (var i = 0; i < components.length; i++) {
+			components[i].toggleDeleteIcon(bool);
+		}
+		stage.draw();
+	}
+	
+	function updateNumberOfInputs() {
+		var res = prompt("Enter number of inputs.", numInputs);
+		if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
+		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
+		setup.resetExercise(parseFloat(res), numOutputs);
+	}
+	
+	function updateNumberOfOutputs() {
+		var res = prompt("Enter number of outputs.", numOutputs);
+		if (res <= "0") { alert("You can't have a negative number of outputs..."); return; }
+		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
+		setup.resetExercise(numInputs, parseFloat(res));
+	}
+	
+	function initTruthTableListeners() {
+		$(function() {
+			$( "#table1" ).draggable();
+			$( "#table1" ).on("touchstart mousedown", function() {
+				haltMenu = true;
+			});
+		});
 	}
 }

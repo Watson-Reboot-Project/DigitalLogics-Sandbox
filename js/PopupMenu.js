@@ -69,7 +69,7 @@ PopupMenu.prototype = {
     setPos: function(e) {
         if (!this.element) return;
         if (!e) e = window.event;
-
+		
         var x, y;
         if (window.opera) {
             x = e.clientX;

@@ -1,6 +1,7 @@
-function Exercises(setup, truthTable, controller) {
-	var scale = setup.getGScale();
+function Exercises(stage, setup, truthTable, controller, numInputs, numOutputs) {
 	var stage = setup.getStage();
+	var alphabet = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ];
+	
 	this.setExercise = setExercise;
 	
 	function setExercise(exerciseNum) {
@@ -9,6 +10,23 @@ function Exercises(setup, truthTable, controller) {
 		var numIn;
 		var numOut;
 		
+		if (exerciseNum == 0) {	// scratch pad mode
+			expectedTruthTable = [ ];
+			var header = [ ];
+			
+			for (var i = 0; i < numInputs; i++) header.push(alphabet[i]);
+			for (var i = 0; i < numOutputs; i++) header.push(alphabet[25 - i]);
+			
+			truthTable.createTable(numInputs, numOutputs, header);
+			
+			var ind = 0;
+			for (var i = 0; i < numInputs; i++) {
+				controller.addInput(5, ((600 / (numInputs + 1)) * (i + 1)), header[ind++], 0);
+			}
+			for (var i = 0; i < numOutputs; i++) {
+				controller.addOutput(740, ((600 / (numOutputs + 1)) * (i + 1)), header[ind++]);
+			}
+		}
 		if (exerciseNum == 1) {  //3 input AND
 			expectedTruthTable = [
 			[0, 0, 0, 0],
@@ -23,10 +41,10 @@ function Exercises(setup, truthTable, controller) {
 			header = ["A","B","C","Z"];
 			truthTable.createTable(3, 1, header);
 			
-			controller.addInput(50, 50, "A", 0);
-			controller.addInput(50, 250, "B", 0);
-			controller.addInput(50, 450, "C", 0);
-			controller.addOutput(1350, 250, "Z");
+			controller.addInput(5, 50, "A", 0);
+			controller.addInput(5, 250, "B", 0);
+			controller.addInput(5, 450, "C", 0);
+			controller.addOutput(760, 250, "Z");
 		}
 		else if (exerciseNum == 2) {  //4 input AND
 			expectedTruthTable = [
@@ -409,23 +427,5 @@ function Exercises(setup, truthTable, controller) {
 		}
 		
 		truthTable.setExpectedTruthTable(expectedTruthTable);
-		
-		if (exerciseNum == 5 || exerciseNum == 7 || exerciseNum == 9 || exerciseNum == 11 || exerciseNum == 13 ||
-			exerciseNum == 14 || exerciseNum == 16 || exerciseNum == 17) truthTable.setLeftOffset((1300 + 75) * scale);
-		else if (exerciseNum == 15) truthTable.setLeftOffset((1250 + 75) * scale);
-		else if (exerciseNum == 18) truthTable.setLeftOffset((1125 + 75) * scale);
-		else truthTable.setLeftOffset((1350 + 75) * scale);
-	}
-	
-	this.resizeExercise = resizeExercise;
-	function resizeExercise(exerciseNum, width) {
-		if (exerciseNum == 5 || exerciseNum == 7 || exerciseNum == 9 || exerciseNum == 11 || exerciseNum == 13 ||
-			exerciseNum == 14 || exerciseNum == 16 || exerciseNum == 17) scale = (width - 300) / 1300;
-		else if (exerciseNum == 15) scale = (width - 350) / 1250;
-		else if (exerciseNum == 18) scale = (width - 475) / 1125;
-		else scale = (width - 250) / 1350;
-		
-		console.log("Scale: " + scale);
-		return scale;
 	}
 }

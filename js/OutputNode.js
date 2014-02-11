@@ -17,10 +17,10 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 	var group;						// the group that will be composed of the connector's components
 	var transFg;					// the transparent foreground that makes it easy for users to click the connector
 	
-	var scale = setup.getGScale();
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
 	var mouseOver = 'pointer';
+	var scale = 0.75;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -42,21 +42,21 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 	this.getGroup = getGroup;
 	this.evaluate = evaluate;
 	this.probe = probe;
-	this.updateScale = updateScale;
 	this.setPlugColor = setPlugColor;
 	this.setConnectorPlugin = setConnectorPlugin;
 	this.getConnectorPlugin = getConnectorPlugin;
 	this.setMouseOver = setMouseOver;
+	this.toggleDeleteIcon = toggleDeleteIcon;
+	this.setPluginColor = setPluginColor;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	// make the rectangle
     compShape = new Kinetic.Rect({
-        x: scale * 15,
+        x: scale * 5,
         y: scale * 20,
-        width: scale * 10,
+        width: scale * 20,
         height: scale * 10,
-        fill: 'black',
         stroke: 'black',
         strokeWidth: 1
       });
@@ -72,7 +72,7 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 
 	// create the first plugout line
 	plugin = new Kinetic.Line({
-		points : [scale * 0, scale * 25, scale * 15, scale * 25],
+		points : [scale * -10, scale * 25, scale * 5, scale * 25],
 		stroke : 'black',
 		strokeWidth : 1,
 		lineCap : 'round',
@@ -89,10 +89,10 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 	
 	// create the group object
 	group = new Kinetic.Group({
-			x : scale * initX,
-			y : scale * initY,
-			rotationDeg : 0,
-			draggable : true
+			x :  initX,
+			y :  initY,
+			rotationDeg : 0
+			//draggable : true
 		});
 	
 	// add cursor styling when the user mouseovers the group
@@ -121,16 +121,15 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 		var plug;
 		if (inputBox) {
 			plug = getPlugin();
-			inputBox.setPosition(plug.getPoints()[0].x - 10, plug.getPoints()[0].y - 20);
+			inputBox.setPosition(plug.getPoints()[0].x - scale * 0, plug.getPoints()[0].y - scale * 20);
 		}
 		else {
 			plug = getPlugin();
 			inputBox = new Kinetic.Rect({
-				x: plug.getPoints()[0].x - 10,
-				y: plug.getPoints()[0].y - 20,
+				x: plug.getPoints()[0].x - scale * 0,
+				y: plug.getPoints()[0].y - scale * 20,
 				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
-				height: 40
-				//fill : 'black'
+				height: scale * 40
 			});
 			
 			mainLayer.add(inputBox);
@@ -140,6 +139,10 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 	
 	function getInputBox() {
 		return inputBox;
+	}
+	
+	function toggleDeleteIcon() {
+	
 	}
 	
 	function setMouseOver(str) { mouseOver = str; }
@@ -170,16 +173,36 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 	
 	function setPluginComp(comp) { pluginComp = comp; }
 	
-	function setPluginCompNull() { pluginComp = null; pluginVal = -1; }
-	
-	function setPluginVal(comp, value) {
-		evaluate(value);
-		pluginVals = [];
-		pluginVal = value;
+	function setPluginCompNull() {
+		pluginComp = null;
+		pluginVal = -1;
+		evaluate();
 	}
 	
-	function evaluate(res) {
-		//console.log("Final result: " + res);
+	function setPluginColor(comp, color) {
+		if (comp == pluginComp) {
+			if (color == "default") evaluate();
+			else plugin.setStroke(color);
+		}
+	}
+	
+	function setPluginVal(comp, value) {
+		pluginVal = value;
+		evaluate();
+	}
+	
+	function evaluate() {
+		if (pluginVal == -1) {
+			compShape.setFill("#ffffff");
+			plugin.setStroke("black");
+			return;
+		}
+		
+		var color = "blue";
+		if (pluginVal == 1) color = "red";
+		
+		compShape.setFill(color);
+		plugin.setStroke(color);
 	}
 	
 	this.getResult = getResult;
@@ -196,10 +219,11 @@ function OutputNode(initX, initY, setText, setName, id, setup) {
 		else return null;
 	}
 	
-	function updateScale() { scale = setup.getGScale(); }
-	
 	function setPlugColor(plugStr, color) {
-		if (plugStr == "plugin") plugin.setStroke(color);
+		if (plugStr == "plugin") {
+			if (color == "default") evaluate();
+			else plugin.setStroke(color);
+		}
 	}
 	
 	function setPlugColor1(plugStr, color) { 

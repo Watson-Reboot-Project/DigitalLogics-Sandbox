@@ -1,15 +1,14 @@
-function Setup(container, width, height) {
-
-	this.setStageDimensions = setStageDimensions;
-	this.getGScale = getGScale;
+function Setup(container) {
+	var timeout = false;
+	
 	this.getMainLayer = getMainLayer;
 	this.getStage = getStage;
 	this.getBG = getBG;
+	this.resetExercise = resetExercise;
 	
-	//var width = (window.innerWidth > 0) ? window.innerWidth : screen.width;
-	//var height = (window.innerHeight > 0) ? window.innerHeight : screen.height;
-
-	console.log(width + ", " + height);
+	var width = 800;
+	var height = 600;
+	var thisObj = this;
 	
 	var stage = new Kinetic.Stage({
 			container : container,
@@ -28,29 +27,69 @@ function Setup(container, width, height) {
 	});
 	
 	mainLayer.add(bg);
-	
-	var gScale = 1;
 
-	var truthTable = new TruthTable(container);
-	var controller = new Controller(this, truthTable);
-	var exercises = new Exercises(this, truthTable, controller);
-		
-	var curExercise = 1;
+	resize();
 	
-	setStageDimensions(width, height);
+	var truthTable = new TruthTable(container);
+	var controller = new Controller(this, truthTable, 2, 1);
+	var exercises = new Exercises(stage, this, truthTable, controller, 2, 1);
+		
+	var curExercise = 0;
 	exercises.setExercise(curExercise);
+	controller.initTruthTableListeners();
 	
 	truthTable.setLeftOffset(50);
 	
-	function setStageDimensions(width) {
-		var scale = exercises.resizeExercise(curExercise, width);
-		gScale = scale;
-		stage.setWidth(width);
-		stage.setHeight(height);
-		stage.draw();
+	$(window).resize( function() {
+		if (timeout == false) {
+			timeout = true;
+			setTimeout(resize, 200);
+		}
+	});
+	
+	function resize() {
+		console.log(window.innerWidth);
+		var width = (window.innerWidth > 800) ? 800 : window.innerWidth;
+		var ratio = (width / 800);
+		console.log("Ratio: " + ratio);
+		stage.setScale(ratio);
+		stage.setSize(800 * ratio, 600);
+		console.log("Size: " + stage.getWidth() + ", " + stage.getHeight());
+		
+		timeout = false;
 	}
 	
-	function getGScale() { return gScale; }
+	function resetExercise(numInputs, numOutputs) {
+		console.log(document.getElementById("table1"));
+		var table = document.getElementById("table1");
+		table.id = "";
+		table.parentNode.removeChild(table);
+		
+		container.innerHTML = "";
+		width = 800;
+		height = 600;
+		stage = new Kinetic.Stage({
+			container : container,
+			width : width,
+			height : height
+		});
+		mainLayer = new Kinetic.Layer();
+		stage.add(mainLayer);
+		bg = new Kinetic.Rect({
+			x : 0,
+			y : 0,
+			width : width,
+			height : height
+		});
+		mainLayer.add(bg);
+		resize();
+		truthTable = new TruthTable(container);
+		controller = new Controller(thisObj, truthTable, numInputs, numOutputs);
+		exercises = new Exercises(stage, thisObj, truthTable, controller, numInputs, numOutputs);
+		exercises.setExercise(0);
+		truthTable.setLeftOffset(50);
+		controller.initTruthTableListeners();
+	}
 	
 	function getMainLayer() { return mainLayer; }
 	

@@ -42,11 +42,11 @@ function Connector(initX, initY, setName, id, setup) {
 	var output2Box;
 	var output3Box;
 	
-	var scale = setup.getGScale();
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
 	var thisObj = this;
 	var mouseOver = 'pointer';
+	var deleteImg;
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -79,23 +79,25 @@ function Connector(initX, initY, setName, id, setup) {
 	this.deleteOutputConnection = deleteOutputConnection;
 	this.setPlugoutWireColor = setPlugoutWireColor;
 	this.setMouseOver = setMouseOver;
+	this.toggleDeleteIcon = toggleDeleteIcon;
+	this.setPluginColor = setPluginColor;
+	this.deleteSelf = deleteSelf;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
 	// make the rectangle
     compShape = new Kinetic.Rect({
-        x: scale * 20,
-        y: scale * 20,
-        width: scale * 6,
-        height: scale * 6,
-        fill: 'black',
+        x:  20,
+        y:  20,
+        width:  6,
+        height:  6,
         stroke: 'black',
         strokeWidth: 1
       });
 	   
 	// create the plugin line
 	plugin = new Kinetic.Line({
-		points : [scale * 4, scale * 23, scale * 19, scale * 23],
+		points : [ 4,  23,  19,  23],
 		stroke : 'black',
 		strokeWidth : 1,
 		lineCap : 'round',
@@ -104,7 +106,7 @@ function Connector(initX, initY, setName, id, setup) {
 
 	// create the first plugout line
 	plugout1 = new Kinetic.Line({
-		points : [scale * 23, scale * 20, scale * 23, scale * 5],
+		points : [ 23,  20,  23,  5],
 		stroke : 'black',
 		strokeWidth : 1,
 		lineCap : 'round',
@@ -113,7 +115,7 @@ function Connector(initX, initY, setName, id, setup) {
 
 	// create the second plugout line
 	plugout2 = new Kinetic.Line({
-		points : [scale * 27, scale * 23, scale * 42, scale * 23],
+		points : [ 27,  23,  42,  23],
 		stroke : 'black',
 		strokeWidth : 1,
 		lineCap : 'round',
@@ -122,7 +124,7 @@ function Connector(initX, initY, setName, id, setup) {
 	
 	// create the third plugout line
 	plugout3 = new Kinetic.Line({
-		points : [scale * 23, scale * 27, scale * 23, scale * 42],
+		points : [ 23,  27,  23,  42],
 		stroke : 'black',
 		strokeWidth : 1,
 		lineCap : 'round',
@@ -131,10 +133,10 @@ function Connector(initX, initY, setName, id, setup) {
 
 	// create the transparent rectangle
 	transFg = new Kinetic.Rect({
-		x: scale * 3,
-		y: scale * 3,
-		width: scale * 41,
-		height: scale * 41
+		x:  3,
+		y:  3,
+		width:  41,
+		height:  41
 	});
 	
 	// create the group object
@@ -144,6 +146,20 @@ function Connector(initX, initY, setName, id, setup) {
 			rotationDeg : 0,
 			draggable : true
 		});
+		
+	deleteImg = new Image();
+	deleteImg.onload = function() {
+		var deleteIco = new Kinetic.Image({
+			x: 32,
+			y: -5,
+			image: deleteImg,
+			scale: 0.3
+		});
+
+		// add the shape to the layer
+		group.add(deleteIco);
+		mainLayer.draw();
+	};
 	
 	// add cursor styling when the user mouseovers the group
 	group.on('mouseover', function () {
@@ -167,6 +183,14 @@ function Connector(initX, initY, setName, id, setup) {
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();			// call draw on the stage to redraw its components
 		drawBoxes();
+	}
+	
+	function deleteSelf() {
+		group.remove();
+		inputBox.remove();
+		output1Box.remove();
+		output2Box.remove();
+		output3Box.remove();
 	}
 	
 	function drawBoxes() {
@@ -237,6 +261,13 @@ function Connector(initX, initY, setName, id, setup) {
 	}
 	
 	function setMouseOver(str) { mouseOver = str; }
+	
+	function toggleDeleteIcon(bool) {
+		if (bool) deleteImg.src = "delete.ico";
+		else deleteImg.src = "";
+		
+		mainLayer.draw();
+	}
 	
 	// accessor for this gate's type
 	function getType() { return "connector"; }
@@ -355,6 +386,7 @@ function Connector(initX, initY, setName, id, setup) {
 	{
 		pluginComp = null;
 		pluginVal = -1;
+		plugin.setStroke("black");
 		evaluate();
 	}
 	
@@ -376,9 +408,42 @@ function Connector(initX, initY, setName, id, setup) {
 	function evaluate() {
 		var thisComp = thisObj;
 		
-		if (plugout1Comp !== null) plugout1Comp.setPluginVal(thisComp, pluginVal);
-		if (plugout2Comp !== null) plugout2Comp.setPluginVal(thisComp, pluginVal);
-		if (plugout3Comp !== null) plugout3Comp.setPluginVal(thisComp, pluginVal);
+		var color = "blue";
+		if (pluginVal == 1) color = "red";
+		else if (pluginVal == -1) color = "black";
+		
+		if (plugout1Comp !== null) {
+			plugout1Comp.setPluginVal(thisComp, pluginVal);
+			setPlugColor("plugout1", color);
+			plugout1Wire.setStroke(color);
+			plugout1Comp.setPluginColor(thisObj, color);
+		}
+		else {
+			setPlugColor("plugout1", color);
+		}
+		
+		if (plugout2Comp !== null) {
+			plugout2Comp.setPluginVal(thisComp, pluginVal);
+			setPlugColor("plugout2", color);
+			plugout2Wire.setStroke(color);
+			plugout2Comp.setPluginColor(thisObj, color);
+		}
+		else {
+			setPlugColor("plugout2", color);
+		}
+		
+		if (plugout3Comp !== null) {
+			plugout3Comp.setPluginVal(thisComp, pluginVal);
+			setPlugColor("plugout3", color);
+			plugout3Wire.setStroke(color);
+			plugout3Comp.setPluginColor(thisObj, color);
+		}
+		else {
+			setPlugColor("plugout3", color);
+		}
+		
+		if (color == "black") color = "#ffffff";
+		compShape.setFill(color);
 	}
 	
 	function probe() {
@@ -390,62 +455,40 @@ function Connector(initX, initY, setName, id, setup) {
 		else return null;
 	}
 	
-	function setPlugoutWireColor(plugoutNum, color) { 
+	function setPluginColor(comp, color) {
+		if (comp == pluginComp) plugin.setStroke(color);
+		if (comp == plugout1Comp) plugout1.setStroke(color);
+		if (comp == plugout2Comp) plugout2.setStroke(color);
+		if (comp == plugout3Comp) plugout3.setStroke(color);
+		mainLayer.draw();
+	}
+	
+	function setPlugoutWireColor(plugoutNum, color) {
+		if (color == "default") { evaluate(); return; }
+		
 		if (plugoutNum == 1) plugout1Wire.setStroke(color);
 		else if (plugoutNum == 2) plugout2Wire.setStroke(color);
 		else if (plugoutNum == 3) plugout3Wire.setStroke(color);
 	}
 	
 	function setPlugColor(plugStr, color) {
-		if (plugStr == "plugin") plugin.setStroke(color);
-		else if (plugStr == "plugout1") plugout1.setStroke(color);
-		else if (plugStr == "plugout2") plugout2.setStroke(color);
-		else if (plugStr == "plugout3") plugout3.setStroke(color);
-	}
-	
-	function setPlugColor1(plugStr, color) { 
-		plugin.setStroke("black");
-		plugout1.setStroke("black");
-		plugout2.setStroke("black");
-		plugout3.setStroke("black");
-		if (pluginComp !== null) pluginComp.setPlugoutWireColor("black", connectorPlugin);
-		if (plugout1Comp !== null) plugout1Wire.setStroke("black");
-		if (plugout2Comp !== null) plugout2Wire.setStroke("black");
-		if (plugout3Comp !== null) plugout3Wire.setStroke("black");
-		
-		if (plugStr == "all") return;
-		else if (plugStr == "plugin") {
-			if (pluginComp !== null && color == "green") return false;
-			else if (pluginComp !== null && color == "yellow") {
-				pluginComp.setPlugoutWireColor("yellow", connectorPlugin);
-				return pluginComp.getPlugoutWire(connectorPlugin);
-			}
+		if (plugStr == "plugin") {
+			if (color == "default" && pluginComp !== null) pluginComp.evaluate();
+			else if (color == "default" && pluginComp === null) plugin.setStroke("black");
 			else plugin.setStroke(color);
 		}
 		else if (plugStr == "plugout1") {
-			if (plugout1Comp !== null && color == "green") return false;
-			else if (plugout1Comp !== null && color == "yellow") {
-				plugout1Wire.setStroke("yellow");
-				return plugout1;
-			}
+			if (color == "default") evaluate();
 			else plugout1.setStroke(color);
 		}
 		else if (plugStr == "plugout2") {
-			if (plugout2Comp !== null && color == "green") return false;
-			else if (plugout2Comp !== null && color == "yellow") {
-				plugout2Wire.setStroke("yellow");
-				return plugout2;
-			}
+			if (color == "default") evaluate();
 			else plugout2.setStroke(color);
 		}
 		else if (plugStr == "plugout3") {
-			if (plugout3Comp !== null && color == "green") return false;
-			else if (plugout3Comp !== null && color == "yellow") {
-				plugout3Wire.setStroke("yellow");
-				return plugout3;
-			}
+			if (color == "default") evaluate();
 			else plugout3.setStroke(color);
-		}
+		}		
 	}
 	
 	function deleteOutputConnection(plugoutNum) {
