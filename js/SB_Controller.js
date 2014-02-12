@@ -26,7 +26,7 @@
 *								in terms of digital circuits.
 ***************************************************************************************/
 
-function Controller(setup, truthTable, numInputs, numOutputs) {
+function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS/DEFINITIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1068,7 +1068,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 				connect.deleteOutputConnection(plugoutNum);
 			}
 			else {
-				points = [ connect.getPlugin(plugoutNum).getPoints()[1].x, connect.getPlugin(plugoutNum).getPoints()[1].y, connect.getPlugin(plugoutNum).getPoints()[1].x, connect.getPlugin(plugoutNum).getPoints()[1].y ];
+				points = [ connect.getPlugout(plugoutNum).getPoints()[1].x, connect.getPlugout(plugoutNum).getPoints()[1].y, connect.getPlugout(plugoutNum).getPoints()[1].x, connect.getPlugout(plugoutNum).getPoints()[1].y ];
 				connect.setSelectedPlugout(plugoutNum);			// set this plugout selected within this connector (very important)
 			}
 			
@@ -1667,13 +1667,32 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	*	the controller is in connecting mode. If the controller is in connecting mode, that means we need to draw the line that follows the mouse. That
 	*	is what we do here.
 	*/
-	function stageMouseMove3() {
+	
+	function stageMouseMove() {
 		if (connecting) {
-			console.log("Drawing temp line.");
+			var mPos = getRelativePointerPosition();
+			mPos.x = mPos.x;
+			mPos.y = mPos.y - 5;
+			
+			if (selectedComp.getType() == "connector" && selectedPlug.indexOf("plugout") >= 0) {
+				if (selectedPlugNum == 1 || selectedPlugNum == 3) points = getWirePoints2(tempLine.getPoints()[0], mPos);
+				else points = getWirePoints(tempLine.getPoints()[0], mPos);
+			}
+			else points = getWirePoints(tempLine.getPoints()[0], mPos);
+			
+			if (tempLine.getStroke() != "green" && selectedPlug.indexOf("plugout") >= 0) {
+				var state = selectedComp.getOutputValue();
+				if (state == -1) tempLine.setStroke("black");
+				else if (state == 1) tempLine.setStroke("red");
+				else tempLine.setStroke("blue");
+			}
+			
+			tempLine.setPoints(points);
+			mainLayer.draw();
 		}
 	}
 	
-	function stageMouseMove() {
+	function stageMouseMove3() {
 		if (connecting) {		// if we are in connecting mode
 			var selPlugout;
 			
@@ -1683,6 +1702,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 			
 			if (selectedComp.getType() == "connector") {			// if the selected component is a connector
 				selPlugout = selectedComp.getSelectedPlugout();		// retrieve the selected plugout number
+				
 				
 				// if the selected plugout is the top plugout (2), use getWirePoints(); else use getWirePoints2() -- go see why if you haven't yet
 				if (selPlugout == 2) points = getWirePoints(selectedComp.getPlugout(selPlugout).getPoints()[1], mPos);
@@ -1893,7 +1913,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	//------------------------------------
 	
 	function addOrGate(initX, initY) {
-		var orGate = new OrGate(initX, initY, "Or Gate", nextID++, setup);
+		var orGate = new SB_OrGate(initX, initY, "Or Gate", nextID++, setup);
 		components.push(orGate);
 		orGate.draw();
 		registerComponent(orGate);
@@ -1901,7 +1921,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function addAndGate(initX, initY) {
-		var andGate = new AndGate(initX, initY, "And Gate", nextID++, setup);
+		var andGate = new SB_AndGate(initX, initY, "And Gate", nextID++, setup);
 		components.push(andGate);
 		andGate.draw();
 		registerComponent(andGate);
@@ -1909,7 +1929,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function addNotGate(initX, initY) {
-		var notGate = new NotGate(initX, initY, "Not Gate", nextID++, setup);
+		var notGate = new SB_NotGate(initX, initY, "Not Gate", nextID++, setup);
 		components.push(notGate);
 		notGate.draw();
 		registerComponent(notGate);
@@ -1917,7 +1937,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function addConnector(initX, initY) {
-		var conn = new Connector(initX, initY, "Connector", nextID++, setup);
+		var conn = new SB_Connector(initX, initY, "Connector", nextID++, setup);
 		components.push(conn);
 		conn.draw();
 		registerComponent(conn);
@@ -2057,7 +2077,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function addInput(initX, initY, text, value) {
-		input = new InputNode(initX, initY, text, value, "Input Node", nextID++, setup);
+		input = new SB_InputNode(initX, initY, text, value, "Input Node", nextID++, setup);
 		components.push(input);
 		inputs.push(input);
 		input.draw();
@@ -2065,7 +2085,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function addOutput(initX, initY, text) {
-		output = new OutputNode(initX, initY, text, "Output Node", nextID++, setup);
+		output = new SB_OutputNode(initX, initY, text, "Output Node", nextID++, setup);
 		components.push(output);
 		outputs.push(output);
 		output.draw();
@@ -2179,7 +2199,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function showAddMenu(event, pos) {
-		addPopup = new PopupMenu();
+		addPopup = new SB_PopupMenu();
 		addPopup.add('And Gate', function(target) {
 			addAndGate(pos.x, pos.y);
 			addPopup = null;
@@ -2201,7 +2221,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function showDeleteMenu(event, gate) {
-		deletePopup = new PopupMenu();
+		deletePopup = new SB_PopupMenu();
 		deletePopup.add('Delete Gate', function(target) {
 			if (gate.getFunc() == "node") { alert("You cannot delete an input/output node."); return; }
 			deleteGate(gate);
@@ -2215,7 +2235,7 @@ function Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function showWrenchMenu(event, pos) {
-		wrenchPopup = new PopupMenu();
+		wrenchPopup = new SB_PopupMenu();
 		wrenchPopup.add('Boolean Probe', function(target) {
 			probeMode = true;
 			setComponentMouseOver("crosshair");

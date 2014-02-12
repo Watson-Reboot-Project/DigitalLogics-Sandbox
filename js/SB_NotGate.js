@@ -11,7 +11,7 @@
 *				the component the OR gate outputs to.
 ***************************************************************************************/
 
-function NotGate(initX, initY, setName, id, setup) {
+function SB_NotGate(initX, initY, setName, id, setup) {
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -71,6 +71,7 @@ function NotGate(initX, initY, setName, id, setup) {
 	this.toggleDeleteIcon = toggleDeleteIcon;
 	this.setPluginColor = setPluginColor;
 	this.deleteSelf = deleteSelf;
+	this.getOutputValue = getOutputValue;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	// make a custom shape for the triangle; just three lines
@@ -370,5 +371,11 @@ function NotGate(initX, initY, setName, id, setup) {
 		plugoutWire.disableStroke();
 		plugoutComp = null;
 		plugoutWire = null;
+	}
+	
+	function getOutputValue() {
+		if (pluginVal == -1) return -1;
+		else if (pluginVal == 0) return 1;
+		else return 0;
 	}
 }

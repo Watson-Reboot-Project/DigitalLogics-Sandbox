@@ -1,3 +1,3 @@
 function DigitalLogicsLab(container) {
-	var setup = new Setup(container);
+	var setup = new SB_Setup(container);
 }

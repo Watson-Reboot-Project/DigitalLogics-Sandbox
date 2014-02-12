@@ -13,12 +13,12 @@
     popup.bind('targetElement');
     popup.bind(); // target is document;
 */
-var PopupMenu = function() {
+var SB_PopupMenu = function() {
     this.init();
 }
-PopupMenu.SEPARATOR = 'PopupMenu.SEPARATOR';
-PopupMenu.current = null;
-PopupMenu.addEventListener = function(element, name, observer, capture) {
+SB_PopupMenu.SEPARATOR = 'SB_PopupMenu.SEPARATOR';
+SB_PopupMenu.current = null;
+SB_PopupMenu.addEventListener = function(element, name, observer, capture) {
     if (typeof element == 'string') {
         element = document.getElementById(element);
     }
@@ -28,7 +28,7 @@ PopupMenu.addEventListener = function(element, name, observer, capture) {
         element.attachEvent('on' + name, observer);
     }
 };
-PopupMenu.prototype = {
+SB_PopupMenu.prototype = {
     init: function() {
         this.items  = [];
         this.width  = 0;
@@ -58,13 +58,13 @@ PopupMenu.prototype = {
             return false;
         };
         var listener = function() { self.hide.call(self) };
-        PopupMenu.addEventListener(document, 'click', listener, true);
+        SB_PopupMenu.addEventListener(document, 'click', listener, true);
     },
     add: function(text, callback) {
         this.items.push({ text: text, callback: callback });
     },
     addSeparator: function() {
-        this.items.push(PopupMenu.SEPARATOR);
+        this.items.push(SB_PopupMenu.SEPARATOR);
     },
     setPos: function(e) {
         if (!this.element) return;
@@ -92,9 +92,9 @@ PopupMenu.prototype = {
         this.element.style.left = pos.x + 'px';
     },
 	showMenu: function(e, pos) {
-        if (PopupMenu.current && PopupMenu.current != this) return;
+        if (SB_PopupMenu.current && SB_PopupMenu.current != this) return;
 		if (!e) e = window.event;
-        PopupMenu.current = this;
+        SB_PopupMenu.current = this;
         if (this.element) {
             this.setManPos(e, pos);
             this.element.style.display = '';
@@ -105,9 +105,9 @@ PopupMenu.prototype = {
         }
     },
     show: function(e) {
-        if (PopupMenu.current && PopupMenu.current != this) return;
+        if (SB_PopupMenu.current && SB_PopupMenu.current != this) return;
 		if (!e) e = window.event;
-        PopupMenu.current = this;
+        SB_PopupMenu.current = this;
         if (this.element) {
             this.setPos(e);
             this.element.style.display = '';
@@ -118,7 +118,7 @@ PopupMenu.prototype = {
         }
     },
     hide: function() {
-        PopupMenu.current = null;
+        SB_PopupMenu.current = null;
         if (this.element) this.element.style.display = 'none';
     },
     createMenu: function(items) {
@@ -137,7 +137,7 @@ PopupMenu.prototype = {
         }
         for (var i = 0; i < items.length; i++) {
             var item;
-            if (items[i] == PopupMenu.SEPARATOR) {
+            if (items[i] == SB_PopupMenu.SEPARATOR) {
                 item = this.createSeparator();
             } else {
                 item = this.createItem(items[i]);
@@ -151,16 +151,16 @@ PopupMenu.prototype = {
         var elem = document.createElement('div');
         elem.style.padding = '4px';
         var callback = item.callback;
-        PopupMenu.addEventListener(elem, 'click', function(_callback) {
+        SB_PopupMenu.addEventListener(elem, 'click', function(_callback) {
             return function() {
                 self.hide();
                 _callback(self.target);
             };
         }(callback), true);
-        PopupMenu.addEventListener(elem, 'mouseover', function(e) {
+        SB_PopupMenu.addEventListener(elem, 'mouseover', function(e) {
             elem.style.background = '#B6BDD2';
         }, true);
-        PopupMenu.addEventListener(elem, 'mouseout', function(e) {
+        SB_PopupMenu.addEventListener(elem, 'mouseout', function(e) {
             elem.style.background = '#FFFFFF';
         }, true);
         elem.appendChild(document.createTextNode(item.text));

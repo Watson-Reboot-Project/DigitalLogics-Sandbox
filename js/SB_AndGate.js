@@ -12,7 +12,7 @@
 *				class is very similar (the only major difference is the evaluate function).
 ***************************************************************************************/
 
-function AndGate(initX, initY, setName, id, setup) {
+function SB_AndGate(initX, initY, setName, id, setup) {
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -80,6 +80,7 @@ function AndGate(initX, initY, setName, id, setup) {
 	this.toggleDeleteIcon = toggleDeleteIcon;
 	this.setPluginColor = setPluginColor;
 	this.deleteSelf = deleteSelf;
+	this.getOutputValue = getOutputValue;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -99,7 +100,7 @@ function AndGate(initX, initY, setName, id, setup) {
 				context.fillStrokeShape(this);
 			},
 			stroke : 'black',
-			strokeWidth : 1,
+			strokeWidth : 1
 		});
 
 	// the line for the first plugin
@@ -342,6 +343,14 @@ function AndGate(initX, initY, setName, id, setup) {
 		}
 		
 		evaluate();
+	}
+	
+	function getOutputValue() {
+		if (plugin1Val == -1 || plugin2Val == -1) return -1;
+		else {
+			if (plugin1Val == 1 && plugin2Val == 1) return 1;
+			else return 0;
+		}
 	}
 	
 	// set the component that the AND gate's input is connected to

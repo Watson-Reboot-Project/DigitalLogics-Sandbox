@@ -1,4 +1,4 @@
-function Exercises(stage, setup, truthTable, controller, numInputs, numOutputs) {
+function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutputs) {
 	var stage = setup.getStage();
 	var alphabet = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ];
 	

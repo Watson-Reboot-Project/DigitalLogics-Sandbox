@@ -1,40 +1,38 @@
-function InputNode(initX, initY, setText, initValue, setName, id, setup) {
+function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
-	var value = initValue;
-	var plugout = null;
-	var plugoutComp = null;
-	var plugoutWire = null;
+	var value;
+	var plugin = null;
+	var pluginVal = -1;
+	var pluginComp = null;
+	var pluginWire = null;
+	var connectorPlugin;
 	
 	var name = setName;				// the name of the connector
 	var ID = id;					// the ID of the connector
 	var compShape;					// the shape of the connector (square)
-	var outputBox;
+	var inputBox;
 	var text;
 	var group;						// the group that will be composed of the connector's components
 	var transFg;					// the transparent foreground that makes it easy for users to click the connector
 	
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
-	var thisObj = this;
 	var mouseOver = 'pointer';
 	var scale = 0.75;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
-	this.getPlugout = getPlugout;
-	this.getPlugoutComp = getPlugoutComp;
-	this.setPlugoutComp = setPlugoutComp;
-	this.setPlugoutWire = setPlugoutWire;
-	this.getPlugoutWire = getPlugoutWire;
-	this.setPlugoutWireColor = setPlugoutWireColor;
-	this.setValue = setValue;
-	this.getValue = getValue;
+	this.getPlugin = getPlugin;
+	this.getPluginComp = getPluginComp;
+	this.setPluginComp = setPluginComp;
+	this.setPluginVal = setPluginVal;
+	this.setPluginCompNull = setPluginCompNull;
 	
 	this.draw = draw;
 	this.drawBoxes = drawBoxes;
-	this.getOutputBox = getOutputBox;
+	this.getInputBox = getInputBox;
 	this.getID = getID;
 	this.getName = getName;
 	this.getType = getType;
@@ -45,49 +43,37 @@ function InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	this.evaluate = evaluate;
 	this.probe = probe;
 	this.setPlugColor = setPlugColor;
-	this.deleteOutputConnection = deleteOutputConnection;
+	this.setConnectorPlugin = setConnectorPlugin;
+	this.getConnectorPlugin = getConnectorPlugin;
 	this.setMouseOver = setMouseOver;
 	this.toggleDeleteIcon = toggleDeleteIcon;
-	this.toggleOutputValue = toggleOutputValue;
+	this.setPluginColor = setPluginColor;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	// make the rectangle
     compShape = new Kinetic.Rect({
-        x: scale * 15,
+        x: scale * 5,
         y: scale * 20,
         width: scale * 20,
         height: scale * 10,
-        fill: 'blue',
         stroke: 'black',
         strokeWidth: 1
       });
 	  
-	if (setText.length == 1) {
-		text = new Kinetic.Text({
-			x:  0,
-			y: scale * 14,
-			text: setText,
-			fontSize: scale * 20,
-			fontFamily: 'Calibri',
-			fill: 'black'
-		});
-	}
-	else {
-		text = new Kinetic.Text({
-			x:  (scale * -5 * setText.length),
-			y:  scale * 14,
-			text: setText,
-			fontSize: scale * 20,
-			fontFamily: 'Calibri',
-			fill: 'black'
-		});
-	}
+	text = new Kinetic.Text({
+		x: scale * 15,
+		y: scale * 0,
+		text: setText,
+		fontSize: scale * 20,
+		fontFamily: 'Calibri',
+		fill: 'black'
+	});
 
 	// create the first plugout line
-	plugout = new Kinetic.Line({
-		points : [scale * 35, scale * 25, scale * 50, scale * 25],
-		stroke : 'blue',
+	plugin = new Kinetic.Line({
+		points : [scale * -10, scale * 25, scale * 5, scale * 25],
+		stroke : 'black',
 		strokeWidth : 1,
 		lineCap : 'round',
 		lineJoin : 'round'
@@ -95,10 +81,10 @@ function InputNode(initX, initY, setText, initValue, setName, id, setup) {
 
 	// create the transparent rectangle
 	transFg = new Kinetic.Rect({
-		x: scale * 14,
-		y: 0,
-		width: scale * 20,
-		height: scale * 50
+		x: scale * 0,
+		y: scale * 0,
+		width: scale * 25,
+		height: scale * 40
 	});
 	
 	// create the group object
@@ -124,8 +110,8 @@ function InputNode(initX, initY, setText, initValue, setName, id, setup) {
 		// add each of the components to the group
 		group.add(compShape);	// the shape
 		group.add(text);
-		group.add(plugout);		// ... the plugin line
-		group.add(transFg);		// and finally the transparent foreground
+		group.add(plugin);		// ... the plugin line
+		//group.add(transFg);		// and finally the transparent foreground
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();			// call draw on the stage to redraw its components
 		drawBoxes();
@@ -133,39 +119,39 @@ function InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	
 	function drawBoxes() {
 		var plug;
-		if (outputBox) {
-			plug = getPlugout();
-			outputBox.setPosition(plug.getPoints()[0].x + scale * 7, plug.getPoints()[0].y - scale * 20);
+		if (inputBox) {
+			plug = getPlugin();
+			inputBox.setPosition(plug.getPoints()[0].x - scale * 0, plug.getPoints()[0].y - scale * 20);
 		}
 		else {
-			plug = getPlugout();
-			outputBox = new Kinetic.Rect({
-				x: plug.getPoints()[0].x + scale * 7,
+			plug = getPlugin();
+			inputBox = new Kinetic.Rect({
+				x: plug.getPoints()[0].x - scale * 0,
 				y: plug.getPoints()[0].y - scale * 20,
 				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
 				height: scale * 40
 			});
 			
-			mainLayer.add(outputBox);
+			mainLayer.add(inputBox);
 			stage.draw();
 		}
 	}
 	
-	function setMouseOver(str) { mouseOver = str; }
-	
-	function getOutputBox() {
-		return outputBox;
+	function getInputBox() {
+		return inputBox;
 	}
 	
 	function toggleDeleteIcon() {
-		
+	
 	}
+	
+	function setMouseOver(str) { mouseOver = str; }
 	
 	function getName() { return name; }
 	
 	function getID() { return ID; }
 	
-	function getType() { return "input"; }
+	function getType() { return "output"; }
 	
 	function getText() { return setText; }
 	
@@ -175,79 +161,77 @@ function InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	
 	function getGroup() { return group; }
 	
-	function getPlugout() {
+	function getPlugin() {
 		var line;
 		line = new Kinetic.Line({
-			points: [group.getX() + plugout.getPoints()[0].x, group.getY() + plugout.getPoints()[0].y, group.getX() + plugout.getPoints()[1].x, group.getY() + plugout.getPoints()[1].y]
+			points: [group.getX() + plugin.getPoints()[0].x, group.getY() + plugin.getPoints()[0].y, group.getX() + plugin.getPoints()[1].x, group.getY() + plugin.getPoints()[1].y]
 		});
 		return line;
 	}
 	
-	function setValue(val) { value = val; }
+	function getPluginComp() { return pluginComp; }
 	
-	function getValue() { return value; }
+	function setPluginComp(comp) { pluginComp = comp; }
 	
-	function getPlugoutComp() { return plugoutComp; }
-	
-	function setPlugoutComp(comp) { plugoutComp = comp; evaluate(); }
-	
-	function getPlugoutWire() { return plugoutWire; }
-	
-	function setPlugoutWire(line) { plugoutWire = line; }
-	
-	function setPlugoutWireColor(color) {
-		if (color != "default") plugoutWire.setStroke(color);
-		else evaluate();
+	function setPluginCompNull() {
+		pluginComp = null;
+		pluginVal = -1;
+		evaluate();
 	}
 	
-	function toggleOutputValue() {
-		var color = "blue";
-		if (value == 0) {
-			value = 1;
-			color = "red";
+	function setPluginColor(comp, color) {
+		if (comp == pluginComp) {
+			if (color == "default") evaluate();
+			else plugin.setStroke(color);
 		}
-		else value = 0;
-		
-		compShape.setFill(color);
-		setPlugColor("plugout", color);
-		if (plugoutComp !== null) {
-			plugoutWire.setStroke(color);
-			plugoutComp.setPluginColor(thisObj, color);
-		}
+	}
+	
+	function setPluginVal(comp, value) {
+		pluginVal = value;
 		evaluate();
 	}
 	
 	function evaluate() {
-		var color = "blue";
-		if (value == 1) color = "red";
+		if (pluginVal == -1) {
+			compShape.setFill("#ffffff");
+			plugin.setStroke("black");
+			return;
+		}
 		
-		if (plugoutComp !== null) {
-			plugoutComp.setPluginVal(thisObj, value);
-			plugoutComp.setPluginColor(thisObj, color);
-			setPlugColor("plugout", color);
-			plugoutWire.setStroke(color);
-		}
-		else {
-			setPlugColor("plugout", color);
-		}
+		var color = "blue";
+		if (pluginVal == 1) color = "red";
+		
+		compShape.setFill(color);
+		plugin.setStroke(color);
+	}
+	
+	this.getResult = getResult;
+	function getResult() {
+		return pluginVal;
 	}
 	
 	function probe() {
-		var str = setText;
-		return str;
+		var str;
+		if (pluginComp !== null) {
+			str = pluginComp.probe();
+			return str;
+		}
+		else return null;
 	}
 	
 	function setPlugColor(plugStr, color) {
-		if (plugStr == "plugout") {
+		if (plugStr == "plugin") {
 			if (color == "default") evaluate();
-			else plugout.setStroke(color);
+			else plugin.setStroke(color);
 		}
 	}
 	
-	function deleteOutputConnection() {
-		plugoutComp.setPluginCompNull(thisObj);
-		plugoutWire.disableStroke();
-		plugoutComp = null;
-		plugoutWire = null;
+	function setPlugColor1(plugStr, color) { 
+		plugin.setStroke("black");
+		if (plugStr == "plugin") plugin.setStroke("green");
 	}
+	
+	function setConnectorPlugin(num) { connectorPlugin = num; }
+	
+	function getConnectorPlugin() { return connectorPlugin; }
 }

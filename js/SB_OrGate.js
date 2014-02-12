@@ -11,7 +11,7 @@
 *				the components the OR gate outputs to.
 ***************************************************************************************/
 
-function OrGate(initX, initY, setName, id, setup) {
+function SB_OrGate(initX, initY, setName, id, setup) {
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -78,6 +78,7 @@ function OrGate(initX, initY, setName, id, setup) {
 	this.toggleDeleteIcon = toggleDeleteIcon;
 	this.setPluginColor = setPluginColor;
 	this.deleteSelf = deleteSelf;
+	this.getOutputValue = getOutputValue;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -450,5 +451,13 @@ function OrGate(initX, initY, setName, id, setup) {
 		plugoutWire.disableStroke();
 		plugoutComp = null;
 		plugoutWire = null;
+	}
+	
+	function getOutputValue() {
+		if (plugin1Val == -1 || plugin2Val == -1) return -1;
+		else {
+			if (plugin1Val == 1 || plugin2Val == 1) return 1;
+			else return 0;
+		}
 	}
 }

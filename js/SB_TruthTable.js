@@ -1,4 +1,4 @@
-function TruthTable(container) {
+function SB_TruthTable(container) {
 	var expectedTruthTable;
 	var numIn;
 	var numOut;

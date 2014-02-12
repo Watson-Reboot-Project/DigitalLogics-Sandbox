@@ -9,7 +9,7 @@
 *				three output lines.
 ***************************************************************************************/
 
-function Connector(initX, initY, setName, id, setup) {
+function SB_Connector(initX, initY, setName, id, setup) {
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -82,6 +82,7 @@ function Connector(initX, initY, setName, id, setup) {
 	this.toggleDeleteIcon = toggleDeleteIcon;
 	this.setPluginColor = setPluginColor;
 	this.deleteSelf = deleteSelf;
+	this.getOutputValue = getOutputValue;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -510,5 +511,9 @@ function Connector(initX, initY, setName, id, setup) {
 			plugoutComp.setConnectorPlugin(pluginNum, -1);
 			plugoutComp.setPluginComp(pluginNum, null);
 		}
+	}
+	
+	function getOutputValue() {
+		return pluginVal;
 	}
 }
