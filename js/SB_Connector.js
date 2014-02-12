@@ -161,7 +161,7 @@ function SB_Connector(initX, initY, setName, id, setup) {
 		group.add(deleteIco);
 		mainLayer.draw();
 	};
-	
+	deleteImg.src = "";
 	// add cursor styling when the user mouseovers the group
 	group.on('mouseover', function () {
 		document.body.style.cursor = mouseOver;

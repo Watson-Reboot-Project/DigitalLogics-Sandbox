@@ -24,7 +24,6 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 			var ind = 0;
 			for (var i = 0; i < numInputs; i++) {
 				controller.addInput(5, ((600 / (numInputs + 1)) * (i + 1)), header[ind++], 0);
-				console.log("Added: " + i);
 			}
 			for (var i = 0; i < numOutputs; i++) {
 				controller.addOutput(820, ((550 / (numOutputs + 1)) * (i + 1)), header[ind++]);

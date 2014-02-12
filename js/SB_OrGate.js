@@ -163,6 +163,7 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 		group.add(deleteIco);
 		mainLayer.draw();
 	};
+	deleteImg.src = "";
 
 	// add cursor styling when the user mouseovers the group
 	group.on('mouseover', function () {
