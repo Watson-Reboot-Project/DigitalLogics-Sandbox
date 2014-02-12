@@ -13,18 +13,21 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 		if (exerciseNum == 0) {	// scratch pad mode
 			expectedTruthTable = [ ];
 			var header = [ ];
-			
+
 			for (var i = 0; i < numInputs; i++) header.push(alphabet[i]);
 			for (var i = 0; i < numOutputs; i++) header.push(alphabet[25 - i]);
-			
-			truthTable.createTable(numInputs, numOutputs, header);
+				
+			if (numInputs <= 5) {
+				truthTable.createTable(numInputs, numOutputs, header);
+			}
 			
 			var ind = 0;
 			for (var i = 0; i < numInputs; i++) {
 				controller.addInput(5, ((600 / (numInputs + 1)) * (i + 1)), header[ind++], 0);
+				console.log("Added: " + i);
 			}
 			for (var i = 0; i < numOutputs; i++) {
-				controller.addOutput(740, ((600 / (numOutputs + 1)) * (i + 1)), header[ind++]);
+				controller.addOutput(820, ((550 / (numOutputs + 1)) * (i + 1)), header[ind++]);
 			}
 		}
 		if (exerciseNum == 1) {  //3 input AND

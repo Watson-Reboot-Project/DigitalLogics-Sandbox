@@ -138,7 +138,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		
 		var wrench = new Kinetic.Image({
 		  //x: ((stage.getWidth() - 43) + (stage.getWidth() * stage.getScale())),
-		  x: 725,
+		  x: 805,
 		  y: 10,
 		  image: wrenchImg,
 		  scale: 0.3
@@ -149,7 +149,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		wrench.on('click tap', function(event) {
 			if (wrenchPopup !== null) return;
 			
-			var mPos = stage.getPointerPosition();
+			var mPos = getPosition(event);
 			mPos.x = mPos.x - 100;
 			mPos.y = mPos.y + 15;
 			showWrenchMenu(event, mPos);
@@ -167,8 +167,8 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		//var scalarHeight = stage.getHeight() * (1 - stage.getScale().y);
 		
 		var trash = new Kinetic.Image({
-		  x: 725,
-		  y: stage.getHeight() - 55,
+		  x: 805,
+		  y: 600 - 55,
 		  image: trashImg,
 		  scale: 0.3
 		  //width: 106,
@@ -1011,19 +1011,22 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	
 	function connectorInputBoxMouseUp(event, connect) {
 		if (connecting) {
-			if (selectedPlug.indexOf("plugin") >= 0) return;
-			
-			if (selectedComp.getType() == "connector") {				// if the selected component is a connector,
-				var selPlugout = selectedComp.getSelectedPlugout();		// get the selected plugout for that connector
-				setWireFromConnectorToConnector(selectedComp, connect, selPlugout);	// make the connection
+			if (selectedPlug.indexOf("plugin") < 0) {			
+				if (selectedComp.getType() == "connector") {				// if the selected component is a connector,
+					var selPlugout = selectedComp.getSelectedPlugout();		// get the selected plugout for that connector
+					setWireFromConnectorToConnector(selectedComp, connect, selPlugout);	// make the connection
+				}
+				else {	// else, the selected component is not a connector, it's a gate
+					setWireFromGateToConnector(selectedComp, connect);	// make the connection
+				}
 			}
-			else {	// else, the selected component is not a connector, it's a gate
-				setWireFromGateToConnector(selectedComp, connect);	// make the connection
-			}
 			
-			mainLayer.drawScene();		
 			connecting = false;
 			selectedComp = null;
+			selectedPlug = null;
+			tempLine.remove();
+			tempLine = null;
+			mainLayer.drawScene();		
 		}
 	}
 	
@@ -1083,27 +1086,28 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	
 	function connectorOutputBoxMouseUp(event, connect, plugoutNum) {
 		if (connecting) {
-			if (selectedPlug.indexOf("plugout") >= 0) return;
+			if (selectedPlug.indexOf("plugout") < 0) {
+				if (selectedComp.getType() == "connector") {
+					// setting connection from a connector's input to this connectors output
+					setWireFromConnectorToConnector(connect, selectedComp, plugoutNum);
+				}
+				else if (selectedComp.getType() == "not" || selectedComp.getType() == "output") {
+					// setting connection from a NOT's input or an output node's input to this connectors output
+					setWireFromConnectorToGate(connect, selectedComp, plugoutNum, 0);
+					console.log("Set wire from connector to output.");
+				}
+				else {
+					// setting connection from an OR or AND gate's input to this connectors output
+					var pluginNum = parseFloat(selectedPlug.charAt(selectedPlug.length - 1));
+					console.log("Plugin num: " + pluginNum + ":: " + selectedPlug);
+					setWireFromConnectorToGate(connect, selectedComp, plugoutNum, pluginNum);
+				}
+			}
 			
-			if (selectedComp.getType() == "connector") {
-				// setting connection from a connector's input to this connectors output
-				setWireFromConnectorToConnector(connect, selectedComp, plugoutNum);
-			}
-			else if (selectedComp.getType() == "not" || selectedComp.getType() == "output") {
-				// setting connection from a NOT's input or an output node's input to this connectors output
-				setWireFromConnectorToGate(connect, selectedComp, plugoutNum, 0);
-				console.log("Set wire from connector to output.");
-			}
-			else {
-				// setting connection from an OR or AND gate's input to this connectors output
-				var pluginNum = parseFloat(selectedPlug.charAt(selectedPlug.length - 1));
-				console.log("Plugin num: " + pluginNum + ":: " + selectedPlug);
-				setWireFromConnectorToGate(connect, selectedComp, plugoutNum, pluginNum);
-			}
-			
-			mainLayer.drawScene();		
 			connecting = false;
+			tempLine.remove();
 			selectedComp = null;
+			mainLayer.drawScene();		
 		}
 	}
 	
@@ -1352,19 +1356,20 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	
 	function nodeOutputBoxMouseUp(event, node) {
 		if (connecting) {
-			if (selectedPlug.indexOf("plugout") >= 0) return;
-					
-			if (selectedComp.getType() == "not" || selectedComp.getType() == "output") setWireFromGateToGate(node, selectedComp, 0);
-			else if (selectedComp.getFunc() == "gate") setWireFromGateToGate(node, selectedComp, parseFloat(selectedPlug.charAt(selectedPlug.length - 1)));
-			else if (selectedComp.getType() == "connector") {
-				// connect wire from connector to input node
-				setWireFromGateToConnector(node, selectedComp);
+			if (selectedPlug.indexOf("plugout") < 0) {
+				if (selectedComp.getType() == "not" || selectedComp.getType() == "output") setWireFromGateToGate(node, selectedComp, 0);
+				else if (selectedComp.getFunc() == "gate") setWireFromGateToGate(node, selectedComp, parseFloat(selectedPlug.charAt(selectedPlug.length - 1)));
+				else if (selectedComp.getType() == "connector") {
+					// connect wire from connector to input node
+					setWireFromGateToConnector(node, selectedComp);
+				}
 			}
 			
 			node.setPlugColor("plugout", "black");
 			connecting = false;
 			selectedComp = null;
 			selectedPlug = null;
+			tempLine.remove();
 			mainLayer.drawScene();
 		}
 	}
@@ -1419,7 +1424,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		if (connecting) {
 			if (selectedPlug.indexOf("plugin") >= 0) return;	
 		
-			if (selectedComp.getFunc() == "gate") setWireFromGateToGate(selectedComp, node, 0);
+			if (selectedComp.getFunc() == "gate" || selectedComp.getType() == "input") setWireFromGateToGate(selectedComp, node, 0);
 			else if (selectedComp.getType() == "connector") {
 				// connect wire from connector to output node
 				var plugoutNum = parseFloat(selectedPlug.charAt(selectedPlug.length - 1));
@@ -1613,7 +1618,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		}
 		
 		if (!connecting && haltMenu == false) {
-			showAddMenu(event, getPosition(event));
+			showAddMenu(event, getRelativePointerPosition(event));
 		}
 		else if (haltMenu == true) haltMenu = false;
 		
@@ -1726,7 +1731,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	
 	function bgMouseUp() {
 		if (!connecting) {
-		
+			
 		}
 		else {
 			console.log("Cancel the current connection mode.");
@@ -2154,6 +2159,8 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function evaluateCircuit() {
+		if (numInputs > 5) return;
+		
 		var flag = false;
 		var truthTableArr = [];
 		var inputValSave = [];
@@ -2242,7 +2249,10 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			wrenchPopup = null;
 		});
 		wrenchPopup.add('Truth Table', function(target) {
-			truthTable.toggleVisible("table1");
+			if (numInputs > 5) { alert("The truth table feature has been disabled because you have more than 5 inputs."); return; }
+			else {
+				truthTable.toggleVisible("table1");
+			}
 			wrenchPopup = null;
 		});
 		wrenchPopup.add('Number of Inputs', function(target) {
@@ -2302,15 +2312,19 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	
 	function updateNumberOfInputs() {
 		var res = prompt("Enter number of inputs.", numInputs);
+		if (res === null) return;
 		if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
 		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
+		if (parseFloat(res) + numOutputs > 25) { alert("You can't have that many inputs."); return; }
 		setup.resetExercise(parseFloat(res), numOutputs);
 	}
 	
 	function updateNumberOfOutputs() {
 		var res = prompt("Enter number of outputs.", numOutputs);
+		if (res === null) return;
 		if (res <= "0") { alert("You can't have a negative number of outputs..."); return; }
 		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
+		if (parseFloat(res) + numInputs > 25) { alert("You can't have that many outputs."); return; }
 		setup.resetExercise(numInputs, parseFloat(res));
 	}
 	

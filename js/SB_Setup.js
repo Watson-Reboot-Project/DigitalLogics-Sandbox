@@ -6,6 +6,7 @@ function SB_Setup(container) {
 	this.getBG = getBG;
 	this.resetExercise = resetExercise;
 	
+	var defaultWidth = 880;
 	var width = 800;
 	var height = 600;
 	var thisObj = this;
@@ -48,12 +49,14 @@ function SB_Setup(container) {
 	});
 	
 	function resize() {
-		console.log(window.innerWidth);
-		var width = (window.innerWidth > 800) ? 800 : window.innerWidth;
-		var ratio = (width / 800);
+		var width = (window.innerWidth > defaultWidth) ? defaultWidth : window.innerWidth;
+		// Burt, uncomment the next line (line 54) and comment the previous line (line 52)
+		//var width = (document.getElementById(container).offsetWidth > defaultWidth) ? defaultWidth : document.getElementById(container).offsetWidth;
+		
+		var ratio = (width / defaultWidth);
 		console.log("Ratio: " + ratio);
 		stage.setScale(ratio);
-		stage.setSize(800 * ratio, 600);
+		stage.setSize(defaultWidth * ratio, 600 * ratio);
 		console.log("Size: " + stage.getWidth() + ", " + stage.getHeight());
 		
 		timeout = false;
