@@ -313,10 +313,6 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			comp.getOutputBox().on('mouseleave', function(event) {
 				gateOutputBoxMouseLeave(event, comp);
 			});
-			
-			comp.getOutputBox().on('click tap', function(event) {
-				gateOutputBoxClick(event, comp);
-			});
 
 			comp.getGroup().on('click tap', function (event) {
 				gateClick(event, comp);
@@ -548,8 +544,6 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function gateOutputBoxMouseDown(event, gate) {
-		if (deleteMode == true) return;
-		
 		if (!connecting) {
 			connecting = true;
 			console.log("Attempting to make a connection.");		
@@ -569,8 +563,6 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function gateOutputBoxMouseUp(event, gate) {
-		if (deleteMode == true) return;
-		
 		if (connecting) {
 			
 			if (gate.getPlugoutComp() !== null || selectedPlug.indexOf("plugout") >= 0) {
@@ -603,8 +595,6 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function gateOutputBoxMouseEnter(event, comp, inputNum) {
-		if (deleteMode == true) return;
-		
 		if (comp.getPlugoutComp() === null) {
 			if (!connecting) comp.setPlugColor("plugout", "green");
 			if (connecting && selectedPlug.indexOf("plugin") >= 0) {
@@ -629,12 +619,6 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			}
 		}
 		mainLayer.draw();
-	}
-	
-	function gateOutputBoxClick(event, gate) {
-		if (deleteMode == true) {
-			deleteGate(gate);
-		}
 	}
 	
 	function gateClick(event, gate) {
