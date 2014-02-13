@@ -26,15 +26,11 @@
 		<script src="js/SB_TruthTable.js"></script>
 		<script src="js/SB_Setup.js"></script>
 		<script src="js/DigitalLogicsLab.js"></script>
-		
-		<!-- <div id="tableDiv"> -->
-		<div id="container1">
 
-		</div>
+		<div id="container1"></div>
+		
 		<script>
-			if (detectMobile() == false) {
-				var lab = new DigitalLogicsLab("container1");
-			}
+			var lab = new DigitalLogicsLab("container1");
 			
 			function detectMobile() { 
 				 if( navigator.userAgent.match(/Android/i)

@@ -7,7 +7,7 @@ function SB_Setup(container) {
 	this.resetExercise = resetExercise;
 	
 	var defaultWidth = 880;
-	var width = 800;
+	var width = 880;
 	var height = 600;
 	var thisObj = this;
 	
@@ -69,7 +69,7 @@ function SB_Setup(container) {
 		table.parentNode.removeChild(table);
 		
 		container.innerHTML = "";
-		width = 800;
+		width = 880;
 		height = 600;
 		stage = new Kinetic.Stage({
 			container : container,

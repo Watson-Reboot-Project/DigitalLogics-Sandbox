@@ -121,10 +121,10 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 
 	// the transparent rectangle
 	transFg = new Kinetic.Rect({
-		x:  23,
-		y:  0,
-		width: plugout.getPoints()[1].x - plugin.getPoints()[0].x,
-		height:  50
+		x:  scale * 50,
+		y:  -5,
+		width: 57 - plugin.getPoints()[0].x,
+		height:  scale * 50
 	});
 
 	// create the group at the x,y coords passed to this object
@@ -168,7 +168,7 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 		group.add(gateShapeCircle);		// ... the circle
 		group.add(plugin);				// ... the plugin line
 		group.add(plugout);				// ... the plugout line
-		//group.add(transFg);				// and finally the transparent foreground
+		group.add(transFg);				// and finally the transparent foreground
 		mainLayer.add(group);			// add this group to the main layer
 		stage.draw();					// call draw on the stage to redraw its components
 		drawBoxes();

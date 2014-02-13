@@ -77,10 +77,13 @@ SB_PopupMenu.prototype = {
         } else if (document.all) {
             x = document.body.scrollLeft + event.clientX;
             y = document.body.scrollTop + event.clientY;
+		} else if (event.changedTouches) {
+			x = event.changedTouches[0].pageX;
+			y = event.changedTouches[0].pageY;
         } else if (document.layers || document.getElementById) {
             x = e.pageX;
             y = e.pageY;
-        }
+       }
         this.element.style.top  = y + 'px';
         this.element.style.left = x + 'px';
     },
@@ -149,21 +152,30 @@ SB_PopupMenu.prototype = {
     createItem: function(item) {
         var self = this;
         var elem = document.createElement('div');
-        elem.style.padding = '4px';
+		var disabled = false;
+		if (item.text.charAt(0) == ".") {
+			elem.style.color = "grey";
+			item.text = item.text.slice(1, item.text.length);
+			disabled = true;
+		}
+		elem.style.padding = '4px';
         var callback = item.callback;
-        SB_PopupMenu.addEventListener(elem, 'click', function(_callback) {
-            return function() {
-                self.hide();
-                _callback(self.target);
-            };
-        }(callback), true);
-        SB_PopupMenu.addEventListener(elem, 'mouseover', function(e) {
-            elem.style.background = '#B6BDD2';
-        }, true);
-        SB_PopupMenu.addEventListener(elem, 'mouseout', function(e) {
-            elem.style.background = '#FFFFFF';
-        }, true);
-        elem.appendChild(document.createTextNode(item.text));
+		if (!disabled) {
+			SB_PopupMenu.addEventListener(elem, 'click', function(_callback) {
+				return function() {
+					self.hide();
+					_callback(self.target);
+				};
+			}(callback), true);
+			SB_PopupMenu.addEventListener(elem, 'mouseover', function(e) {
+				elem.style.background = '#B6BDD2';
+			}, true);
+			SB_PopupMenu.addEventListener(elem, 'mouseout', function(e) {
+				elem.style.background = '#FFFFFF';
+			}, true);
+		}
+		var textNode = document.createTextNode(item.text);
+        elem.appendChild(textNode);
         return elem;
     },
     createSeparator: function() {

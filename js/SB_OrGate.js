@@ -136,10 +136,10 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 	
 	// create the transparent rectangle that makes it easy to click the OR gate
 	transFg = new Kinetic.Rect({
-		x:  30,
-		y:  0,
-		width: plugout.getPoints()[1].x - plugin1.getPoints()[0].x,
-		height: (plugin2.getPoints()[0].y +  10)
+		x:  37,
+		y:  -2,
+		width: 56 - plugin1.getPoints()[0].x,
+		height: (plugin2.getPoints()[0].y + 12)
 	});
 
 	// create the group for the components that make up the OR gate; place it at the x,y coords passed to the object
@@ -153,8 +153,8 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 	deleteImg = new Image();
 	deleteImg.onload = function() {
 		var deleteIco = new Kinetic.Image({
-			x: scale * 87,
-			y: scale * -5,
+			x: scale * 71,
+			y: scale * -13,
 			image: deleteImg,
 			scale: 0.3
 		});
@@ -182,7 +182,7 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 		group.add(plugin1);		// ... the first plugin line
 		group.add(plugin2);		// ... the secong plugin line
 		group.add(plugout);		// ... the plugout line
-		//group.add(transFg);		// and finally the transparent foreground
+		group.add(transFg);		// and finally the transparent foreground
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();					// call draw on the stage to redraw its components
 		drawBoxes();
@@ -243,8 +243,16 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 	function setMouseOver(str) { mouseOver = str; }
 	
 	function toggleDeleteIcon(bool) {
-		if (bool) deleteImg.src = "delete.ico";
-		else deleteImg.src = "";
+		if (bool) {
+			deleteImg.src = "delete.ico";
+			transFg.setOffsetY(transFg.getOffsetY() + 10);
+			transFg.setHeight(transFg.getHeight() + 10);
+		}
+		else {
+			deleteImg.src = "";
+			transFg.setOffsetY(transFg.getOffsetY() - 10);
+			transFg.setHeight(transFg.getHeight() - 10);
+		}
 		
 		mainLayer.draw();
 	}

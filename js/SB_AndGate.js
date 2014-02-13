@@ -39,7 +39,7 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	var input2Box;
 	var outputBox;
 	
-	//var transFg;					// a transparent foreground for the AND gate
+	var transFg;					// a transparent foreground for the AND gate
 	
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
@@ -132,10 +132,10 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 
 	// create the transparent rectangle that makes it easy to click the AND gate		
 	transFg = new Kinetic.Rect({
-		x:  scale * 23,
-		y:  0,
-		width: scale * plugout.getPoints()[1].x - scale * plugin1.getPoints()[0].x,
-		height: scale * plugin2.getPoints()[0].y +  scale * 10
+		x:  scale * 50,
+		y:  -3,
+		width: 50 - plugin1.getPoints()[0].x,
+		height: scale * plugin2.getPoints()[0].y + scale * 26
 	});
 
 	// create the group for the components that make up the AND gate; place it at the x,y coords passed to the object
@@ -149,8 +149,8 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	deleteImg = new Image();
 	deleteImg.onload = function() {
 		var deleteIco = new Kinetic.Image({
-			x: scale * 87,
-			y: scale * -5,
+			x: scale * 73,
+			y: scale * -15,
 			image: deleteImg,
 			scale: 0.3
 		});
@@ -240,9 +240,18 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	function setMouseOver(str) { mouseOver = str; console.log("Mouse over: " + str); }
 	
 	function toggleDeleteIcon(bool) {
-		if (bool) deleteImg.src = "delete.ico";
-		else deleteImg.src = "";
-				
+		if (bool) {
+			deleteImg.src = "delete.ico";
+			transFg.setOffsetY(transFg.getOffsetY() + 10);
+			transFg.setHeight(transFg.getHeight() + 10);
+		}
+		else 
+		{
+			deleteImg.src = "";
+			transFg.setOffsetY(transFg.getOffsetY() - 10);
+			transFg.setHeight(transFg.getHeight() - 10);
+		}	
+		
 		mainLayer.draw();
 	}
 	

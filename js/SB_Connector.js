@@ -264,9 +264,16 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	function setMouseOver(str) { mouseOver = str; }
 	
 	function toggleDeleteIcon(bool) {
-		if (bool) deleteImg.src = "delete.ico";
-		else deleteImg.src = "";
-		
+		if (bool) {
+			transFg.setOffsetY(transFg.getOffsetY() + 8);
+			transFg.setHeight(transFg.getHeight() + 8);
+			deleteImg.src = "delete.ico";
+		}
+		else {
+			transFg.setOffsetY(transFg.getOffsetY() - 8);
+			transFg.setHeight(transFg.getHeight() - 8);
+			deleteImg.src = "";
+		}
 		mainLayer.draw();
 	}
 	

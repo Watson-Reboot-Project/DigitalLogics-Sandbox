@@ -314,6 +314,10 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 				gateOutputBoxMouseLeave(event, comp);
 			});
 			
+			comp.getOutputBox().on('click tap', function(event) {
+				gateOutputBoxClick(event, comp);
+			});
+
 			comp.getGroup().on('click tap', function (event) {
 				gateClick(event, comp);
 			});
@@ -544,6 +548,8 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function gateOutputBoxMouseDown(event, gate) {
+		if (deleteMode == true) return;
+		
 		if (!connecting) {
 			connecting = true;
 			console.log("Attempting to make a connection.");		
@@ -563,6 +569,8 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function gateOutputBoxMouseUp(event, gate) {
+		if (deleteMode == true) return;
+		
 		if (connecting) {
 			
 			if (gate.getPlugoutComp() !== null || selectedPlug.indexOf("plugout") >= 0) {
@@ -595,6 +603,8 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function gateOutputBoxMouseEnter(event, comp, inputNum) {
+		if (deleteMode == true) return;
+		
 		if (comp.getPlugoutComp() === null) {
 			if (!connecting) comp.setPlugColor("plugout", "green");
 			if (connecting && selectedPlug.indexOf("plugin") >= 0) {
@@ -621,11 +631,17 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		mainLayer.draw();
 	}
 	
+	function gateOutputBoxClick(event, gate) {
+		if (deleteMode == true) {
+			deleteGate(gate);
+		}
+	}
+	
 	function gateClick(event, gate) {
 		if (probeMode) {
 			probe(gate);
 			probeMode = false;
-			setComponentMouseOver("default");
+			setComponentMouseOver("pointer");
 		}
 		
 		if (deleteMode) {
@@ -1329,6 +1345,12 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	//------------------------------------
 	
 	function nodeClick(node) {
+		if (probeMode == true) {
+			probe(node);
+			probeMode = false;
+			setComponentMouseOver("pointer");
+			return;
+		}
 		if (node.getType() == "input") {
 			node.toggleOutputValue();
 			mainLayer.draw();
@@ -1603,7 +1625,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		if (addPopup !== null) { addPopup.hide(); addPopup = null; return; }
 		if (deletePopup !== null) { deletePopup.hide(); deletePopup = null; return; }
 		if (wrenchPopup !== null) { wrenchPopup.hide(); wrenchPopup = null; return; }
-		if (probeMode == true) { probeMode = false; setComponentMouseOver("default"); return; }
+		if (probeMode == true) { probeMode = false; setComponentMouseOver("pointer"); return; }
 		if (deleteMode == true) { 
 			if (haltMenu == true) {
 				truthTable.toggleVisible("table1");
@@ -2207,6 +2229,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	
 	function showAddMenu(event, pos) {
 		addPopup = new SB_PopupMenu();
+		
 		addPopup.add('And Gate', function(target) {
 			addAndGate(pos.x, pos.y);
 			addPopup = null;
@@ -2255,37 +2278,30 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			}
 			wrenchPopup = null;
 		});
-		wrenchPopup.add('Number of Inputs', function(target) {
-			if (components.length != (numInputs + numOutputs)) {
-				var r = confirm("You have already began building a circuit. This action will reset the Scratch Pad which would result in work being lost.\n\nDo you wish to continue?");
-				if (r == true) {
-					updateNumberOfInputs();
-				}
-				else {
-					wrenchPopup = null;
-					return;
-				}
-			}
-			else {
-				updateNumberOfInputs();
-			}
+		var inputMenu = "Number of Inputs";
+		var outputMenu = "Number of Outputs";
+		if ((components.length != (numInputs + numOutputs)) || checkNodeConnections() == true) {
+			inputMenu = ".Number of Inputs";
+			outputMenu = ".Number of Outputs";
+		}
+		
+		wrenchPopup.add(inputMenu, function(target) {
+			updateNumberOfInputs();
 			wrenchPopup = null;
 		});
-		wrenchPopup.add('Number of Outputs', function(target) {
-			if (components.length != (numInputs + numOutputs)) {
-				var r = confirm("You have already began building a circuit. This action will reset the Scratch Pad which would result in work being lost.\n\nDo you wish to continue?");
-				if (r == true) {
-					updateNumberOfOutputs();
-				}
-				else {
-					wrenchPopup = null;
-					return;
-				}
+		wrenchPopup.add(outputMenu, function(target) {
+			updateNumberOfOutputs();
+			wrenchPopup = null;
+		});
+		wrenchPopup.add("Reset", function(target) {
+			var res = confirm("You are about to reset the sandbox which will result in all current progress being lost.\n\nDo you wish to continue?");
+			if (res == true) {
+				setup.resetExercise(numInputs, numOutputs);
 			}
 			else {
-				updateNumberOfOutputs();
+				wrenchPopup = null;
+				return;
 			}
-			wrenchPopup = null;
 		});
 		wrenchPopup.setSize(140, 0);
 		wrenchPopup.showMenu(event, pos);
@@ -2335,5 +2351,15 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 				haltMenu = true;
 			});
 		});
+	}
+	
+	function checkNodeConnections() {
+		for (var i = 0; i < components.length; i++) {
+			if (components[i].getType() == "input") {
+				if (components[i].getPlugoutComp() !== null) return true;
+			}
+		}
+		
+		return false;
 	}
 }
