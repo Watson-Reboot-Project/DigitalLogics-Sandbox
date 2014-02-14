@@ -64,7 +64,7 @@ function SB_Setup(container) {
 		
 		var ratio = (width / defaultWidth);
 		console.log("Ratio: " + ratio);
-		stage.setScale(ratio);
+		stage.setScale({x: ratio, y: ratio});
 		stage.setSize(defaultWidth * ratio, 600 * ratio);
 		console.log("Size: " + stage.getWidth() + ", " + stage.getHeight());
 		

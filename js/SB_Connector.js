@@ -84,6 +84,7 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	this.setPluginColor = setPluginColor;
 	this.deleteSelf = deleteSelf;
 	this.getOutputValue = getOutputValue;
+	this.setDeleteIcon = setDeleteIcon;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -163,6 +164,7 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	iconLayer.on('mouseout', function() { document.body.style.cursor = 'default'; });
 	
 	iconLayer.on('click tap', function() {
+		console.log("Here.");
 		setup.deleteComponent(thisObj);
 	});
 
@@ -189,7 +191,8 @@ function SB_Connector(initX, initY, setName, id, setup) {
 			  x: group.getX() + 35,
 			  y: group.getY() + -10,
 			  image: imageObj,
-			  scale: 0.4
+			  scaleX: 0.4,
+			  scaleY: 0.4
 		 });
 
          iconLayer.destroyChildren();

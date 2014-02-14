@@ -80,6 +80,7 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 	this.setPluginColor = setPluginColor;
 	this.deleteSelf = deleteSelf;
 	this.getOutputValue = getOutputValue;
+	this.setDeleteIcon = setDeleteIcon;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -183,14 +184,15 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 		drawBoxes();
 	}
 	
-	function setDeleteIcon (image){
+	function setDeleteIcon(image) {
          var imageObj = new Image();
          imageObj.onload = function (){
          var deleteImg = new Kinetic.Image({
 			  x: group.getX() + scale * 90,
 			  y: group.getY() + scale * -15,
 			  image: imageObj,
-			  scale: 0.4
+			  scaleX: 0.4,
+			  scaleY: 0.4
 		 });
 
          iconLayer.destroyChildren();

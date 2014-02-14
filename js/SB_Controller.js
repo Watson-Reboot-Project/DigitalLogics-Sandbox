@@ -156,9 +156,8 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		  x: 805,
 		  y: 10,
 		  image: wrenchImg,
-		  scale: 0.3
-		  //width: 106,
-		  //height: 118
+		  scaleX: 0.3,
+		  scaleY: 0.3
 		});
 		
 		wrench.on('click tap', function(event) {
@@ -183,8 +182,10 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			  x: 805,
 			  y: 600 - 55,
 			  image: imageObj,
-			  scale: 0.3
+			  scaleX: 0.3,
+			  scaleY: 0.3
 		 });
+		 trashImg.setScale(0.3);
 		 trashImg.on('click tap', function() {
 			if (deleteMode == false) {
 				deleteMode = true;
@@ -1161,6 +1162,9 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		var connectedComps;
 		
 		connect.drawBoxes();
+		if (deleteMode == true) {
+			connect.setDeleteIcon("delete.ico");
+		}
 		
 		if (connect.getPluginComp() !== null) {		// if this connector has an input component
 			if (connect.getPluginComp().getType() != "connector") {	// if the component connected to the input line is not connector
@@ -2140,6 +2144,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function showWrenchMenu(event, pos) {
+		console.log("Showing menu.");
 		wrenchPopup = new SB_PopupMenu();
 		wrenchPopup.add('Boolean Probe', function(target) {
 			probeMode = true;
@@ -2179,7 +2184,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			}
 		});
 		wrenchPopup.setSize(140, 0);
-		wrenchPopup.showMenu(event, pos);
+		wrenchPopup.showMenu(event);
 	}
 	
 	function removeComp(comp) {
@@ -2208,6 +2213,15 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
 		if (parseFloat(res) + numOutputs > 25) { alert("You can't have that many inputs."); return; }
 		setup.resetExercise(parseFloat(res), numOutputs);
+		return;
+		
+		for (var i = 0; i < inputs.length; i++) {
+			// delete input
+		}
+		
+		for (var i = 0; i < parseFloat(res); i++) {
+			// add new inputs using alphabet method from exercises
+		}
 	}
 	
 	function updateNumberOfOutputs() {

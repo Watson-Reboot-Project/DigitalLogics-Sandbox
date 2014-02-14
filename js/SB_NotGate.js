@@ -73,6 +73,7 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 	this.setPluginColor = setPluginColor;
 	this.deleteSelf = deleteSelf;
 	this.getOutputValue = getOutputValue;
+	this.setDeleteIcon = setDeleteIcon;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	// make a custom shape for the triangle; just three lines
@@ -176,7 +177,8 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 			  x: group.getX() + scale * 90,
 			  y: group.getY() + scale * -15,
 			  image: imageObj,
-			  scale: 0.4
+			  scaleX: 0.4,
+			  scaleY: 0.4
 		 });
 
          iconLayer.destroyChildren();

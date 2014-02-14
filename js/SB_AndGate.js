@@ -188,7 +188,8 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 			  x: group.getX() + scale * 90,
 			  y: group.getY() + scale * -15,
 			  image: imageObj,
-			  scale: 0.4
+			  scaleX: 0.4,
+			  scaleY: 0.4
 		 });
 
          iconLayer.destroyChildren();

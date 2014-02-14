@@ -90,9 +90,23 @@ SB_PopupMenu.prototype = {
 	setManPos: function(e, pos) {
         if (!this.element) return;
         if (!e) e = window.event;
-
-        this.element.style.top  = pos.y + 'px';
-        this.element.style.left = pos.x + 'px';
+		
+        var x, y;
+        if (window.opera) {
+            x = e.clientX;
+            y = e.clientY;
+        } else if (document.all) {
+            x = document.body.scrollLeft + event.clientX;
+            y = document.body.scrollTop + event.clientY;
+		} else if (e.changedTouches) {
+			x = event.changedTouches[0].pageX;
+			y = event.changedTouches[0].pageY;
+        } else if (document.layers || document.getElementById) {
+            x = e.pageX;
+            y = e.pageY;
+       }
+        this.element.style.top  = (y + 15) + 'px';
+        this.element.style.left = (x - 150) + 'px';
     },
 	showMenu: function(e, pos) {
         if (SB_PopupMenu.current && SB_PopupMenu.current != this) return;
