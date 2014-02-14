@@ -77,7 +77,7 @@ SB_PopupMenu.prototype = {
         } else if (document.all) {
             x = document.body.scrollLeft + event.clientX;
             y = document.body.scrollTop + event.clientY;
-		} else if (event.changedTouches) {
+		} else if (e.changedTouches) {
 			x = event.changedTouches[0].pageX;
 			y = event.changedTouches[0].pageY;
         } else if (document.layers || document.getElementById) {

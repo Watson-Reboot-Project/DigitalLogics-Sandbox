@@ -149,7 +149,7 @@ function SB_TruthTable(container) {
 	
 	function getTableWidth() { return document.getElementById(tableName).offsetWidth; }
 	
-	function setLeftOffset(num) { document.getElementById("table1").style.marginLeft = num + "px"; }
+	function setLeftOffset(num) { if (document.getElementById("table1") !== null) document.getElementById("table1").style.marginLeft = num + "px"; }
 
 	function toggleVisible(tableN){
 		var tbl = document.getElementById(tableN);

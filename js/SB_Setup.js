@@ -2,9 +2,12 @@ function SB_Setup(container) {
 	var timeout = false;
 	
 	this.getMainLayer = getMainLayer;
+	this.getWrenchLayer = getWrenchLayer;
+	this.getTrashLayer = getTrashLayer;
 	this.getStage = getStage;
 	this.getBG = getBG;
 	this.resetExercise = resetExercise;
+	this.deleteComponent = deleteComponent;
 	
 	var defaultWidth = 880;
 	var width = 880;
@@ -19,6 +22,12 @@ function SB_Setup(container) {
 
 	var mainLayer = new Kinetic.Layer();
 	stage.add(mainLayer);
+
+	var wrenchLayer = new Kinetic.Layer();
+	stage.add(wrenchLayer);
+	
+	var trashLayer = new Kinetic.Layer();
+	stage.add(trashLayer);
 	
 	var bg = new Kinetic.Rect({
 		x : 0,
@@ -63,10 +72,11 @@ function SB_Setup(container) {
 	}
 	
 	function resetExercise(numInputs, numOutputs) {
-		console.log(document.getElementById("table1"));
 		var table = document.getElementById("table1");
-		table.id = "";
-		table.parentNode.removeChild(table);
+		if (table) {
+			table.id = "";
+			table.parentNode.removeChild(table);
+		}
 		
 		container.innerHTML = "";
 		width = 880;
@@ -78,6 +88,10 @@ function SB_Setup(container) {
 		});
 		mainLayer = new Kinetic.Layer();
 		stage.add(mainLayer);
+		wrenchLayer = new Kinetic.Layer();
+		stage.add(wrenchLayer);
+		trashLayer = new Kinetic.Layer();
+		stage.add(trashLayer);
 		bg = new Kinetic.Rect({
 			x : 0,
 			y : 0,
@@ -96,7 +110,15 @@ function SB_Setup(container) {
 	
 	function getMainLayer() { return mainLayer; }
 	
+	function getTrashLayer() { return trashLayer; }
+	
+	function getWrenchLayer() { return wrenchLayer; }
+	
 	function getStage() { return stage; }
 	
 	function getBG() { return bg; }
+	
+	function deleteComponent(comp) {
+		controller.deleteComponent(comp);
+	}
 }

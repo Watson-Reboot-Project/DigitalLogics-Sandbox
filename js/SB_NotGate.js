@@ -34,8 +34,9 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 	var outputBox;
 	var transFg;					// a transparent foreground that makes the NOT gate easier to click
 	
-	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
+	var mainLayer = setup.getMainLayer();
+	var iconLayer = new Kinetic.Layer(); stage.add(iconLayer);
 	var thisObj = this;
 	var mouseOver = 'pointer';
 	var deleteImg;
@@ -134,21 +135,6 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 			rotationDeg : 0,
 			draggable : true
 		});
-		
-	deleteImg = new Image();
-	deleteImg.onload = function() {
-		var deleteIco = new Kinetic.Image({
-			x: scale * 75,
-			y: scale * -5,
-			image: deleteImg,
-			scale: 0.3
-		});
-
-		// add the shape to the layer
-		group.add(deleteIco);
-		mainLayer.draw();
-	};
-	deleteImg.src = "";
 	
 	// add cursor styling when the user mouseovers the group
 	group.on('mouseover', function () {
@@ -156,6 +142,15 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 	});
 	group.on('mouseout', function () {
 		if (mouseOver !== "crosshair") document.body.style.cursor = 'default';
+	});
+	
+	setDeleteIcon("empty.bmp");
+	
+	iconLayer.on('mouseover', function() { document.body.style.cursor = 'pointer'; });
+	iconLayer.on('mouseout', function() { document.body.style.cursor = 'default'; });
+	
+	iconLayer.on('click tap', function() {
+		setup.deleteComponent(thisObj);
 	});
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION IMPLEMENTATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -173,11 +168,29 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 		stage.draw();					// call draw on the stage to redraw its components
 		drawBoxes();
 	}
+
+	function setDeleteIcon (image){
+         var imageObj = new Image();
+         imageObj.onload = function (){
+         var deleteImg = new Kinetic.Image({
+			  x: group.getX() + scale * 90,
+			  y: group.getY() + scale * -15,
+			  image: imageObj,
+			  scale: 0.3
+		 });
+
+         iconLayer.destroyChildren();
+         iconLayer.add(deleteImg);
+         iconLayer.draw();
+		};
+		imageObj.src = image;
+    }
 	
 	function deleteSelf() {
 		group.remove();
 		inputBox.remove();
 		outputBox.remove();
+		iconLayer.remove();
 	}
 	
 	function drawBoxes() {
@@ -217,10 +230,8 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 	function setMouseOver(str) { mouseOver = str; }
 	
 	function toggleDeleteIcon(bool) {
-		if (bool) deleteImg.src = "delete.ico";
-		else deleteImg.src = "";
-		
-		mainLayer.draw();
+		if (bool) setDeleteIcon("delete.ico");
+		else setDeleteIcon("empty.bmp");
 	}
 	
 	function getInputBox() {
