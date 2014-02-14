@@ -184,7 +184,9 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 		return line;
 	}
 	
-	function setValue(val) { value = val; }
+	function setValue(val) { 
+		value = val;
+	}
 	
 	function getValue() { return value; }
 	
@@ -201,7 +203,7 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 		else evaluate();
 	}
 	
-	function toggleOutputValue() {
+	function toggleOutputValue(bool) {
 		var color = "blue";
 		if (value == 0) {
 			value = 1;
@@ -215,7 +217,9 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 			plugoutWire.setStroke(color);
 			plugoutComp.setPluginColor(thisObj, color);
 		}
-		evaluate();
+		if (!bool) {
+			evaluate();
+		}
 	}
 	
 	function evaluate() {

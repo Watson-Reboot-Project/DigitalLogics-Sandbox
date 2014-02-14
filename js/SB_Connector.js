@@ -189,7 +189,7 @@ function SB_Connector(initX, initY, setName, id, setup) {
 			  x: group.getX() + 35,
 			  y: group.getY() + -10,
 			  image: imageObj,
-			  scale: 0.3
+			  scale: 0.4
 		 });
 
          iconLayer.destroyChildren();
@@ -511,8 +511,8 @@ function SB_Connector(initX, initY, setName, id, setup) {
 		else if (plugoutNum == 2) { plugoutComp = plugout2Comp; plugout2Comp = null; plugout2Wire.disableStroke(); plugout2Wire = null }
 		else if (plugoutNum == 3) { plugoutComp = plugout3Comp; plugout3Comp = null; plugout3Wire.disableStroke(); plugout3Wire = null }
 		
-		if (plugoutComp.getType() == "not" || plugoutComp.getType() == "output" || plugoutComp.getType == "connector") {
-			if (plugoutComp.getType() != "output") plugoutComp.setConnectorPlugin(-1);
+		if (plugoutComp.getType() == "not" || plugoutComp.getType() == "output" || plugoutComp.getType() == "connector") {
+			if (plugoutComp.getType() != "connector") plugoutComp.setConnectorPlugin(-1);
 			plugoutComp.setPluginCompNull();
 		}
 		else {

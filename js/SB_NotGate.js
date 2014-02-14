@@ -176,7 +176,7 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 			  x: group.getX() + scale * 90,
 			  y: group.getY() + scale * -15,
 			  image: imageObj,
-			  scale: 0.3
+			  scale: 0.4
 		 });
 
          iconLayer.destroyChildren();
