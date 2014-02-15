@@ -32,10 +32,11 @@
 		<script src="js/SB_Setup.js"></script>
 		<script src="js/DigitalLogicsLab.js"></script>
 
-		<div id="container1"></div>
+		<div id="sandbox1"></div>
+		<div id="truthTableDiv1" style="position: absolute; visibility: hidden"></div>
 		
 		<script>
-			var lab = new DigitalLogicsLab("container1");
+			var lab = new DigitalLogicsLab(1);
 			
 			function detectMobile() { 
 				 if( navigator.userAgent.match(/Android/i)
@@ -55,4 +56,5 @@
 			
 		</script>
 	</body>
+
 </html>

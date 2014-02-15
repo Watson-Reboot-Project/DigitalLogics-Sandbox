@@ -1,19 +1,34 @@
-function SB_TruthTable(container) {
+function SB_TruthTable(containerNum) {
 	var expectedTruthTable;
 	var numIn;
 	var numOut;
 	var header;
 	//var title;
-	var suffix = container.substring(container.length - 1);
-	var tableName = "table" + suffix;
+	var tableName = "truthTable" + containerNum;
+	var divName = "truthTableDiv" + containerNum;
+	var tableDiv = document.getElementById(divName);
+	var img;
 	
 	this.setExpectedTruthTable = setExpectedTruthTable;
 	this.checkTruthTable = checkTruthTable;
 	this.createTable = createTable;
 	this.setTable = setTable;
 	this.getTableWidth = getTableWidth;
-	this.setLeftOffset = setLeftOffset;
+	//this.setLeftOffset = setLeftOffset;
 	this.toggleVisible = toggleVisible;
+	this.setDeleteIcon = setDeleteIcon;
+	this.setTableOffset = setTableOffset;
+	this.resetTruthTable = resetTruthTable;
+	
+	function resetTruthTable(_numIn, _numOut, _header) {
+		var table = document.getElementById(tableName);
+		if (table) {
+			table.id = "";
+			tableDiv.removeChild(document.getElementById("tableDeleteIcon" + containerNum));
+			tableDiv.removeChild(table);
+			createTable(_numIn, _numOut, _header);
+		}
+	}
 	
 	function checkTruthTable(resultTruthTable) {
 		if (expectedTruthTable.length == 0) return; // no truth table set; scratch pad mode
@@ -43,15 +58,15 @@ function SB_TruthTable(container) {
 		
 		var rows = Math.pow(2, numIn);											// set number of rows
 		var cols = numIn+numOut;												// set number of columns
-		var body = document.getElementById(container).childNodes[0];							// grab the div element for the table
+		var body = tableDiv;
 		//var body = document.getElementById('tableDiv');
 		var tbl = document.createElement('table');								// create a table element
-		tbl.id=tableName;				
+		tbl.id = tableName;				
 		// set its ID
 		tbl.style.position='absolute';
 		//tbl.style.width = '10%';
-		tbl.border='2';	
-		tbl.style.display = 'none'; // block is viisble, none is invisible
+		//tbl.border='2';	
+		tbl.style.display = 'block'; // block is viisble, none is invisible
 		
 		/*
 		title = "Gate";
@@ -63,6 +78,15 @@ function SB_TruthTable(container) {
 		caption.appendChild(b);
 		tbl.appendChild(caption);
 		*/
+		
+		img = document.createElement('img');
+		img.id = "tableDeleteIcon" + containerNum;
+		img.src = "delete.ico";
+		img.style.height = '20px';
+		img.style.width = '20px';
+		img.style.position = "absolute";
+		img.style.visibility = 'hidden';
+		body.appendChild(img);
 		
 		var tbdy = document.createElement('tbody');
 		
@@ -100,6 +124,9 @@ function SB_TruthTable(container) {
 		}
 		tbl.style.borderSpacing = '0px';
 		initTableValues(rows, cols);
+
+		img.style.marginLeft = tbl.offsetWidth + "px";
+		img.style.marginTop = "-10px";
 	}
 
 	/*
@@ -147,16 +174,29 @@ function SB_TruthTable(container) {
 		}
 	}
 	
-	function getTableWidth() { return document.getElementById(tableName).offsetWidth; }
+	function getTableWidth() { return tableDiv.offsetWidth; }
 	
-	function setLeftOffset(num) { if (document.getElementById("table1") !== null) document.getElementById("table1").style.marginLeft = num + "px"; }
+	function setTableOffset(x, y) {
+		if (tableDiv !== null) {
+			tableDiv.style.marginLeft = x + "px";
+			tableDiv.style.marginTop = -y + "px";
+		}
+	}
+	
+	function setDeleteIcon(bool) {
+		if (bool && tableDiv.style.visibility == 'visible') {
+			img.style.visibility = 'visible';
+		}
+		else {
+			img.style.visibility = 'hidden';
+		}
+	}
 
-	function toggleVisible(tableN){
-		var tbl = document.getElementById(tableN);
-		if(tbl.style.display == 'block'){
-			tbl.style.display = 'none';
+	function toggleVisible(){
+		if(tableDiv.style.visibility == 'hidden'){
+			tableDiv.style.visibility = 'visible';
 		}else{
-			tbl.style.display = 'block';
+			tableDiv.style.visibility = 'hidden';
 		}
 	}
 }

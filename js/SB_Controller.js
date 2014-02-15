@@ -26,7 +26,7 @@
 *								in terms of digital circuits.
 ***************************************************************************************/
 
-function SB_Controller(setup, truthTable, numInputs, numOutputs) {
+function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS/DEFINITIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -50,8 +50,8 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	var warningWire = null;
 	var selectedPlugNum = 0;
 	var deleteMode = false;
-	var haltMenu = false;
-
+	var truthTableOpen = false;
+	
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
 	var bg = setup.getBG();
@@ -120,7 +120,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	// this event listener is used to draw the line that follows the mouse when in connecting mode
 	stage.on('mousemove touchmove', function() {
 		stageMouseMove();
-		mainLayer.drawScene();
+		mainLayer.draw();
 	});
 	
 	// this event listener listens for clicks on the stage
@@ -139,12 +139,12 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			tempLine = null;
 			tempLineLayer.draw();
 		}
-		//mainLayer.drawScene();
+		//mainLayer.draw();
 	});
 	
 	bg.on('mousedown touchstart', function() {
 		bgMouseDown();
-		mainLayer.drawScene();
+		mainLayer.draw();
 	});
 	
 	var wrenchImg = new Image();
@@ -227,49 +227,51 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 				tempLine = null;
 				selectedComp = null;
 				connecting = false;
-				tempLineLayer.drawScene();
+				tempLineLayer.draw();
 			}
 		});
 		if (comp.getFunc() == "connection") {
 			comp.getInputBox().on('mousedown touchstart', function(event) {
 				connectorInputBoxMouseDown(event, comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 			comp.getInputBox().on('mouseup touchend', function(event) {
 				connectorInputBoxMouseUp(event, comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 				setTimeout(evaluateCircuit, 50);
 			});
 			comp.getInputBox().on('mouseenter', function(event) {
 				connectorInputBoxMouseEnter(event, comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 			comp.getInputBox().on('mouseleave', function(event) {
 				connectorInputBoxMouseLeave(event, comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 			
-			comp.getOutputBox(1).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 1); mainLayer.drawScene();});
-			comp.getOutputBox(1).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 1); mainLayer.drawScene(); setTimeout(evaluateCircuit, 50);});
-			comp.getOutputBox(1).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 1); mainLayer.drawScene();});
-			comp.getOutputBox(1).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 1); mainLayer.drawScene();});
-			comp.getOutputBox(2).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 2); mainLayer.drawScene();});
-			comp.getOutputBox(2).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 2); mainLayer.drawScene(); setTimeout(evaluateCircuit, 50);});
-			comp.getOutputBox(2).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 2); mainLayer.drawScene();});
-			comp.getOutputBox(2).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 2); mainLayer.drawScene();});
-			comp.getOutputBox(3).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 3); mainLayer.drawScene();});
-			comp.getOutputBox(3).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 3); mainLayer.drawScene(); setTimeout(evaluateCircuit, 50);});
-			comp.getOutputBox(3).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 3); mainLayer.drawScene();});
-			comp.getOutputBox(3).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 3); mainLayer.drawScene();});
+			comp.getOutputBox(1).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 1); mainLayer.draw();});
+			comp.getOutputBox(1).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 1); mainLayer.draw(); setTimeout(evaluateCircuit, 50);});
+			comp.getOutputBox(1).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 1); mainLayer.draw();});
+			comp.getOutputBox(1).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 1); mainLayer.draw();});
+			comp.getOutputBox(2).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 2); mainLayer.draw();});
+			comp.getOutputBox(2).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 2); mainLayer.draw(); setTimeout(evaluateCircuit, 50);});
+			comp.getOutputBox(2).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 2); mainLayer.draw();});
+			comp.getOutputBox(2).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 2); mainLayer.draw();});
+			comp.getOutputBox(3).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 3); mainLayer.draw();});
+			comp.getOutputBox(3).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 3); mainLayer.draw(); setTimeout(evaluateCircuit, 50);});
+			comp.getOutputBox(3).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 3); mainLayer.draw();});
+			comp.getOutputBox(3).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 3); mainLayer.draw();});
 			
 			comp.getGroup().on('dragmove touchmove', function() {
 				connectorDrag(comp);
-				mainLayer.drawScene();
+				wrenchLayer.draw();
+				trashLayer.draw();
+				mainLayer.draw();
 			});
 			
 			comp.getGroup().on('click tap', function() {
 				connectorClick(comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 		}
 		// if the component is a gate, set gate event listeners
@@ -281,82 +283,84 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 				});
 				comp.getInputBox().on('mouseup touchend', function(event) {
 					gateInputBoxMouseUp(event, comp, 0);
-					mainLayer.drawScene();
+					mainLayer.draw();
 					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getInputBox().on('mouseenter', function(event) {
 					gateInputBoxMouseEnter(event, comp, 0);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				comp.getInputBox().on('mouseleave', function(event) {
 					gateInputBoxMouseLeave(event, comp, 0);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 			}
 			else {
 				comp.getInputBox(1).on('mousedown touchstart', function(event) {
 					gateInputBoxMouseDown(event, comp, 1);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				comp.getInputBox(1).on('mouseup touchend', function(event) {
 					gateInputBoxMouseUp(event, comp, 1);
-					mainLayer.drawScene();
+					mainLayer.draw();
 					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getInputBox(1).on('mouseenter', function(event) {
 					gateInputBoxMouseEnter(event, comp, 1);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				comp.getInputBox(1).on('mouseleave', function(event) {
 					gateInputBoxMouseLeave(event, comp, 1);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				
 				comp.getInputBox(2).on('mousedown touchstart', function(event) {
 					gateInputBoxMouseDown(event, comp, 2);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				comp.getInputBox(2).on('mouseup touchend', function(event) {
 					gateInputBoxMouseUp(event, comp, 2);
-					mainLayer.drawScene();
+					mainLayer.draw();
 					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getInputBox(2).on('mouseenter', function(event) {
 					gateInputBoxMouseEnter(event, comp, 2);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				comp.getInputBox(2).on('mouseleave', function(event) {
 					gateInputBoxMouseLeave(event, comp, 2);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 			}
 			
 			comp.getOutputBox().on('mousedown touchstart', function(event) {
 				gateOutputBoxMouseDown(event, comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 			comp.getOutputBox().on('mouseup touchend', function(event) {
 				gateOutputBoxMouseUp(event, comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 				setTimeout(evaluateCircuit, 50);
 			});
 			comp.getOutputBox().on('mouseenter', function(event) {
 				gateOutputBoxMouseEnter(event, comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 			comp.getOutputBox().on('mouseleave', function(event) {
 				gateOutputBoxMouseLeave(event, comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 
 			comp.getGroup().on('click tap', function (event) {
 				gateClick(event, comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 	
 			comp.getGroup().on('dragmove touchmove', function() {
 				gateDrag(comp);
-				mainLayer.drawScene();
+				wrenchLayer.draw();
+				trashLayer.draw();
+				mainLayer.draw();
 			});
 		}
 		else if (comp.getFunc() == "node") {
@@ -364,49 +368,49 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			if (comp.getType() == "input") {
 				comp.getOutputBox().on('mousedown touchstart', function (event) {
 					nodeOutputBoxMouseDown(event, comp);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				comp.getOutputBox().on('mouseup touchend', function (event) {
 					nodeOutputBoxMouseUp(event, comp);
-					mainLayer.drawScene();
+					mainLayer.draw();
 					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getOutputBox().on('mouseenter', function (event) {
 					nodeOutputBoxMouseEnter(event, comp);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				comp.getOutputBox().on('mouseleave', function(event) {
 					nodeOutputBoxMouseLeave(event, comp);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 			}
 			if (comp.getType() == "output") {
 				comp.getInputBox().on('mousedown touchstart', function (event) {
 					nodeInputBoxMouseDown(event, comp);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				comp.getInputBox().on('mouseup touchend', function (event) {
 					nodeInputBoxMouseUp(event, comp);
-					mainLayer.drawScene();
+					mainLayer.draw();
 					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getInputBox().on('mouseenter', function (event) {
 					nodeInputBoxMouseEnter(event, comp);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 				comp.getInputBox().on('mouseleave', function(event) {
 					nodeInputBoxMouseLeave(event, comp);
-					mainLayer.drawScene();
+					mainLayer.draw();
 				});
 			}
 	
 			comp.getGroup().on('dragmove touchmove', function() {
 				nodeDrag(comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 			comp.getGroup().on('click tap', function() {
 				nodeClick(comp);
-				mainLayer.drawScene();
+				mainLayer.draw();
 			});
 		}
 	}
@@ -457,7 +461,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			
 			if (selectedComp == gate || gate.getPluginComp(pluginNum) !== null || selectedPlug.indexOf("plugin") >= 0) {
 				tempLine.remove();
-				tempLineLayer.drawScene();
+				tempLineLayer.draw();
 				connecting = false;
 				selectedComp = null;
 				
@@ -586,7 +590,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			
 			if (selectedComp == gate || gate.getPlugoutComp() !== null || selectedPlug.indexOf("plugout") >= 0) {
 				tempLine.remove();
-				tempLineLayer.drawScene();
+				tempLineLayer.draw();
 				connecting = false;
 				selectedComp = null;
 				
@@ -693,7 +697,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			if (highlightPlug.indexOf("plugout") >= 0) {
 				if (gate.getPlugoutWire() !== null) {			
 					gate.deleteOutputConnection();
-					mainLayer.drawScene();								// redraw the scene
+					mainLayer.draw();								// redraw the scene
 					return;
 				}
 				else {
@@ -790,7 +794,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			
 			selectedPlug = null;
 			tempLine = null;
-			mainLayer.drawScene();	// redraw the scene to draw any changes
+			mainLayer.draw();	// redraw the scene to draw any changes
 			connecting = false;		// we are no longer in connection mode
 			selectedComp = null;	// null the selected component
 		}
@@ -916,7 +920,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		if (connecting) {
 			if (selectedComp == connect || connect.getPluginComp() !== null) {
 				tempLine.remove();
-				tempLineLayer.drawScene();
+				tempLineLayer.draw();
 				connecting = false;
 				selectedComp = null;
 				return;
@@ -994,7 +998,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		if (connecting) {
 			if (selectedComp == connect || connect.getPlugoutComp(plugoutNum) !== null) {
 				tempLine.remove();
-				tempLineLayer.drawScene();
+				tempLineLayer.draw();
 				connecting = false;
 				selectedComp = null;
 				
@@ -1144,7 +1148,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 				}
 			}
 		
-			mainLayer.drawScene();		
+			mainLayer.draw();		
 			connecting = false;
 			selectedComp = null;
 		}
@@ -1241,7 +1245,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		if (connecting) {
 			if (selectedComp == node || node.getPlugoutComp() !== null) {
 				tempLine.remove();
-				tempLineLayer.drawScene();
+				tempLineLayer.draw();
 				connecting = false;
 				selectedComp = null;
 				selectedPlug = null;
@@ -1313,7 +1317,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		if (connecting) {
 			if (selectedComp == node || node.getPluginComp() !== null) {
 				tempLine.remove();
-				tempLineLayer.drawScene();
+				tempLineLayer.draw();
 				connecting = false;
 				selectedComp = null;
 				
@@ -1496,22 +1500,15 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		if (wrenchPopup !== null) { wrenchPopup.hide(); wrenchPopup = null; return; }
 		if (probeMode == true) { probeMode = false; setComponentMouseOver("pointer"); return; }
 		if (deleteMode == true) { 
-			if (haltMenu == true) {
-				truthTable.toggleVisible("table1");
-				haltMenu = false;
-				return;
-			}
 			deleteMode = false;
 			toggleComponentDeleteIcons(false);
 			setTrashImage("trash_closed.bmp");
-			haltMenu = false;
 			return;
 		}
 		
-		if (!connecting && haltMenu == false) {
+		if (!connecting) {
 			showAddMenu(event, getRelativePointerPosition(event));
 		}
-		else if (haltMenu == true) haltMenu = false;
 		
 		if (connecting) {							// if we are in connecting mode
 			tempLine.disableStroke();				// disable the tempLine's stroke
@@ -1581,7 +1578,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			}
 			
 			tempLine.setPoints(points);
-			tempLineLayer.drawScene();
+			tempLineLayer.draw();
 		}
 	}
 	
@@ -1656,12 +1653,12 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		// make a new line with the points computed earlier
 		var line = new Kinetic.Line({points : points, stroke : "black", strokeWidth : 1, lineCap : 'round', lineJoin : 'round'});
 		mainLayer.add(line);			// refresh the scene
-		line.drawScene();
+		line.draw();
 		
 		if (tempLine !== null) {		// if the tempLine does not equal null, disable it and set it null
 			tempLine.remove();
 			tempLine = null;
-			tempLineLayer.drawScene();
+			tempLineLayer.draw();
 		}
 		
 		if (pluginNum == 0) toGate.setPluginComp(fromGate);				// if the plugin number is 0, the component is a NOT gate (only one input for a not gate)
@@ -1687,12 +1684,12 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		// make the line with the points computed earlier
 		var line = new Kinetic.Line({points : points, stroke : "black", strokeWidth : 1, lineCap : 'round', lineJoin : 'round'});
 		mainLayer.add(line);
-		line.drawScene();
+		line.draw();
 		
 		if (tempLine !== null) {		// if temp line does not equal null, make it null and disable it
 			tempLine.remove();
 			tempLine = null;
-			tempLineLayer.drawScene();
+			tempLineLayer.draw();
 		}
 		
 		toConnect.setPluginComp(fromGate);	// set the plugin component of the connector to the selected gate
@@ -1718,12 +1715,12 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		
 		var line = new Kinetic.Line({points : points, stroke : "black", strokeWidth : 1, lineCap : 'round', lineJoin : 'round'});
 		mainLayer.add(line);
-		line.drawScene();
+		line.draw();
 		
 		if (tempLine !== null) {		// if the temp line is not null, disable it
 			tempLine.remove();
 			tempLine = null;
-			tempLineLayer.drawScene();
+			tempLineLayer.draw();
 		}
 		
 		if (pluginNum == 0) {
@@ -1758,7 +1755,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		
 		var line = new Kinetic.Line({points : points, stroke : "black", strokeWidth : 1, lineCap : 'round', lineJoin : 'round'});
 		mainLayer.add(line);
-		line.drawScene();
+		line.draw();
 		
 		if (tempLine !== null) {		// if the temp line isn't null, disable it
 			tempLine.remove();
@@ -1801,7 +1798,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			setWireFromConnectorToConnector(comp2, comp1.getPlugout(opts[0]).getPoints()[1], comp2.getPlugin().getPoints()[0], opts[0]);	// make the connection
 		}
 		
-		mainLayer.drawScene();	// refresh the scene
+		mainLayer.draw();	// refresh the scene
 	}
 	
 	//------------------------------------
@@ -1845,6 +1842,26 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			else deleteANDORGate(comp);
 		}
 		else deleteConnector(comp);
+	}
+	
+	function deleteInputNode(node) {
+		if (node.getPlugoutComp() !== null) {
+			node.deleteOutputConnection();
+		}
+		
+		node.deleteSelf();
+		removeComp(node);
+		mainLayer.draw();
+	}
+	
+	function deleteOutputNode(node) {
+		if (node.getPluginComp() !== null) {
+			node.getPluginComp().deleteOutputConnection();
+		}
+		
+		node.deleteSelf();
+		removeComp(node);
+		mainLayer.draw();
 	}
 	
 	function deleteGate(gate) {
@@ -1904,7 +1921,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		
 		gate.deleteSelf();
 		removeComp(gate);
-		mainLayer.drawScene();
+		mainLayer.draw();
 	}
 	
 	function deleteNotGate(gate) {
@@ -1939,7 +1956,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		
 		gate.deleteSelf();
 		removeComp(gate);
-		mainLayer.drawScene();
+		mainLayer.draw();
 	}
 	
 	function deleteConnector(connect) {
@@ -2101,7 +2118,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 			}
 		}
 		
-		mainLayer.drawScene();
+		mainLayer.draw();
 		truthTable.setTable(truthTableArr);
 		truthTable.checkTruthTable(truthTableArr);	
 	}
@@ -2144,26 +2161,32 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 	}
 	
 	function showWrenchMenu(event, pos) {
-		console.log("Showing menu.");
 		wrenchPopup = new SB_PopupMenu();
 		wrenchPopup.add('Boolean Probe', function(target) {
 			probeMode = true;
 			setComponentMouseOver("crosshair");
 			wrenchPopup = null;
 		});
-		wrenchPopup.add('Truth Table', function(target) {
+		var truthTableMenu = "Truth Table";
+		if (truthTableOpen) truthTableMenu = ".Truth Table";
+		
+		wrenchPopup.add(truthTableMenu, function(target) {
 			if (numInputs > 5) { alert("The truth table feature has been disabled because you have more than 5 inputs."); return; }
 			else {
-				truthTable.toggleVisible("table1");
+				truthTable.setTableOffset(stage.getWidth() / 2, stage.getHeight() / 2);
+				truthTable.toggleVisible();
+				
+				if (deleteMode == true) truthTable.setDeleteIcon(true);
+				else truthTable.setDeleteIcon(false);
+				
+				truthTableOpen = true;
 			}
 			wrenchPopup = null;
 		});
 		var inputMenu = "Number of Inputs";
 		var outputMenu = "Number of Outputs";
-		if ((components.length != (numInputs + numOutputs)) || checkNodeConnections() == true) {
-			inputMenu = ".Number of Inputs";
-			outputMenu = ".Number of Outputs";
-		}
+		if (checkInputNodeConnections() == true) inputMenu = ".Number of Inputs";
+		if (checkOutputNodeConnections() == true) outputMenu = ".Number of Outputs";
 		
 		wrenchPopup.add(inputMenu, function(target) {
 			updateNumberOfInputs();
@@ -2203,49 +2226,104 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs) {
 		for (var i = 0; i < components.length; i++) {
 			components[i].toggleDeleteIcon(bool);
 		}
+		truthTable.setDeleteIcon(bool);
 		//stage.draw();
 	}
 	
 	function updateNumberOfInputs() {
+		var alphabet = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ];
+		
 		var res = prompt("Enter number of inputs.", numInputs);
 		if (res === null) return;
 		if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
 		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
-		if (parseFloat(res) + numOutputs > 25) { alert("You can't have that many inputs."); return; }
-		setup.resetExercise(parseFloat(res), numOutputs);
-		return;
+		res = parseFloat(res);
+		if (res + numOutputs > 25) { alert("You can't have that many inputs."); return; }
+		//setup.resetExercise(parseFloat(res), numOutputs);
 		
+		var header = [ ];
+
+		for (var i = 0; i < res; i++) header.push(alphabet[i]);
+		for (var i = 0; i < numOutputs; i++) header.push(alphabet[25 - i]);
+			
 		for (var i = 0; i < inputs.length; i++) {
-			// delete input
+			deleteInputNode(inputs[i]);
+		}
+		inputs = [];
+		
+		var ind = 0;
+		for (var i = 0; i < res; i++) {
+			addInput(5, ((600 / (res + 1)) * (i + 1)), header[ind++], 0);
 		}
 		
-		for (var i = 0; i < parseFloat(res); i++) {
-			// add new inputs using alphabet method from exercises
+		truthTable.resetTruthTable(res, numOutputs, header);
+		numInputs = res;
+		if (deleteMode) {
+			truthTable.setDeleteIcon(true);
 		}
 	}
 	
 	function updateNumberOfOutputs() {
+		var alphabet = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ];
+		
 		var res = prompt("Enter number of outputs.", numOutputs);
 		if (res === null) return;
 		if (res <= "0") { alert("You can't have a negative number of outputs..."); return; }
 		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
-		if (parseFloat(res) + numInputs > 25) { alert("You can't have that many outputs."); return; }
-		setup.resetExercise(numInputs, parseFloat(res));
+		res = parseFloat(res);
+		if (res + numInputs > 25) { alert("You can't have that many outputs."); return; }
+		//setup.resetExercise(numInputs, parseFloat(res));
+		
+		var header = [ ];
+
+		for (var i = 0; i < numInputs; i++) header.push(alphabet[i]);
+		for (var i = 0; i < res; i++) header.push(alphabet[25 - i]);
+			
+		for (var i = 0; i < outputs.length; i++) {
+			deleteOutputNode(outputs[i]);
+		}
+		outputs = [];
+		
+		var ind = numInputs;
+		for (var i = 0; i < res; i++) {
+			addOutput(820, ((550 / (res + 1)) * (i + 1)), header[ind++]);
+		}
+		
+		truthTable.resetTruthTable(numInputs, res, header);
+		numOutputs = res;
+		if (deleteMode) {
+			truthTable.setDeleteIcon(true);
+		}
 	}
 	
 	function initTruthTableListeners() {
 		$(function() {
-			$( "#table1" ).draggable();
-			$( "#table1" ).on("touchstart mousedown", function() {
-				haltMenu = true;
+			$( "#truthTableDiv" + containerNum ).draggable();
+
+			$( "#truthTableDiv" + containerNum ).on("click tap", function() {
+				if (deleteMode == true) {
+					truthTable.toggleVisible();
+					truthTable.setDeleteIcon(false);
+					truthTableOpen = false;
+				}
 			});
 		});
 	}
 	
-	function checkNodeConnections() {
+	function checkInputNodeConnections() {
 		for (var i = 0; i < components.length; i++) {
 			if (components[i].getType() == "input") {
 				if (components[i].getPlugoutComp() !== null) return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	function checkOutputNodeConnections() {
+		for (var i = 0; i < components.length; i++) {
+			if (components[i].getType() == "output") {
+				if (components[i].getPluginComp() !== null) return true;
 			}
 		}
 		

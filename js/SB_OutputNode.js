@@ -48,6 +48,7 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 	this.setMouseOver = setMouseOver;
 	this.toggleDeleteIcon = toggleDeleteIcon;
 	this.setPluginColor = setPluginColor;
+	this.deleteSelf = deleteSelf;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -139,6 +140,11 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 	
 	function getInputBox() {
 		return inputBox;
+	}
+	
+	function deleteSelf() {
+		group.remove();
+		inputBox.remove();
 	}
 	
 	function toggleDeleteIcon() {

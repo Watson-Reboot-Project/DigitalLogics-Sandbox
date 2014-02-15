@@ -50,6 +50,7 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	this.toggleDeleteIcon = toggleDeleteIcon;
 	this.toggleOutputValue = toggleOutputValue;
 	this.getOutputValue = getOutputValue;
+	this.deleteSelf = deleteSelf;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -157,6 +158,12 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	function getOutputBox() {
 		return outputBox;
 	}
+	
+	function deleteSelf() {
+		group.remove();
+		outputBox.remove();
+	}
+	
 	
 	function toggleDeleteIcon() {
 		

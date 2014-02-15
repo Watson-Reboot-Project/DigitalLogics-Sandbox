@@ -43,7 +43,8 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	
 	var stage = setup.getStage();
 	var mainLayer = setup.getMainLayer();
-	var iconLayer = new Kinetic.Layer(); stage.add(iconLayer);
+	var iconLayer = new Kinetic.Layer();
+	stage.add(iconLayer);
 	var thisObj = this;
 	var mouseOver = 'pointer';
 	var deleteImg;

@@ -1,4 +1,4 @@
-function SB_Setup(container) {
+function SB_Setup(container, containerNum) {
 	var timeout = false;
 	
 	this.getMainLayer = getMainLayer;
@@ -40,15 +40,13 @@ function SB_Setup(container) {
 
 	resize();
 	
-	var truthTable = new SB_TruthTable(container);
-	var controller = new SB_Controller(this, truthTable, 2, 1);
+	var truthTable = new SB_TruthTable(containerNum);
+	var controller = new SB_Controller(this, truthTable, 2, 1, containerNum);
 	var exercises = new SB_Exercises(stage, this, truthTable, controller, 2, 1);
 		
 	var curExercise = 0;
 	exercises.setExercise(curExercise);
 	controller.initTruthTableListeners();
-	
-	truthTable.setLeftOffset(50);
 	
 	$(window).resize( function() {
 		if (timeout == false) {
@@ -72,7 +70,7 @@ function SB_Setup(container) {
 	}
 	
 	function resetExercise(numInputs, numOutputs) {
-		var table = document.getElementById("table1");
+		var table = document.getElementById("truthTable" + containerNum);
 		if (table) {
 			table.id = "";
 			table.parentNode.removeChild(table);
@@ -100,11 +98,10 @@ function SB_Setup(container) {
 		});
 		mainLayer.add(bg);
 		resize();
-		truthTable = new SB_TruthTable(container);
-		controller = new SB_Controller(thisObj, truthTable, numInputs, numOutputs);
+		truthTable = new SB_TruthTable(containerNum);
+		controller = new SB_Controller(thisObj, truthTable, numInputs, numOutputs, containerNum);
 		exercises = new SB_Exercises(stage, thisObj, truthTable, controller, numInputs, numOutputs);
 		exercises.setExercise(0);
-		truthTable.setLeftOffset(50);
 		controller.initTruthTableListeners();
 	}
 	
