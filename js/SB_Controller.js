@@ -360,11 +360,12 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 				gateDrag(comp);
 				mainLayer.draw();
 			});
-			
+			/*
 			comp.getGroup().on('dragend', function() {
 				console.log("Drag end.");
 				gateDragEnd(comp);
 			});
+			*/
 		}
 		else if (comp.getFunc() == "node") {
 
@@ -659,8 +660,10 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	function gateDragEnd(gate) {
 		var gateOutputBox = gate.getOuputBox();
 		
-		if (shape) {
-			console.log(shape);
+		for (var i = 0; i < components.length; i++) {
+			if (gate.getType() == "and") {
+			
+			}
 		}
 	}
 	
