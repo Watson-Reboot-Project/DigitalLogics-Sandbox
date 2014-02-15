@@ -358,9 +358,12 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	
 			comp.getGroup().on('dragmove touchmove', function() {
 				gateDrag(comp);
-				wrenchLayer.draw();
-				trashLayer.draw();
 				mainLayer.draw();
+			});
+			
+			comp.getGroup().on('dragend', function() {
+				console.log("Drag end.");
+				gateDragEnd(comp);
 			});
 		}
 		else if (comp.getFunc() == "node") {
@@ -610,7 +613,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 			gate.setPlugColor("plugout", "default");
 		}
 		
-		tempLine.remove();
+		tempLineLayer.draw();
 		tempLine = null;
 		connecting = false;		// we are no longer in connection mode
 		selectedComp = null;	// null the selected component
@@ -650,6 +653,14 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 		
 		if (deleteMode) {
 			deleteGate(gate);
+		}
+	}
+	
+	function gateDragEnd(gate) {
+		var gateOutputBox = gate.getOuputBox();
+		
+		if (shape) {
+			console.log(shape);
 		}
 	}
 	
