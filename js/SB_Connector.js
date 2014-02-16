@@ -85,6 +85,10 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	this.deleteSelf = deleteSelf;
 	this.getOutputValue = getOutputValue;
 	this.setDeleteIcon = setDeleteIcon;
+	this.getInputBoxCoords = getInputBoxCoords;
+	this.getOutputBoxCoords = getOutputBoxCoords;
+	this.loopCheckForward = loopCheckForward;
+	this.loopCheckBackward = loopCheckBackward;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -209,6 +213,26 @@ function SB_Connector(initX, initY, setName, id, setup) {
 		output2Box.remove();
 		output3Box.remove();
 		iconLayer.remove();
+	}
+	
+
+	function getInputBoxCoords() {
+		var pos;
+		var box;
+		pos = inputBox.getAbsolutePosition();
+		box = inputBox;
+		
+		return { x1: pos.x, x2: pos.x + box.getWidth(), y1: pos.y, y2: pos.y + box.getHeight() };
+	}
+	
+	function getOutputBoxCoords(num) {
+		var pos;
+		var box;
+		if (num == 1) { pos = output1Box.getAbsolutePosition(); box = output1Box; }
+		else if (num == 2) { pos = output2Box.getAbsolutePosition(); box = output2Box; }
+		else if (num == 3) { pos = output3Box.getAbsolutePosition(); box = output3Box; }
+		
+		return { x1: pos.x, x2: pos.x + box.getWidth(), y1: pos.y, y2: pos.y + box.getHeight() };
 	}
 	
 	function drawBoxes() {
@@ -530,5 +554,34 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	
 	function getOutputValue() {
 		return pluginVal;
+	}
+	
+	function loopCheckForward(comp) {
+		var result = false;
+		
+		if (plugout1Comp !== null && plugout1Comp == comp) return true;
+		if (plugout2Comp !== null && plugout2Comp == comp) return true;
+		if (plugout3Comp !== null && plugout3Comp == comp) return true;
+		
+		if (plugout1Comp !== null) result = plugout1Comp.loopCheckForward(comp);
+		if (result) return true;
+		
+		if (plugout2Comp !== null) result = plugout2Comp.loopCheckForward(comp);
+		if (result) return true;
+		
+		if (plugout3Comp !== null) result = plugout3Comp.loopCheckForward(comp);
+		if (result) return true;
+		
+		return false;
+	}
+	
+	function loopCheckBackward(comp) {
+		var result = false;
+		
+		if (pluginComp !== null && pluginComp == comp) return true;
+		
+		if (pluginComp !== null) result = pluginComp.loopCheckBackward(comp);
+		
+		return result;
 	}
 }

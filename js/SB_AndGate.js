@@ -83,8 +83,11 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	this.setPluginColor = setPluginColor;
 	this.deleteSelf = deleteSelf;
 	this.getOutputValue = getOutputValue;
-	
+	this.getInputBoxCoords = getInputBoxCoords;
+	this.getOutputBoxCoords = getOutputBoxCoords;
 	this.setDeleteIcon = setDeleteIcon;
+	this.loopCheckForward = loopCheckForward;
+	this.loopCheckBackward = loopCheckBackward;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -208,6 +211,22 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 		iconLayer.remove();
 	}
 	
+	function getInputBoxCoords(num) {
+		var pos;
+		var box;
+		if (num == 1) { pos = input1Box.getAbsolutePosition(); box = input1Box; }
+		else { pos = input2Box.getAbsolutePosition(); box = input2Box; }
+		
+		return { x1: pos.x, x2: pos.x + box.getWidth(), y1: pos.y, y2: pos.y + box.getHeight() };
+	}
+	
+	function getOutputBoxCoords() {
+		var pos = outputBox.getAbsolutePosition();
+		var corners = [];
+		
+		return { x1: pos.x, x2: pos.x + outputBox.getWidth(), y1: pos.y, y2: pos.y + outputBox.getHeight() };
+	}
+	
 	function drawBoxes() {
 		var plug;
 		if (input1Box) {
@@ -271,7 +290,7 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	}
 	
 	// accessor for the gate type
-	function getType() { return "or"; }
+	function getType() { return "and"; }
 	
 	function getID() { return ID; }
 	
@@ -471,5 +490,26 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 		plugoutWire.disableStroke();
 		plugoutComp = null;
 		plugoutWire = null;
+	}
+	
+	function loopCheckForward(comp) {
+		var result = false;
+		
+		if (plugoutComp !== null && plugoutComp == comp) return true;
+		if (plugoutComp !== null) result = plugoutComp.loopCheckForward(comp);
+		
+		return result;
+	}
+	
+	function loopCheckBackward(comp) {
+		var result1, result2;
+		if (plugin1Comp !== null && plugin1Comp == comp) return true;
+		if (plugin2Comp !== null && plugin2Comp == comp) return true;
+		
+		if (plugin1Comp !== null) result1 = plugin1Comp.loopCheckBackward(comp);
+		if (plugin2Comp !== null) result2 = plugin2Comp.loopCheckBackward(comp);
+		
+		if (result1 || result2) return true;
+		else return false;
 	}
 }

@@ -51,6 +51,10 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	this.toggleOutputValue = toggleOutputValue;
 	this.getOutputValue = getOutputValue;
 	this.deleteSelf = deleteSelf;
+	this.getInputBoxCoords = getInputBoxCoords;
+	this.getOutputBoxCoords = getOutputBoxCoords;
+	this.loopCheckBackward = loopCheckBackward;
+	this.loopCheckForward = loopCheckForward;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -131,6 +135,18 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();			// call draw on the stage to redraw its components
 		drawBoxes();
+	}
+	
+	function getInputBoxCoords() {
+		// return null, no input box
+		return null;
+	}
+	
+	function getOutputBoxCoords() {
+		var pos = outputBox.getAbsolutePosition();
+		var corners = [];
+		
+		return { x1: pos.x, x2: pos.x + outputBox.getWidth(), y1: pos.y, y2: pos.y + outputBox.getHeight() };
 	}
 	
 	function drawBoxes() {
@@ -265,5 +281,13 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	
 	function getOutputValue() {
 		return value;
+	}
+	
+	function loopCheckForward() {
+		return false;
+	}
+	
+	function loopCheckBackward() {
+		return false;
 	}
 }

@@ -81,6 +81,10 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 	this.deleteSelf = deleteSelf;
 	this.getOutputValue = getOutputValue;
 	this.setDeleteIcon = setDeleteIcon;
+	this.getInputBoxCoords = getInputBoxCoords;
+	this.getOutputBoxCoords = getOutputBoxCoords;
+	this.loopCheckForward = loopCheckForward;
+	this.loopCheckBackward = loopCheckBackward;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -208,6 +212,22 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 		input2Box.remove();
 		outputBox.remove();
 		iconLayer.remove();
+	}
+	
+	function getInputBoxCoords(num) {
+		var pos;
+		var box;
+		if (num == 1) { pos = input1Box.getAbsolutePosition(); box = input1Box; }
+		else { pos = input2Box.getAbsolutePosition(); box = input2Box; }
+		
+		return { x1: pos.x, x2: pos.x + box.getWidth(), y1: pos.y, y2: pos.y + box.getHeight() };
+	}
+	
+	function getOutputBoxCoords() {
+		var pos = outputBox.getAbsolutePosition();
+		var corners = [];
+		
+		return { x1: pos.x, x2: pos.x + outputBox.getWidth(), y1: pos.y, y2: pos.y + outputBox.getHeight() };
 	}
 	
 	function drawBoxes() {
@@ -473,5 +493,28 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 			if (plugin1Val == 1 || plugin2Val == 1) return 1;
 			else return 0;
 		}
+	}
+	
+	function loopCheckForward(comp) {
+		var result = false;
+		
+		if (plugoutComp !== null && plugoutComp == comp) return true;
+		if (plugoutComp !== null) result = plugoutComp.loopCheckForward(comp);
+		
+		return result;
+	}
+	
+	function loopCheckBackward(comp) {
+		var result1 = false;
+		var result2 = false;
+		
+		if (plugin1Comp !== null && plugin1Comp == comp) return true;
+		if (plugin2Comp !== null && plugin2Comp == comp) return true;
+		
+		if (plugin1Comp !== null) result1 = plugin1Comp.loopCheckBackward(comp);
+		if (plugin2Comp !== null) result2 = plugin2Comp.loopCheckBackward(comp);
+		
+		if (result1 || result2) return true;
+		else return false;
 	}
 }

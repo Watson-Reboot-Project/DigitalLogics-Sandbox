@@ -264,14 +264,16 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 			
 			comp.getGroup().on('dragmove touchmove', function() {
 				connectorDrag(comp);
-				wrenchLayer.draw();
-				trashLayer.draw();
 				mainLayer.draw();
 			});
 			
 			comp.getGroup().on('click tap', function() {
 				connectorClick(comp);
 				mainLayer.draw();
+			});
+			
+			comp.getGroup().on('dragend', function() {
+				connectorDragEnd(comp);
 			});
 		}
 		// if the component is a gate, set gate event listeners
@@ -360,12 +362,11 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 				gateDrag(comp);
 				mainLayer.draw();
 			});
-			/*
+			
 			comp.getGroup().on('dragend', function() {
-				console.log("Drag end.");
 				gateDragEnd(comp);
 			});
-			*/
+			
 		}
 		else if (comp.getFunc() == "node") {
 
@@ -463,13 +464,15 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	function gateInputBoxMouseUp(event, gate, pluginNum) {
 		if (connecting) {
 			
-			if (selectedComp == gate || gate.getPluginComp(pluginNum) !== null || selectedPlug.indexOf("plugin") >= 0) {
-				tempLine.remove();
-				tempLineLayer.draw();
+			if (selectedComp == gate || gate.getPluginComp(pluginNum) !== null || selectedPlug.indexOf("plugin") >= 0 || selectedComp.loopCheckBackward(gate) == true) {
+				if (tempLine !== null) {
+					tempLine.remove();
+					tempLineLayer.draw();
+				}
 				connecting = false;
 				selectedComp = null;
 				
-				return;
+				return false;
 			}
 			
 			if (gate.getType() == "not") {
@@ -496,10 +499,12 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 			
 			if (pluginNum == 0) gate.setPlugColor("plugin", "default");
 			else gate.setPlugColor("plugin" + pluginNum, "default");
+			
+			connecting = false;		// we are no longer in connection mode
+			selectedComp = null;	// null the selected component
+			
+			return true;
 		}
-		
-		connecting = false;		// we are no longer in connection mode
-		selectedComp = null;	// null the selected component
 	}
 	
 	function gateInputBoxMouseEnter(event, comp, inputNum) {
@@ -592,13 +597,15 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	function gateOutputBoxMouseUp(event, gate) {
 		if (connecting) {
 			
-			if (selectedComp == gate || gate.getPlugoutComp() !== null || selectedPlug.indexOf("plugout") >= 0) {
-				tempLine.remove();
-				tempLineLayer.draw();
+			if (selectedComp == gate || gate.getPlugoutComp() !== null || selectedPlug.indexOf("plugout") >= 0 || selectedComp.loopCheckForward(gate)) {
+				if (tempLine !== null) {
+					tempLine.remove();
+					tempLineLayer.draw();
+				}
 				connecting = false;
 				selectedComp = null;
 				
-				return;
+				return false;
 			}
 			
 			if (selectedComp.getType() == "not" || selectedComp.getType() == "output" || selectedComp.getType() == "connector") {
@@ -612,13 +619,17 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 			}
 		
 			gate.setPlugColor("plugout", "default");
-		}
 		
-		tempLineLayer.draw();
-		tempLine = null;
-		connecting = false;		// we are no longer in connection mode
-		selectedComp = null;	// null the selected component
+		
+			tempLineLayer.draw();
+			tempLine = null;
+			connecting = false;		// we are no longer in connection mode
+			selectedComp = null;	// null the selected component
+			
+			return true;
+		}
 	}
+	
 	
 	function gateOutputBoxMouseEnter(event, comp, inputNum) {
 		if (comp.getPlugoutComp() === null) {
@@ -658,13 +669,152 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	}
 	
 	function gateDragEnd(gate) {
-		var gateOutputBox = gate.getOuputBox();
+		var thisInput1Box = gate.getInputBoxCoords(1);
+		var thisInput2Box = gate.getInputBoxCoords(2);
+		var thisInputBox = [ thisInput1Box, thisInput2Box ];
+		var thisOutput1Box = gate.getOutputBoxCoords();
+		var thisOutputBox = [ thisOutput1Box ];
 		
 		for (var i = 0; i < components.length; i++) {
-			if (gate.getType() == "and") {
+			var comp = components[i];
+			if (comp == gate) continue;
 			
+			var thatInputBox;
+			var thatOutputBox;
+			
+			var thatInput1Box;
+			var thatInput2Box;
+			var thatOutput1Box;
+			var thatOutput2Box;
+			var thatOutput3Box;
+			
+			if (comp.getFunc() == "gate" || comp.getFunc() == "node") {
+				thatInput1Box = comp.getInputBoxCoords(1);
+				thatInput2Box = comp.getInputBoxCoords(2);
+				thatInputBox = [ thatInput1Box, thatInput2Box ];
+				
+				thatOutput1Box = comp.getOutputBoxCoords();
+				thatOutputBox = [ thatOutput1Box ];
+			}
+			else {
+				thatInput1Box = comp.getInputBoxCoords(1);
+				thatInputBox = [ thatInput1Box ];
+				
+				thatOutput1Box = comp.getOutputBoxCoords(1);
+				thatOutput2Box = comp.getOutputBoxCoords(2);
+				thatOutput3Box = comp.getOutputBoxCoords(3);
+				thatOutputBox = [ thatOutput1Box, thatOutput2Box, thatOutput3Box ];
+			}
+			
+			inputIntersectOutput(thatOutputBox, thisInputBox, gate, comp);
+			outputIntersectInput(thisOutputBox, thatInputBox, gate, comp);
+		}
+	}
+	
+	function inputIntersectOutput(thatOutputBox, thisInputBox, thisComp, thatComp) {
+		if (thatComp.getType() == "output") return;
+		
+		var trueResults = [];
+		var pluginNum;
+		var plugoutNum;
+		
+		var iters = (thisComp.getType() == "not" || thisComp.getType() == "connector") ? 1 : 2;
+		
+		for (var i = 0; i < iters; i++) {
+		
+			if (thisComp.getPluginComp(i+1) !== null) continue;
+			if (thatComp.getType() == "output") break;
+			
+			for (var j = 0; j < thatOutputBox.length; j++) {
+				if (thatComp.getPlugoutComp(j+1) !== null) continue;
+				
+				if (thatOutputBox[j].x1 < thisInputBox[i].x2 && thatOutputBox[j].x2 > thisInputBox[i].x1 && thatOutputBox[j].y1 < thisInputBox[i].y2 && thatOutputBox[j].y2 > thisInputBox[i].y1) {
+					trueResults.push([i+1, j+1]);
+				}
 			}
 		}
+		
+		if (trueResults.length == 0) {
+			return;
+		}
+		else if (trueResults.length == 1) {
+			pluginNum = trueResults[0][0];
+			plugoutNum = trueResults[0][1];
+		}
+		else {
+			var shortest = distance(thisComp.getPlugin(trueResults[0][0]).getPoints()[0], thatComp.getPlugout(trueResults[0][1]).getPoints()[1]);
+			pluginNum = trueResults[0][0];
+			plugoutNum = trueResults[0][1];
+			for (var i = 1; i < trueResults.length; i++) {
+				var dist = distance(thisComp.getPlugin(trueResults[i][0]).getPoints()[0], thatComp.getPlugout(trueResults[i][1]).getPoints()[1]);
+				if (dist < shortest) {
+					dist = shortest;
+					pluginNum = i+1;
+					plugoutNum = j+1;
+				}
+			}
+		}
+		
+		selectedComp = thisComp;
+		selectedPlugNum = pluginNum;
+		selectedPlug = "plugin" + pluginNum;
+		connecting = true;
+		var res;
+		if (thatComp.getType() == "connector") res = connectorOutputBoxMouseUp(null, thatComp, plugoutNum);
+		else res = gateOutputBoxMouseUp(null, thatComp, plugoutNum);
+		
+		if (res) evaluateCircuit();
+	}
+	
+	function outputIntersectInput(thisOutputBox, thatInputBox, thisComp, thatComp, outputNum) {
+		var trueResults = [];
+		var pluginNum;
+		var plugoutNum;
+		
+		if (thatComp.getType() == "input") return;
+		
+		for (var i = 0; i < 2; i++) {
+			if ((thatComp.getType() == "connector" || thatComp.getType() == "not" || thatComp.getType() == "output") && i == 1) break;
+			if (thatComp.getPluginComp(i+1) !== null) continue;
+			
+			for (var j = 0; j < thisOutputBox.length; j++) {
+				if (thisComp.getPlugoutComp(j+1) !== null) continue;
+				if (thisOutputBox[j].x1 < thatInputBox[i].x2 && thisOutputBox[j].x2 > thatInputBox[i].x1 && thisOutputBox[j].y1 < thatInputBox[i].y2 && thisOutputBox[j].y2 > thatInputBox[i].y1) {
+					trueResults.push([i+1, j+1]);
+				}
+			}
+		}
+		
+		if (trueResults.length == 0) {
+			return
+		}
+		else if (trueResults.length == 1) {
+			pluginNum = trueResults[0][0];
+			plugoutNum = trueResults[0][1];
+		}
+		else {
+			var shortest = distance(thisComp.getPlugout(trueResults[0][1]).getPoints()[0], thatComp.getPlugin(trueResults[0][0]).getPoints()[1]);
+			pluginNum = trueResults[0][0];
+			plugoutNum = trueResults[0][1];
+			for (var i = 1; i < trueResults.length; i++) {
+				var dist = distance(thisComp.getPlugout(trueResults[i][1]).getPoints()[0], thatComp.getPlugin(trueResults[i][0]).getPoints()[1]);
+				if (dist < shortest) {
+					dist = shortest;
+					pluginNum = i + 1;
+					plugoutNum = j + 1;
+				}
+			}
+		}
+		
+		selectedComp = thisComp;
+		selectedPlugNum = plugoutNum;
+		selectedPlug = "plugout";
+		connecting = true;
+		var res;
+		
+		if (thatComp.getType() == "connector") res = connectorInputBoxMouseUp(null, thatComp);
+		else res = gateInputBoxMouseUp(null, thatComp, pluginNum);
+		if (res) evaluateCircuit();
 	}
 	
 	/*
@@ -932,12 +1082,14 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	
 	function connectorInputBoxMouseUp(event, connect) {
 		if (connecting) {
-			if (selectedComp == connect || connect.getPluginComp() !== null) {
-				tempLine.remove();
-				tempLineLayer.draw();
+			if (selectedComp == connect || connect.getPluginComp() !== null || selectedComp.loopCheckBackward(connect) == true) {
+				if (tempLine !== null) {
+					tempLine.remove();
+					tempLineLayer.draw();
+				}
 				connecting = false;
 				selectedComp = null;
-				return;
+				return false;
 			}
 			
 			if (selectedPlug.indexOf("plugin") < 0) {			
@@ -952,7 +1104,9 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 			
 			connecting = false;
 			selectedComp = null;
-			selectedPlug = null;	
+			selectedPlug = null;
+			
+			return true;
 		}
 	}
 	
@@ -1010,13 +1164,15 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	
 	function connectorOutputBoxMouseUp(event, connect, plugoutNum) {
 		if (connecting) {
-			if (selectedComp == connect || connect.getPlugoutComp(plugoutNum) !== null) {
-				tempLine.remove();
-				tempLineLayer.draw();
+			if (selectedComp == connect || connect.getPlugoutComp(plugoutNum) !== null || selectedComp.loopCheckForward(connect) == true) {
+				if (tempLine !== null) {
+					tempLine.remove();
+					tempLineLayer.draw();
+				}
 				connecting = false;
 				selectedComp = null;
 				
-				return;
+				return false;
 			}
 			
 			if (selectedPlug.indexOf("plugout") < 0) {
@@ -1038,6 +1194,8 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 			
 			connecting = false;
 			selectedComp = null;
+			
+			return true;
 		}
 	}
 	
@@ -1165,6 +1323,50 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 			mainLayer.draw();		
 			connecting = false;
 			selectedComp = null;
+		}
+	}
+	
+	function connectorDragEnd(connect) {
+		var thisInput1Box = connect.getInputBoxCoords(1);
+		var thisInputBox = [ thisInput1Box ];
+		var thisOutput1Box = connect.getOutputBoxCoords(1);
+		var thisOutput2Box = connect.getOutputBoxCoords(2);
+		var thisOutput3Box = connect.getOutputBoxCoords(3);
+		var thisOutputBox = [ thisOutput1Box, thisOutput2Box, thisOutput3Box ];
+		
+		for (var i = 0; i < components.length; i++) {
+			var comp = components[i];
+			if (comp == connect) continue;
+			
+			var thatInputBox;
+			var thatOutputBox;
+			
+			var thatInput1Box;
+			var thatInput2Box;
+			var thatOutput1Box;
+			var thatOutput2Box;
+			var thatOutput3Box;
+			
+			if (comp.getFunc() == "gate" || comp.getFunc() == "node") {
+				thatInput1Box = comp.getInputBoxCoords(1);
+				thatInput2Box = comp.getInputBoxCoords(2);
+				thatInputBox = [ thatInput1Box, thatInput2Box ];
+				
+				thatOutput1Box = comp.getOutputBoxCoords();
+				thatOutputBox = [ thatOutput1Box ];
+			}
+			else {
+				thatInput1Box = comp.getInputBoxCoords(1);
+				thatInputBox = [ thatInput1Box ];
+				
+				thatOutput1Box = comp.getOutputBoxCoords(1);
+				thatOutput2Box = comp.getOutputBoxCoords(2);
+				thatOutput3Box = comp.getOutputBoxCoords(3);
+				thatOutputBox = [ thatOutput1Box, thatOutput2Box, thatOutput3Box ];
+			}
+			
+			inputIntersectOutput(thatOutputBox, thisInputBox, connect, comp);
+			outputIntersectInput(thisOutputBox, thatInputBox, connect, comp);
 		}
 	}
 	
@@ -1825,6 +2027,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 		orGate.draw();
 		registerComponent(orGate);
 		//orGate.draw();
+		gateDragEnd(orGate);
 	}
 	
 	function addAndGate(initX, initY) {
@@ -1833,6 +2036,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 		andGate.draw();
 		registerComponent(andGate);
 		//andGate.draw();
+		gateDragEnd(andGate);
 	}
 	
 	function addNotGate(initX, initY) {
@@ -1841,6 +2045,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 		notGate.draw();
 		registerComponent(notGate);
 		//notGate.draw();
+		gateDragEnd(notGate);
 	}
 	
 	function addConnector(initX, initY) {

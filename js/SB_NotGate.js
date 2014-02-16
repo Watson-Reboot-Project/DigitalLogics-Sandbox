@@ -74,6 +74,10 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 	this.deleteSelf = deleteSelf;
 	this.getOutputValue = getOutputValue;
 	this.setDeleteIcon = setDeleteIcon;
+	this.getInputBoxCoords = getInputBoxCoords;
+	this.getOutputBoxCoords = getOutputBoxCoords;
+	this.loopCheckForward = loopCheckBackward;
+	this.loopCheckBackward = loopCheckBackward;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	// make a custom shape for the triangle; just three lines
@@ -193,6 +197,21 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 		inputBox.remove();
 		outputBox.remove();
 		iconLayer.remove();
+	}
+	
+	function getInputBoxCoords(num) {
+		var pos;
+		var box;
+		pos = inputBox.getAbsolutePosition(); box = inputBox;
+		
+		return { x1: pos.x, x2: pos.x + box.getWidth(), y1: pos.y, y2: pos.y + box.getHeight() };
+	}
+	
+	function getOutputBoxCoords() {
+		var pos = outputBox.getAbsolutePosition();
+		var corners = [];
+		
+		return { x1: pos.x, x2: pos.x + outputBox.getWidth(), y1: pos.y, y2: pos.y + outputBox.getHeight() };
 	}
 	
 	function drawBoxes() {
@@ -391,5 +410,24 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 		if (pluginVal == -1) return -1;
 		else if (pluginVal == 0) return 1;
 		else return 0;
+	}
+	
+	function loopCheckForward(comp) {
+		var result = false;
+		
+		if (plugoutComp !== null && plugoutComp == comp) return true;
+		if (plugoutComp !== null) result = plugoutComp.loopCheckForward(comp);
+		
+		return result;
+	}
+	
+	function loopCheckBackward(comp) {
+		var result = false;
+		
+		if (pluginComp !== null && pluginComp == comp) return true;
+		
+		if (pluginComp !== null) result = pluginComp.loopCheckBackward(comp);
+	
+		return result;
 	}
 }

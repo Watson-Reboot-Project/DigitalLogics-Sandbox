@@ -49,6 +49,10 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 	this.toggleDeleteIcon = toggleDeleteIcon;
 	this.setPluginColor = setPluginColor;
 	this.deleteSelf = deleteSelf;
+	this.getInputBoxCoords = getInputBoxCoords;
+	this.getOutputBoxCoords = getOutputBoxCoords;
+	this.loopCheckBackward = loopCheckBackward;
+	this.loopCheckForward = loopCheckForward;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -116,6 +120,20 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 		mainLayer.add(group);	// add the group to the main layer
 		stage.draw();			// call draw on the stage to redraw its components
 		drawBoxes();
+	}
+	
+	function getInputBoxCoords(num) {
+		var pos;
+		var box;
+		pos = inputBox.getAbsolutePosition();
+		box = inputBox;
+		
+		return { x1: pos.x, x2: pos.x + box.getWidth(), y1: pos.y, y2: pos.y + box.getHeight() };
+	}
+	
+	function getOutputBoxCoords() {
+		// return null, no output box
+		return null;
 	}
 	
 	function drawBoxes() {
@@ -240,4 +258,12 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 	function setConnectorPlugin(num) { connectorPlugin = num; }
 	
 	function getConnectorPlugin() { return connectorPlugin; }
+	
+	function loopCheckForward() {
+		return false;
+	}
+	
+	function loopCheckBackward() {
+		return false;
+	}
 }
