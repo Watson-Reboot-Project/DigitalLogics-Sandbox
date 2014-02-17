@@ -1164,7 +1164,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	
 	function connectorOutputBoxMouseUp(event, connect, plugoutNum) {
 		if (connecting) {
-			if (selectedComp == connect || connect.getPlugoutComp(plugoutNum) !== null || selectedComp.loopCheckForward(connect) == true) {
+			if (selectedComp == connect || connect.getPlugoutComp(plugoutNum) !== null || connect.loopCheckBackward(selectedComp) == true) {
 				if (tempLine !== null) {
 					tempLine.remove();
 					tempLineLayer.draw();
