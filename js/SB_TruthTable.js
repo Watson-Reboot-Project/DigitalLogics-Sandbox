@@ -178,8 +178,10 @@ function SB_TruthTable(containerNum) {
 	
 	function setTableOffset(x, y) {
 		if (tableDiv !== null) {
-			tableDiv.style.marginLeft = x + "px";
-			tableDiv.style.marginTop = -y + "px";
+			tableDiv.style.left = x + "px";
+			tableDiv.style.top = -y + "px";
+			console.log(document.getElementById(tableName).offsetWidth + "px");
+			tableDiv.style.width=document.getElementById(tableName).offsetWidth + "px";
 		}
 	}
 	
