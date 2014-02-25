@@ -40,12 +40,28 @@ function SB_Setup(container, containerNum) {
 
 	resize();
 	
-	var truthTable = new SB_TruthTable(containerNum);
-	var controller = new SB_Controller(this, truthTable, 2, 1, containerNum);
-	var exercises = new SB_Exercises(stage, this, truthTable, controller, 2, 1);
-		
 	var curExercise = 0;
+	var truthTable = new SB_TruthTable(containerNum);
+	var serializer = new SB_Serializer(curExercise);
+	var controller = new SB_Controller(this, truthTable, serializer, 2, 1, containerNum);
+	var exercises = new SB_Exercises(stage, this, truthTable, controller, 2, 1);
+
 	exercises.setExercise(curExercise);
+		
+	if(typeof(Storage) !== "undefined")
+	{
+		var str = localStorage.getItem("DL_SB_" + curExercise);
+		console.log(str);
+		if (str) {
+			serializer.deserialize(controller, str);
+			controller.evaluateCircuit();
+		}
+	}
+	else
+	{
+		console.log("Web storage not supported.");
+		// no web storage support
+	}
 	controller.initTruthTableListeners();
 	
 	$(window).resize( function() {
@@ -99,7 +115,8 @@ function SB_Setup(container, containerNum) {
 		mainLayer.add(bg);
 		resize();
 		truthTable = new SB_TruthTable(containerNum);
-		controller = new SB_Controller(thisObj, truthTable, numInputs, numOutputs, containerNum);
+		serializer = new SB_Serializer(curExercise);
+		controller = new SB_Controller(thisObj, truthTable, serializer, numInputs, numOutputs, containerNum);
 		exercises = new SB_Exercises(stage, thisObj, truthTable, controller, numInputs, numOutputs);
 		exercises.setExercise(0);
 		controller.initTruthTableListeners();

@@ -53,6 +53,7 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 	this.getOutputBoxCoords = getOutputBoxCoords;
 	this.loopCheckBackward = loopCheckBackward;
 	this.loopCheckForward = loopCheckForward;
+	this.getSerialStringDeclaration = getSerialStringDeclaration;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -265,5 +266,10 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 	
 	function loopCheckBackward() {
 		return false;
+	}
+	
+	function getSerialStringDeclaration() {
+		var str = "and," + group.getX() + "," + group.getY() + "," + ID;
+		return str;
 	}
 }

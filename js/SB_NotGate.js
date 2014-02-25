@@ -78,7 +78,9 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 	this.getOutputBoxCoords = getOutputBoxCoords;
 	this.loopCheckForward = loopCheckBackward;
 	this.loopCheckBackward = loopCheckBackward;
-	
+	this.getSerialStringDeclaration = getSerialStringDeclaration;
+	this.getSerialStringConnections = getSerialStringConnections;
+
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	// make a custom shape for the triangle; just three lines
 	gateShapeTriangle = new Kinetic.Shape({
@@ -429,5 +431,23 @@ function SB_NotGate(initX, initY, setName, id, setup) {
 		if (pluginComp !== null) result = pluginComp.loopCheckBackward(comp);
 	
 		return result;
+	}
+	
+	function getSerialStringDeclaration() {
+		var str = "not," + group.getX() + "," + group.getY() + "," + ID;
+		return str;
+	}
+	
+	function getSerialStringConnections() {
+		if (plugoutComp !== null) {
+			var str = ID + "," + plugoutComp.getID();
+			if (plugoutComp.getType() == "and" || plugoutComp.getType() == "or") {
+				str += "," + plugoutComp.getPluginNumber(thisObj);
+			}
+			
+			return str;
+		}
+		
+		return null;
 	}
 }

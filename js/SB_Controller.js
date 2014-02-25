@@ -26,7 +26,7 @@
 *								in terms of digital circuits.
 ***************************************************************************************/
 
-function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
+function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, containerNum) {
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS/DEFINITIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -51,6 +51,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	var selectedPlugNum = 0;
 	var deleteMode = false;
 	var truthTableOpen = false;
+	var thisObj = this;
 	
 	var mainLayer = setup.getMainLayer();
 	var stage = setup.getStage();
@@ -102,8 +103,12 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	
 	// non-sand box functions
 	this.connectComponents = connectComponents;								// programmatically set a connection from another class
+	this.updateNumberOfInputs = updateNumberOfInputs;
+	this.updateNumberOfOutputs = updateNumberOfOutputs;
+	this.evaluateCircuit = evaluateCircuit;
 	
 	//add & delete functions
+	this.addComponent = addComponent;
 	this.addAndGate = addAndGate;
 	this.addOrGate = addOrGate;
 	this.addNotGate = addNotGate;
@@ -117,6 +122,11 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; INITIAL SETUP ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
+
+	window.addEventListener("beforeunload", function(e){
+	   serializer.serialize(components, inputs, outputs);
+	}, false);
+
 	// this event listener is used to draw the line that follows the mouse when in connecting mode
 	stage.on('mousemove touchmove', function() {
 		stageMouseMove();
@@ -1994,24 +2004,22 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	function connectComponents(comp1, comp2, opts) {
 		selectedComp = comp1;					// set the selectedComp to the first component (it's like the user selected it in the sand-box)
 		
-		if (comp1.getFunc() == "gate" && comp2.getFunc() == "gate") { // if both components are gates (from gate to gate); opts = [ pluginNum ]
-			setWireFromGateToGate(comp2, comp1.getPlugout(), comp2.getPlugin(opts[0]), opts[0]);	// make the connection
+		if ((comp1.getFunc() == "gate" || comp1.getType() == "input") && (comp2.getFunc() == "gate" || comp2.getType() == "output")) { // if both components are gates (from gate to gate); opts = [ pluginNum ]
+			//setWireFromGateToGate(comp2, comp1.getPlugout(), comp2.getPlugin(opts[0]), opts[0]);	// make the connection
+			if (opts) setWireFromGateToGate(comp1, comp2, opts[0]);
+			else setWireFromGateToGate(comp1, comp2, 0);
 		}
-		else if (comp1.getFunc() == "gate" && comp2.getFunc() == "connection") { // if from gate to connector; opts is empty
-			if (comp1.getType() == "not") {	// if the gate is a NOT gate
-				setWireFromGateToGate(comp2, comp1.getPlugout().getPoints()[1], comp2.getPlugin().getPoints()[0], 0); // make the connection
-			}
-			else {							// if the gate is an AND or OR gate 
-				setWireFromGateToConnector(comp2, comp1.getPlugout().getPoints()[1], comp2.getPlugin().getPoints()[0]);	// make the connection
-			}
+		else if ((comp1.getFunc() == "gate" || comp1.getType() == "input") && comp2.getFunc() == "connection") { // if from gate to connector; opts is empty 
+			setWireFromGateToConnector(comp1, comp2);
 		}
 		else if (comp1.getFunc() == "connection" && comp2.getFunc() == "gate") { // if from connector to gate; opts = [ pluginNumOfGate, plugoutNumOfConnector ]
-			comp1.setSelectedPlugout(opts[1]);	// get the selectedPlugout line
-			setWireFromConnectorToGate(comp2, comp1.getPlugout(opts[1]).getPoints()[1], comp2.getPlugin(opts[0]).getPoints()[0], opts[1], opts[0]); // make the connection
+			//comp1.setSelectedPlugout(opts[1]);	// get the selectedPlugout line
+			if (comp2.getType() == "not") setWireFromConnectorToGate(comp1, comp2, opts[0], 0);
+			else setWireFromConnectorToGate(comp1, comp2, opts[0], opts[1]);
 		}
 		else if (comp1.getFunc() == "connection" && comp2.getFunc() == "connection") { // if from connector to connector; opts = [ plugoutNumOfConnecotr ]
-			comp1.setSelectedPlugout(opts[0]);	// get the selectedPlugout line
-			setWireFromConnectorToConnector(comp2, comp1.getPlugout(opts[0]).getPoints()[1], comp2.getPlugin().getPoints()[0], opts[0]);	// make the connection
+			//comp1.setSelectedPlugout(opts[0]);	// get the selectedPlugout line
+			setWireFromConnectorToConnector(comp1, comp2, opts[0]);
 		}
 		
 		mainLayer.draw();	// refresh the scene
@@ -2021,38 +2029,66 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	//----- AND & DELETE FUNCTIONS -------
 	//------------------------------------
 	
-	function addOrGate(initX, initY) {
-		var orGate = new SB_OrGate(initX, initY, "Or Gate", nextID++, setup);
+	function addOrGate(initX, initY, id) {
+		var orGate;
+		if (!id) orGate = new SB_OrGate(initX, initY, "Or Gate", nextID++, setup);
+		else {
+			orGate = new SB_OrGate(initX, initY, "Or Gate", id, setup);
+			if (id >= nextID) nextID = id + 1;
+		}
 		components.push(orGate);
 		orGate.draw();
 		registerComponent(orGate);
 		//orGate.draw();
 		gateDragEnd(orGate);
+		
+		return orGate;
 	}
 	
-	function addAndGate(initX, initY) {
-		var andGate = new SB_AndGate(initX, initY, "And Gate", nextID++, setup);
+	function addAndGate(initX, initY, id) {
+		var andGate;
+		if (!id) andGate = new SB_AndGate(initX, initY, "And Gate", nextID++, setup);
+		else {
+			andGate = new SB_AndGate(initX, initY, "And Gate", id, setup);
+			if (id >= nextID) nextID = id + 1;
+		}
 		components.push(andGate);
 		andGate.draw();
 		registerComponent(andGate);
 		//andGate.draw();
 		gateDragEnd(andGate);
+		
+		return andGate;
 	}
 	
-	function addNotGate(initX, initY) {
-		var notGate = new SB_NotGate(initX, initY, "Not Gate", nextID++, setup);
+	function addNotGate(initX, initY, id) {
+		var notGate;
+		if (!id) notGate = new SB_NotGate(initX, initY, "Not Gate", nextID++, setup);
+		else {
+			notGate = new SB_NotGate(initX, initY, "Not Gate", id, setup);
+			if (id >= nextID) nextID = id + 1;
+		}
 		components.push(notGate);
 		notGate.draw();
 		registerComponent(notGate);
 		//notGate.draw();
 		gateDragEnd(notGate);
+		
+		return notGate;
 	}
 	
-	function addConnector(initX, initY) {
-		var conn = new SB_Connector(initX, initY, "Connector", nextID++, setup);
+	function addConnector(initX, initY, id) {
+		var conn;
+		if (!id) conn = new SB_Connector(initX, initY, "Connector", nextID++, setup);
+		else {
+			conn = new SB_Connector(initX, initY, "Connector", id, setup);
+			if (id >= nextID) nextID = id + 1;
+		}
 		components.push(conn);
 		conn.draw();
 		registerComponent(conn);
+		
+		return conn;
 	}
 	
 	function deleteComponent(comp) {
@@ -2216,7 +2252,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	}
 	
 	function addInput(initX, initY, text, value) {
-		input = new SB_InputNode(initX, initY, text, value, "Input Node", nextID++, setup);
+		input = new SB_InputNode(initX, initY, text, value, "Input Node", text, setup);
 		components.push(input);
 		inputs.push(input);
 		input.draw();
@@ -2224,7 +2260,7 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 	}
 	
 	function addOutput(initX, initY, text) {
-		output = new SB_OutputNode(initX, initY, text, "Output Node", nextID++, setup);
+		output = new SB_OutputNode(initX, initY, text, "Output Node", text, setup);
 		components.push(output);
 		outputs.push(output);
 		output.draw();
@@ -2408,11 +2444,11 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 		if (checkOutputNodeConnections() == true) outputMenu = ".Number of Outputs";
 		
 		wrenchPopup.add(inputMenu, function(target) {
-			updateNumberOfInputs();
+			updateNumberOfInputsMenuButton();
 			wrenchPopup = null;
 		});
 		wrenchPopup.add(outputMenu, function(target) {
-			updateNumberOfOutputs();
+			updateNumberOfOutputsMenuButton();
 			wrenchPopup = null;
 		});
 		wrenchPopup.add("Reset", function(target) {
@@ -2424,6 +2460,16 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 				wrenchPopup = null;
 				return;
 			}
+		});
+		wrenchPopup.add("Test", function() {
+			var str = serializer.serialize(components, inputs, outputs);
+			console.log(str);
+			wrenchPopup = null;
+		});
+		wrenchPopup.add("Build", function() {
+			var str = "2\n1\n1\nand,353,288,0\nA,0,1\nB,0,2\n0,Z"
+			serializer.deserialize(thisObj, str);
+			wrenchPopup = null;
 		});
 		wrenchPopup.setSize(140, 0);
 		wrenchPopup.showMenu(event);
@@ -2449,16 +2495,19 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 		//stage.draw();
 	}
 	
-	function updateNumberOfInputs() {
-		var alphabet = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ];
-		
+	function updateNumberOfInputsMenuButton() {
 		var res = prompt("Enter number of inputs.", numInputs);
 		if (res === null) return;
 		if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
 		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
 		res = parseFloat(res);
 		if (res + numOutputs > 25) { alert("You can't have that many inputs."); return; }
-		//setup.resetExercise(parseFloat(res), numOutputs);
+	
+		updateNumberOfInputs(res);
+	}
+	
+	function updateNumberOfInputs(res) {
+		var alphabet = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ];
 		
 		var header = [ ];
 
@@ -2480,18 +2529,23 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 		if (deleteMode) {
 			truthTable.setDeleteIcon(true);
 		}
+		
+		return inputs;
 	}
 	
-	function updateNumberOfOutputs() {
-		var alphabet = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ];
-		
+	function updateNumberOfOutputsMenuButton() {
 		var res = prompt("Enter number of outputs.", numOutputs);
 		if (res === null) return;
 		if (res <= "0") { alert("You can't have a negative number of outputs..."); return; }
 		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
 		res = parseFloat(res);
 		if (res + numInputs > 25) { alert("You can't have that many outputs."); return; }
-		//setup.resetExercise(numInputs, parseFloat(res));
+		
+		updateNumberOfOutputs(res);
+	}
+	
+	function updateNumberOfOutputs(res) {
+		var alphabet = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ];
 		
 		var header = [ ];
 
@@ -2513,6 +2567,8 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 		if (deleteMode) {
 			truthTable.setDeleteIcon(true);
 		}
+		
+		return outputs;
 	}
 	
 	function initTruthTableListeners() {
@@ -2547,5 +2603,16 @@ function SB_Controller(setup, truthTable, numInputs, numOutputs, containerNum) {
 		}
 		
 		return false;
+	}
+	
+	function addComponent(type, x, y, id) {
+		var comp;
+		
+		if (type == "and") comp = addAndGate(x, y, id);
+		else if (type == "or") comp = addOrGate(x, y, id);
+		else if (type == "not") comp = addNotGate(x, y, id);
+		else if (type == "connector") comp = addConnector(x, y, id);
+		
+		return comp;
 	}
 }

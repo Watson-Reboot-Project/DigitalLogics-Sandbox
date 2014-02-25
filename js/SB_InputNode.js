@@ -55,6 +55,7 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	this.getOutputBoxCoords = getOutputBoxCoords;
 	this.loopCheckBackward = loopCheckBackward;
 	this.loopCheckForward = loopCheckForward;
+	this.getSerialStringConnections = getSerialStringConnections;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -289,5 +290,18 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	
 	function loopCheckBackward() {
 		return false;
+	}
+	
+	function getSerialStringConnections() {
+		if (plugoutComp !== null) {
+			var str = ID + "," + plugoutComp.getID();
+			if (plugoutComp.getType() == "and" || plugoutComp.getType() == "or") {
+				str += ", " + plugoutComp.getPluginNumber(thisObj);
+			}
+			
+			return str;
+		}
+		
+		return null;
 	}
 }

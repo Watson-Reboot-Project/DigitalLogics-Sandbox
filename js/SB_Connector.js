@@ -89,6 +89,9 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	this.getOutputBoxCoords = getOutputBoxCoords;
 	this.loopCheckForward = loopCheckForward;
 	this.loopCheckBackward = loopCheckBackward;
+	this.getSerialStringDeclaration = getSerialStringDeclaration;
+	this.getSerialStringConnections = getSerialStringConnections;
+	this.getPluginNumber = getPluginNumber;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -583,5 +586,51 @@ function SB_Connector(initX, initY, setName, id, setup) {
 		if (pluginComp !== null) result = pluginComp.loopCheckBackward(comp);
 		
 		return result;
+	}
+	
+	function getSerialStringDeclaration() {
+		var str = "connector," + group.getX() + "," + group.getY() + "," + ID;
+		return str;
+	}
+	
+	function getSerialStringConnections() {
+		var str = "";
+		flag = false;
+		
+		if (plugout1Comp !== null) {
+			str += ID + "," + plugout1Comp.getID() + ",1";
+			if (plugout1Comp.getType() == "and" || plugout1Comp.getType() == "or") {
+				str += "," + plugout1Comp.getPluginNumber(thisObj, 1);
+			}
+			flag = true;
+		}
+		
+		if (plugout2Comp !== null) {
+			if (flag) str += "\n";
+
+			str += ID + "," + plugout2Comp.getID() + ",2";
+			if (plugout2Comp.getType() == "and" || plugout2Comp.getType() == "or") {
+				str += "," + plugout2Comp.getPluginNumber(thisObj, 2);
+			}
+			
+			flag = true;
+		}
+		
+		if (plugout3Comp !== null) {
+			if (flag) str += "\n";
+			
+			str += ID + "," + plugout3Comp.getID() + ",3";
+			if (plugout3Comp.getType() == "and" || plugout3Comp.getType() == "or") {
+				str += "," + plugout3Comp.getPluginNumber(thisObj, 3);
+			}
+		}
+		
+		if (str == "") return null
+		else return str;
+	}
+	
+	function getPluginNumber(comp) {
+		if (plugin1Comp !== null && plugin1Comp == comp) return 1;
+		else if (plugin2Comp !== null && plugin2Comp == comp) return 2;
 	}
 }
