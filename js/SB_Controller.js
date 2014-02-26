@@ -2428,7 +2428,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		wrenchPopup.add(truthTableMenu, function(target) {
 			if (numInputs > 5) { alert("The truth table feature has been disabled because you have more than 5 inputs."); return; }
 			else {
-				truthTable.setTableOffset(stage.getWidth() / 2, stage.getHeight() / 2);
+				truthTable.setTableOffset((stage.getWidth() / 2) * 0.3, 600);
 				truthTable.toggleVisible();
 				
 				if (deleteMode == true) truthTable.setDeleteIcon(true);
@@ -2573,7 +2573,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	
 	function initTruthTableListeners() {
 		$(function() {
-			$( "#truthTableDiv" + containerNum ).draggable();
+			$( "#truthTableDiv" + containerNum ).draggable({ containment: "#sandbox1", scroll: false });
 
 			$( "#truthTableDiv" + containerNum ).on("click tap", function() {
 				if (deleteMode == true) {

@@ -86,6 +86,7 @@ function SB_TruthTable(containerNum) {
 		img.style.width = '20px';
 		img.style.position = "absolute";
 		img.style.visibility = 'hidden';
+		img.style.paddingTop = "15px";
 		body.appendChild(img);
 		
 		var tbdy = document.createElement('tbody');
@@ -123,6 +124,7 @@ function SB_TruthTable(containerNum) {
 			thead.appendChild(th);
 		}
 		tbl.style.borderSpacing = '0px';
+		tbl.style.marginTop = "15px";
 		initTableValues(rows, cols);
 
 		img.style.marginLeft = tbl.offsetWidth + "px";
@@ -172,6 +174,8 @@ function SB_TruthTable(containerNum) {
 				myTable.rows[i].cells[j].align='center';				// center the text
 			}
 		}
+		
+		tableDiv.style.width = (document.getElementById(tableName).offsetWidth + 40) + "px";
 	}
 	
 	function getTableWidth() { return tableDiv.offsetWidth; }
@@ -180,8 +184,8 @@ function SB_TruthTable(containerNum) {
 		if (tableDiv !== null) {
 			tableDiv.style.left = x + "px";
 			tableDiv.style.top = -y + "px";
-			console.log(document.getElementById(tableName).offsetWidth + "px");
 			tableDiv.style.width=document.getElementById(tableName).offsetWidth + "px";
+			tableDiv.style.width = (document.getElementById(tableName).offsetWidth + 40) + "px";
 		}
 	}
 	
@@ -197,8 +201,10 @@ function SB_TruthTable(containerNum) {
 	function toggleVisible(){
 		if(tableDiv.style.visibility == 'hidden'){
 			tableDiv.style.visibility = 'visible';
+			tableDiv.style.overflowY = "auto";
 		}else{
 			tableDiv.style.visibility = 'hidden';
+			tableDiv.style.overflowY = "hidden";
 		}
 	}
 }
