@@ -2029,14 +2029,16 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	}
 	
 	function updateNumberOfInputsMenuButton() {
-		var res = prompt("Enter number of inputs.", numInputs);
-		if (res === null) return;
-		if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
-		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
-		res = parseFloat(res);
-		if (res + numOutputs > 25) { alert("You can't have that many inputs."); return; }
-	
-		updateNumberOfInputs(res);
+		//var res = prompt("Enter number of inputs.", numInputs);
+		openNumPad(0, null, "This is a test", "Do things", false, 10).done(function(res) {
+			if (res === null) return;
+			if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
+			if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
+			res = parseFloat(res);
+			if (res + numOutputs > 25) { alert("You can't have that many inputs."); return; }
+		
+			updateNumberOfInputs(res);
+		});
 	}
 	
 	function updateNumberOfInputs(res) {
@@ -2067,14 +2069,15 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	}
 	
 	function updateNumberOfOutputsMenuButton() {
-		var res = prompt("Enter number of outputs.", numOutputs);
-		if (res === null) return;
-		if (res <= "0") { alert("You can't have a negative number of outputs..."); return; }
-		if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
-		res = parseFloat(res);
-		if (res + numInputs > 25) { alert("You can't have that many outputs."); return; }
-		
-		updateNumberOfOutputs(res);
+		//var res = prompt("Enter number of outputs.", numOutputs);
+		openNumPad(0, null, "This is a test", "Do things", false, 10).done(function(res) {
+			if (res === null) return;
+			if (res <= "0") { alert("You can't have a negative number of outputs..."); return; }
+			if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
+			res = parseFloat(res);
+			if (res + numInputs > 25) { alert("You can't have that many outputs."); return; }
+			updateNumberOfOutputs(res);
+		});
 	}
 	
 	function updateNumberOfOutputs(res) {

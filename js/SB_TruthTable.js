@@ -73,12 +73,13 @@ function SB_TruthTable(containerNum) {
 		img.style.height = '20px';
 		img.style.width = '20px';
 		img.style.visibility = 'hidden';
+		img.style.paddingLeft = "10px";
 		body.appendChild(img);
 		
 		innerDiv = document.createElement("div");
 		innerDiv.id = "innerDiv" + containerNum;
-		innerDiv.style.overflowY = "auto";
 		innerDiv.style.position = "relative";
+		//innerDiv.style.marginRight = "10px";
 		
 		if (_numIn == 1) innerDiv.style.height = "70px";
 		else if (_numIn == 2) innerDiv.style.height = "120px";
