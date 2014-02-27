@@ -79,6 +79,7 @@ function SB_TruthTable(containerNum) {
 		innerDiv = document.createElement("div");
 		innerDiv.id = "innerDiv" + containerNum;
 		innerDiv.style.position = "relative";
+		innerDiv.style.overflowY = "auto";
 		//innerDiv.style.marginRight = "10px";
 		
 		if (_numIn == 1) innerDiv.style.height = "70px";
@@ -174,6 +175,7 @@ function SB_TruthTable(containerNum) {
 		}
 		
 		innerDiv.style.width = (document.getElementById(tableName).offsetWidth + 15) + "px";
+		tableDiv.style.width = (document.getElementById(tableName).offsetWidth + 40) + "px";
 	}
 	
 	function getTableWidth() { return tableDiv.offsetWidth; }
