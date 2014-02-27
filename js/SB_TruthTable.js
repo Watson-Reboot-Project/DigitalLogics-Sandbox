@@ -6,6 +6,7 @@ function SB_TruthTable(containerNum) {
 	//var title;
 	var tableName = "truthTable" + containerNum;
 	var divName = "truthTableDiv" + containerNum;
+	var innerDiv;
 	var tableDiv = document.getElementById(divName);
 	var img;
 	
@@ -25,7 +26,8 @@ function SB_TruthTable(containerNum) {
 		if (table) {
 			table.id = "";
 			tableDiv.removeChild(document.getElementById("tableDeleteIcon" + containerNum));
-			tableDiv.removeChild(table);
+			//tableDiv.removeChild(table);
+			tableDiv.removeChild(innerDiv);
 			createTable(_numIn, _numOut, _header);
 		}
 	}
@@ -61,33 +63,29 @@ function SB_TruthTable(containerNum) {
 		var body = tableDiv;
 		//var body = document.getElementById('tableDiv');
 		var tbl = document.createElement('table');								// create a table element
-		tbl.id = tableName;				
-		// set its ID
-		tbl.style.position='absolute';
-		//tbl.style.width = '10%';
-		//tbl.border='2';	
+		tbl.id = tableName;														// set its ID
+		tbl.style.position='absolute';	
 		tbl.style.display = 'block'; // block is viisble, none is invisible
-		
-		/*
-		title = "Gate";
-		var caption = document.createElement('caption');
-		var b = document.createElement('b');
-		b.style.backgroundColor='#FFFFFF';
-		b.style.fontSize='25px';
-		b.appendChild(document.createTextNode(title));
-		caption.appendChild(b);
-		tbl.appendChild(caption);
-		*/
 		
 		img = document.createElement('img');
 		img.id = "tableDeleteIcon" + containerNum;
 		img.src = "delete.ico";
 		img.style.height = '20px';
 		img.style.width = '20px';
-		img.style.position = "absolute";
 		img.style.visibility = 'hidden';
-		img.style.paddingTop = "15px";
 		body.appendChild(img);
+		
+		innerDiv = document.createElement("div");
+		innerDiv.id = "innerDiv" + containerNum;
+		innerDiv.style.overflowY = "auto";
+		innerDiv.style.position = "relative";
+		
+		if (_numIn == 1) innerDiv.style.height = "70px";
+		else if (_numIn == 2) innerDiv.style.height = "120px";
+		else if (_numIn == 3) innerDiv.style.height = "200px";
+		else innerDiv.style.height = "250px";
+		
+		body.appendChild(innerDiv);
 		
 		var tbdy = document.createElement('tbody');
 		
@@ -107,7 +105,7 @@ function SB_TruthTable(containerNum) {
 			tbdy.appendChild(tr);
 		}
 		tbl.appendChild(tbdy);
-		body.appendChild(tbl);
+		innerDiv.appendChild(tbl);
 		
 		var thead = document.createElement('thead');							// create element for header
 		tbl.appendChild(thead);													// append head to table
@@ -124,7 +122,6 @@ function SB_TruthTable(containerNum) {
 			thead.appendChild(th);
 		}
 		tbl.style.borderSpacing = '0px';
-		tbl.style.marginTop = "15px";
 		initTableValues(rows, cols);
 
 		img.style.marginLeft = tbl.offsetWidth + "px";
@@ -175,7 +172,7 @@ function SB_TruthTable(containerNum) {
 			}
 		}
 		
-		tableDiv.style.width = (document.getElementById(tableName).offsetWidth + 40) + "px";
+		innerDiv.style.width = (document.getElementById(tableName).offsetWidth + 15) + "px";
 	}
 	
 	function getTableWidth() { return tableDiv.offsetWidth; }
@@ -184,7 +181,7 @@ function SB_TruthTable(containerNum) {
 		if (tableDiv !== null) {
 			tableDiv.style.left = x + "px";
 			tableDiv.style.top = -y + "px";
-			tableDiv.style.width=document.getElementById(tableName).offsetWidth + "px";
+			//tableDiv.style.width=document.getElementById(tableName).offsetWidth + "px";
 			tableDiv.style.width = (document.getElementById(tableName).offsetWidth + 40) + "px";
 		}
 	}
@@ -201,10 +198,10 @@ function SB_TruthTable(containerNum) {
 	function toggleVisible(){
 		if(tableDiv.style.visibility == 'hidden'){
 			tableDiv.style.visibility = 'visible';
-			tableDiv.style.overflowY = "auto";
+			innerDiv.style.overflowY = "auto";
 		}else{
 			tableDiv.style.visibility = 'hidden';
-			tableDiv.style.overflowY = "hidden";
+			innerDiv.style.overflowY = "hidden";
 		}
 	}
 }
