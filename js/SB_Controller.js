@@ -464,8 +464,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*	gateInputBoxMouseLeave()
 	*
 	*	When the user's mouse leaves an inputBox of this gate:
-	*		1. If this output isn't connected to anything, make the input color its default color
-	*		2. If this output is connected to something, make the wire associated with this connection its default color
+	*		1. If this input isn't connected to anything, make the input color its default color
+	*		2. If this input is connected to something, make the wire associated with this connection its default color
 	*/
 	function gateInputBoxMouseLeave(event, comp, inputNum) {
 		var inputString;
@@ -512,80 +512,110 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 	}
 	
+	/*
+	*	gateOutputBoxMouseUp()
+	*
+	*	When the user mouses up on a gate's output box, the user is potentially wanting to connect this gate to another.
+	*/
 	function gateOutputBoxMouseUp(event, gate) {
-		if (connecting) {
+		if (connecting) {		// if we are in connection mode
 			
+			// if the selected component is this gate, or if this gate is already connected to something via plugout, or if the selected plug is a plugout, or if a loop is introduced .. cancel the connection
 			if (selectedComp == gate || gate.getPlugoutComp() !== null || selectedPlug.indexOf("plugout") >= 0 || selectedComp.loopCheckForward(gate)) {
-				if (tempLine !== null) {
+				if (tempLine !== null) {		// if there is a temp line, make it go away
 					tempLine.remove();
 					tempLineLayer.draw();
 				}
-				connecting = false;
-				selectedComp = null;
+				connecting = false;				// no longer in connection mode
+				selectedComp = null;			// selected component to null
 				
-				return false;
+				return false;					// return false as this wasn't a successful connection
 			}
 			
+			// if the selected component is a component with only one input, simply setWireFromGateToGate()
 			if (selectedComp.getType() == "not" || selectedComp.getType() == "output" || selectedComp.getType() == "connector") {
-				// set wire from the plugout of the gate we are clicking now to a one input component
 				setWireFromGateToGate(gate, selectedComp, 0);
 			}
-			else {
-				// set wire from the plugout of the gate we are clicking now to a multiple input component (or/and gate)
-				var pluginNum = selectedPlugNum;
-				setWireFromGateToGate(gate, selectedComp, pluginNum);
+			else {	// otherwise, it's either a AND or OR gate .. we must get the selecting plugin for that gate
+				var pluginNum = selectedPlugNum;							// grab the selected plugin number
+				setWireFromGateToGate(gate, selectedComp, pluginNum);		// use it when calling setWireFromGateToGate
 			}
 		
-			gate.setPlugColor("plugout", "default");
+			gate.setPlugColor("plugout", "default");	// default will set the plugout to its appropriate color
 		
-		
-			tempLineLayer.draw();
-			tempLine = null;
+			tempLineLayer.draw();	// redraw the temp line layer
+			tempLine = null;		// set the temp line to null
 			connecting = false;		// we are no longer in connection mode
 			selectedComp = null;	// null the selected component
 			
-			return true;
+			return true;			// return true as this connection was successful
 		}
 	}
 	
-	
+	/*
+	*	gateOutputBoxMouseEnter()
+	*
+	*	When the user's mouse enters an outputBox of this gate:
+	*		1. If this output isn't connected to anything, turn the output plug green
+	*		2. If this output is connected to something, turn the wire associated with this connection to yellow
+	*/
 	function gateOutputBoxMouseEnter(event, comp, inputNum) {
-		if (comp.getPlugoutComp() === null) {
-			if (!connecting) comp.setPlugColor("plugout", "green");
-			if (connecting && selectedPlug.indexOf("plugin") >= 0) {
-				comp.setPlugColor("plugout", "green");
-				tempLine.setStroke("green");
+		if (comp.getPlugoutComp() === null) {							// if this gate isn't connected to anything via plugout
+			if (!connecting) comp.setPlugColor("plugout", "green");		// if not in connecting mode, turn the plugout green
+			if (connecting && selectedPlug.indexOf("plugin") >= 0) {	// if in connecting mode and the selected plug is a plugin
+				comp.setPlugColor("plugout", "green");					// turn the plugout green
+				tempLine.setStroke("green");							// ... along with the temp line
 			}
 		}
-		else {
-			if (!connecting) {
-				comp.setPlugoutWireColor("yellow");
+		else {															// otherwise, this gate is connected to something via plugout
+			if (!connecting) {											// if we aren't connecting
+				comp.setPlugoutWireColor("yellow");						// turn the plugout wire yellow
 			}
 		}
 	}
 	
+	/*
+	*	gateOutputBoxMouseLeave()
+	*
+	*	When the user's mouse leaves an outputBox of this gate:
+	*		1. If this output isn't connected to anything, make the output color its default color
+	*		2. If this output is connected to something, make the wire associated with this connection its default color
+	*/
 	function gateOutputBoxMouseLeave(event, comp) {
-		comp.setPlugColor("plugout", "default");
-		if (connecting) tempLine.setStroke("black");
-		else {
-			if (comp.getPlugoutComp() !== null) {
-				comp.setPlugoutWireColor("default");
+		comp.setPlugColor("plugout", "default");			// set the plugout wire color default regardless
+		if (connecting) tempLine.setStroke("black");		// if we are connecting, set the temp line to black
+		else {												// if we aren't connecting...
+			if (comp.getPlugoutComp() !== null) {			// if this gate is connected to something via plugout
+				comp.setPlugoutWireColor("default");		// set the plugout wire color to default
 			}
 		}
 	}
 	
+	/*
+	*	gateClick()
+	*
+	*	If the user clicks on a gate:
+	*		1. If we are in probe mode, probe the gate.
+	*		2. If we are in delete mode, delete the gate.
+	*/
 	function gateClick(event, gate) {
-		if (probeMode) {
-			probe(gate);
-			probeMode = false;
-			setComponentMouseOver("pointer");
+		if (probeMode) {							// if probe mode,
+			probe(gate);							// probe the gate
+			probeMode = false;						// probe mode is now false
+			setComponentMouseOver("pointer");		// set the component mouse over back to pointer as it was changed to crosshair when we entered probe mode
 		}
 		
-		if (deleteMode) {
-			deleteGate(gate);
+		if (deleteMode) {							// if we are in delete mode
+			deleteGate(gate);						// delete the gate
 		}
 	}
 	
+	/*
+	*	gateDragEnd()
+	*
+	*	This function detects if a gate's input/output box overlaps an output/input box of another component.
+	*	If they do, then a connection is set between them.
+	*/
 	function gateDragEnd(gate) {
 		var thisInput1Box = gate.getInputBoxCoords(1);
 		var thisInput2Box = gate.getInputBoxCoords(2);
@@ -629,6 +659,11 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 	}
 	
+	/*
+	*	inputIntersectOutput
+	*
+	*	This function determines if an input of one component intersects the output of another component. If so, a connection is made between them.
+	*/
 	function inputIntersectOutput(thatOutputBox, thisInputBox, thisComp, thatComp) {
 		if (thatComp.getType() == "output") return;
 		
@@ -684,6 +719,11 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (res) evaluateCircuit();
 	}
 	
+	/*
+	*	outputIntersectInput()
+	*
+	*	This function determins if an output of one component intersects the input of another component. If so, a connection is made between them.
+	*/
 	function outputIntersectInput(thisOutputBox, thatInputBox, thisComp, thatComp, outputNum) {
 		var trueResults = [];
 		var pluginNum;
@@ -827,72 +867,100 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	//------ CONNECTOR LISTENERS ---------
 	//------------------------------------
 
+	/*
+	*	connectorInputBoxMouseDown()
+	*
+	*	If a user mouses down on a connector's input, the user potentially wants to connect this connector to another component.
+	*/
 	function connectorInputBoxMouseDown(event, connect) {
-		if (!connecting) {
-			if (connect.getPluginComp() !== null) {
-				var connComp = connect.getPluginComp();
-				if (connComp.getType() == "connector") {
-					var plugoutComp = connComp.getPlugoutToComp(connect);
-					connComp.deleteOutputConnection(plugoutComp);
+		if (!connecting) {														// if we aren't in connection mode
+			if (connect.getPluginComp() !== null) {								// if the connector is already connected to something via plugin, we must first delete that connection before continuing
+				var connComp = connect.getPluginComp();							// get the connected component
+				if (connComp.getType() == "connector") {						// if the connected component is a connector, we must get the plugout number to this connector
+					var plugoutNum = connComp.getPlugoutToComp(connect);		// get the plugout number to this connector by calling getPlugoutToComp() on the connected connector
+					connComp.deleteOutputConnection(plugoutNum);				// delete the output connection from that connector
 				}
-				else connComp.deleteOutputConnection();
+				else connComp.deleteOutputConnection();							// if the connected component is not a connector, simply call deleteOutputConnection() as all other components have only one output
 				
-				evaluateCircuit();
+				evaluateCircuit();												// we need to re-evaluate the truth table
 			}
 
+			// fill the points array with the end point of this connectors plugin
 			points = [ connect.getPlugin().getPoints()[0].x, connect.getPlugin().getPoints()[0].y, connect.getPlugin().getPoints()[0].x, connect.getPlugin().getPoints()[0].y ];
-
 		
+			// set these points in the constructor to tempLine
 			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
-			tempLineLayer.add(tempLine);
-			selectedPlug = "plugin";
+			tempLineLayer.add(tempLine);	// add the temp line
+			selectedPlug = "plugin";		// the selectedPlug is a plugin
 			selectedComp = connect;			// set this gate as the selected component
 			connecting = true;				// set the controller to connecting mode
 		}
 	}
 	
+	/*
+	*	connectorInputBoxMouseUp()
+	*
+	*	If a user mouses up on a connector's input, the user potentially wants to connect another component to this connector.
+	*/
 	function connectorInputBoxMouseUp(event, connect) {
-		if (connecting) {
+		if (connecting) {			// if we are in connection mode
+		
+			// check for validity of connection:
+			// if the selected component is this connector, or if this connector's plugin is already connected to something, or if a loop is introduced, cancel the connection
 			if (selectedComp == connect || connect.getPluginComp() !== null || selectedComp.loopCheckBackward(connect) == true) {
-				if (tempLine !== null) {
+				if (tempLine !== null) {	// remove the temp line
 					tempLine.remove();
 					tempLineLayer.draw();
 				}
-				connecting = false;
-				selectedComp = null;
-				return false;
+				connecting = false;			// no longer connecting
+				selectedComp = null;		// selected comp is null
+				return false;				// not a successful connection
 			}
 			
-			if (selectedPlug.indexOf("plugin") < 0) {			
-				if (selectedComp.getType() == "connector") {				// if the selected component is a connector,
+			if (selectedPlug.indexOf("plugin") < 0) {						// if the selected plug is NOT a plugin (can only connect outputs to inputs)
+				if (selectedComp.getType() == "connector") {				// if the selected component is a connector, we must retrieve the selected plugout number of that connector
 					var selPlugout = selectedComp.getSelectedPlugout();		// get the selected plugout for that connector
 					setWireFromConnectorToConnector(selectedComp, connect, selPlugout);	// make the connection
 				}
-				else {	// else, the selected component is not a connector, it's a gate
+				else {	// else, the selected component is not a connector, it's a component with only one output
 					setWireFromGateToConnector(selectedComp, connect);	// make the connection
 				}
 			}
 			
+			// restore variables back to normal
 			connecting = false;
 			selectedComp = null;
 			selectedPlug = null;
 			
-			return true;
+			return true;	// a successful connection
 		}
 	}
 	
+	/*
+	*	connectorInputBoxMouseEnter()
+	*
+	*	If a user's mouse enters the input box of a connector:
+	*		1. If the connector's plugin isn't connected to anything
+	*			- If we aren't in connection mode, turn the plugin color green.
+	*			- If we are in connection mode and the selected plug is a plugout, turn the plugin color green along with the temp line.
+	*		2. If the connector's plugin is connected to something
+	*			- If we are not in connection mode
+	*				-- If the connected component isn't a connector (hence it has only one output), set the plugout wire yellow.
+	*				-- If the connected component is a connector, get the correct plugout of that connector and set the plugout wire associated with it yellow.
+	*/
 	function connectorInputBoxMouseEnter(event, comp) {
-		if (comp.getPluginComp() === null) {
-			if (!connecting) comp.setPlugColor("plugin", "green");
-			if (connecting && selectedPlug.indexOf("plugout") >= 0)	{
-				comp.setPlugColor("plugin", "green");
-				tempLine.setStroke("green");			
+		if (comp.getPluginComp() === null) {							// if the connector's plugin isn't connected to anything
+			if (!connecting) comp.setPlugColor("plugin", "green");		// if we aren't in connection mode, set the plugin color green
+			if (connecting && selectedPlug.indexOf("plugout") >= 0)	{	// if we are in connection mode and the selected plug is a plugout...
+				comp.setPlugColor("plugin", "green");					// set the plugin color green
+				tempLine.setStroke("green");							// ... along with the temp line
 			}
 		}
-		else {
-			if (!connecting) {
+		else {															// otherwise, the connector is connected to something via plugin
+			if (!connecting) {											// if we aren't in connection mode
+				// if the connected component isn't a connector, that component has only one plugout, turn that plugout wire yellow
 				if (comp.getPluginComp().getType() != "connector") comp.getPluginComp().setPlugoutWireColor("yellow");
-				else {
+				else {	// otherwise, its a connector; get the plugout number associated with this connection so that we can turn that plugout wire yellow
 					var plugoutNum = comp.getPluginComp().getPlugoutToComp(comp);
 					comp.getPluginComp().setPlugoutWireColor(plugoutNum, "yellow");
 				}
@@ -900,6 +968,17 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 	}
 	
+	/*
+	*	connectorInputBoxMouseLeave()
+	*
+	*	If a user's mouse leaves a connector's input box:
+	*		1. Set the plugin color to "default" (this will make the plugin black, red, or blue depending on the state of the circuit)
+	*		2. If we are in connection mode, then set the temp line to black as we are no longer over this connection
+	*		3. If we aren't in connection mode,
+	*			- If this connector is connected to something via plugin
+	*				-- If the connected component isn't a connector (hence it has only one plugout), then set the plugout wire of that component to default
+	*				-- If the connected component is a connector, get the correct plugout number associated with this connection, turn that wire default color
+	*/
 	function connectorInputBoxMouseLeave(event, comp) {
 		comp.setPlugColor("plugin", "default");
 		if (connecting) tempLine.setStroke("black");
@@ -914,22 +993,36 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 	}
 	
+	/*
+	*	connectorOutputBoxMouseDown()
+	*
+	*	If a user mouses down on a connector's output box, then he/she potentially want to connect this connector to another component:
+	*	
+	*	- If the connector's plugout wire for this plugout is not null, then the connector is connected to something via this plugout (we must delete it before continuing)
+	*		1. Delete this output connection
+	*		2. Re-evaluate the truth table
+	*	- Set the points array to the end point of this connector's plugout: [ plugout.x , plugout.y, plugout.x, plugout.y ]
+	*	- Set the selected plugout for this connector to this plugout number (plugoutNum)
+	*	- Create a new temp line with the point array
+	*	- Setting connection mode = true
+	*/
 	function connectorOutputBoxMouseDown(event, connect, plugoutNum) {
-		if (!connecting) {
-			if (connect.getPlugoutWire(plugoutNum) !== null) {
-				connect.deleteOutputConnection(plugoutNum);
-				evaluateCircuit();
+		if (!connecting) {											// if we are not connecting
+			if (connect.getPlugoutWire(plugoutNum) !== null) {		// if this connector is already connected to something via this plugout
+				connect.deleteOutputConnection(plugoutNum);			// delete the connection here
+				evaluateCircuit();									// re-evaluate the circuit
 			}
 			
+			// fill the points array to the endpoint of this plugout
 			points = [ connect.getPlugout(plugoutNum).getPoints()[1].x, connect.getPlugout(plugoutNum).getPoints()[1].y, connect.getPlugout(plugoutNum).getPoints()[1].x, connect.getPlugout(plugoutNum).getPoints()[1].y ];
 			connect.setSelectedPlugout(plugoutNum);			// set this plugout selected within this connector (very important)
 			
 			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
-			tempLineLayer.add(tempLine);
-			selectedPlug = "plugout" + plugoutNum;
+			tempLineLayer.add(tempLine);				// add the temp line to the temp line layer
+			selectedPlug = "plugout" + plugoutNum;		// set selected plug string
 			selectedPlugNum = plugoutNum;
-			selectedComp = connect;			// set this gate as the selected component
-			connecting = true;				// set the controller to connecting mode
+			selectedComp = connect;						// set this gate as the selected component
+			connecting = true;							// set the controller to connecting mode
 		}
 	}
 	
@@ -997,6 +1090,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (deleteMode == true) deleteConnector(connect);
 	}
 	
+	/*
+	* connectorDragEnd()
+	*
+	*	This function will be called upon every connector drag end. The input/output boxes are compiled into an array
+	*	and is passed to the inputIntersectOutput() and outputIntersectInput() functions.
+	*/
 	function connectorDragEnd(connect) {
 		var thisInput1Box = connect.getInputBoxCoords(1);
 		var thisInputBox = [ thisInput1Box ];
@@ -1261,6 +1360,11 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 	}
 	
+	/*
+	*	nodeDrag()
+	*
+	*	Mike wanted nodes to not be draggable; this function doesn't get called.
+	*/
 	function nodeDrag(node) {
 		var connectedComp;
 		
@@ -1296,33 +1400,28 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	/*
 	* bgClick()
 	*
-	*	This function is called every time the user clicks on the stage (every click that occurs). We only act if the click is a right click, however.
-	*	If we are in connecting mode and the user right clicks, the user has requested to cancel the current connection.
-	*
-	*	TBI: If we are NOT in connecting mode and the user has right clicked on the background, a menu needs to popup. The menu needs to have an ADD
-	*	section where we can add a component. When the user clicks on a component to add, the new gate is created and added to the spot of the right
-	*	click.
+	*	This function is called every time the user clicks on the stage (every click that occurs).
 	*/
 	function bgClick(event) {
-		if (addPopup !== null) { addPopup.hide(); addPopup = null; return; }
-		if (deletePopup !== null) { deletePopup.hide(); deletePopup = null; return; }
-		if (wrenchPopup !== null) { wrenchPopup.hide(); wrenchPopup = null; return; }
-		if (probeMode == true) { probeMode = false; setComponentMouseOver("pointer"); return; }
-		if (deleteMode == true) { 
+		if (addPopup !== null) { addPopup.hide(); addPopup = null; return; }					// if the "Add Gate" menu is shown, hide it
+		if (deletePopup !== null) { deletePopup.hide(); deletePopup = null; return; }			// if the "Delete Gate" menu is shown, hide it (not used)
+		if (wrenchPopup !== null) { wrenchPopup.hide(); wrenchPopup = null; return; }			// if the "Wrench" menu is shown, hide it
+		if (probeMode == true) { probeMode = false; setComponentMouseOver("pointer"); return; }	// if in probe mode, exit probe mode
+		if (deleteMode == true) { 																// if in delete mode, exit delete mode
 			deleteMode = false;
 			toggleComponentDeleteIcons(false);
 			setTrashImage("trash_closed.bmp");
 			return;
 		}
 		
-		if (!connecting) {
+		if (!connecting) {																		// if not connecting and we have made it here, show the add menu at this position
 			showAddMenu(event, getRelativePointerPosition(event));
 		}
 		
 		if (connecting) {							// if we are in connecting mode
 			tempLine.disableStroke();				// disable the tempLine's stroke
 			tempLine = null;						// set the tempLine to NULL
-			connecting = false;		// we are not longer in connecting mode
+			connecting = false;						// we are not longer in connecting mode
 			selectedComp = null;
 		}
 	}
@@ -1396,7 +1495,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			
 		}
 		else {
-			console.log("Cancel the current connection mode.");
 			connecting = false;
 		}
 	}
@@ -1408,21 +1506,21 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	/*
 	*	setWireFromGateToGate()
 	*
-	*	This function is called to set a connection for a gate to another gate. We are passed the component
-	*	that will be connected to the selectedComp. In other words, it is the second component chosen in the
-	*	connection process. We are also passed a start line and an end line. Our wire will go from the end point
-	*	of the start line to the start points of the end line. Lastly, we are passed a plugin number which will
-	*	be the number of the plugin that the wire will be connected to.
+	*	NOTE: This function really works for input and output nodes (or any component that has only one output)
+	*
+	*	This function is called to set a connection for a gate to another gate. It is passed two gates:
+	*	the gate the connection is from and the gate the connection is from. Additional pluginNum may be passed
+	*	if the gate is an AND or OR gate.
 	*/
 	function setWireFromGateToGate(fromGate, toGate, pluginNum) {
-		start = fromGate.getPlugout().getPoints()[1];										// the end point of the start line
-		end = toGate.getPlugin(pluginNum).getPoints()[0];											// the start point of the end line
-		points = getWirePoints(start, end);									// compute the wire points
+		start = fromGate.getPlugout().getPoints()[1];					// the starting point of the wire
+		end = toGate.getPlugin(pluginNum).getPoints()[0];				// the end point of the wire
+		points = getWirePoints(start, end);								// compute the wire points
 		
 		// make a new line with the points computed earlier
 		var line = new Kinetic.Line({points : points, stroke : "black", strokeWidth : 1, lineCap : 'round', lineJoin : 'round'});
-		mainLayer.add(line);			// refresh the scene
-		line.draw();
+		mainLayer.add(line);			// add the line to the main layer
+		line.draw();					// draw it
 		
 		if (tempLine !== null) {		// if the tempLine does not equal null, disable it and set it null
 			tempLine.remove();
@@ -1430,20 +1528,17 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			tempLineLayer.draw();
 		}
 		
-		if (toGate.getType() == "not" || toGate.getFunc() == "node") toGate.setPluginComp(fromGate);				// if the plugin number is 0, the component is a NOT gate (only one input for a not gate)
-		else toGate.setPluginComp(pluginNum, fromGate);					// else, call setPluginComp on the component with the plugin number provided and the selected component
+		if (toGate.getType() == "not" || toGate.getFunc() == "node") toGate.setPluginComp(fromGate);	// only one input for a not gate or node
+		else toGate.setPluginComp(pluginNum, fromGate);													// else, call setPluginComp on the component with the plugin number provided
 		
-		fromGate.setPlugoutWire(line);	// set the plugoutWire of the selectedComp to this new line
-		fromGate.setPlugoutComp(toGate);									// set the plugoutComp for the selectedComp
-		
+		fromGate.setPlugoutWire(line);		// set the plugoutWire of the selectedComp to this new line
+		fromGate.setPlugoutComp(toGate);	// set the plugoutComp for the selectedComp
 	}
 	
 	/*
 	*	setWireFromGateToConnector()
 	*
-	*	This function is called to set a connection from a gate to a connector. We are passed the connector that we will be connecting
-	*	the gate (selectedComp) to. We are also passed the start line and end line. We will make a wire (line) from the end point of
-	*	the start line to the start point of the end line.
+	*	This function is called to set a connection from a gate to a connector.
 	*/
 	function setWireFromGateToConnector(fromGate, toConnect) {
 		start = fromGate.getPlugout().getPoints()[1];			// get the end point of the start line
@@ -1469,10 +1564,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	/*
 	*	setWireFromConnectorToGate()
 	*
-	*	This function is called to set a connection from a connector to a gate. We are passed the gate that we will be connecting
-	*	the connector (selectedComp) to. We are also passed the start line and end line. We will make a wire (line) from the end
-	*	point of the start line to the start point of the end line. We are also passed plugoutNum which is the plugout number of
-	*	the connector being use, and also the pluginNum which is the plugin number of the gate being used.
+	*	This function is called to set a connection from a connector to a gate.
 	*/
 	function setWireFromConnectorToGate(fromConnect, toGate, plugoutNum, pluginNum) {
 		start = fromConnect.getPlugout(plugoutNum).getPoints()[1];										// get the end point of the start line
@@ -1510,9 +1602,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	/*
 	*	setWireFromConnectorToConnector()
 	*
-	*	This function is called to set a connection from a connector to another connector. We are passed a start line and end line.
-	*	We will make a wire (line) from the end point of the start line to the start points of the end line. We are also passed
-	*	the plugout number of the first connector we are using.
+	*	This function is called to set a connection from a connector to another connector.
 	*/
 	function setWireFromConnectorToConnector(fromConnect, toConnect, plugoutNum) {
 		start = fromConnect.getPlugout(plugoutNum).getPoints()[1];									// get the end point of the start line
@@ -1540,15 +1630,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	/*
 	*	connectComponents()
 	*
-	*	This function was made for the non-sand box version of this lab. It sets connections between components programmatically.
-	*	From another JavaScript, components can be added to the stage and connected here. We are passed two components that will
-	*	be connected and an options array. We must determine what each component is, and connect them appropriately.
+	*	Programmatically connect components (used in building circuits form serialization string).
 	*/
 	function connectComponents(comp1, comp2, opts) {
 		selectedComp = comp1;					// set the selectedComp to the first component (it's like the user selected it in the sand-box)
 		
 		if ((comp1.getFunc() == "gate" || comp1.getType() == "input") && (comp2.getFunc() == "gate" || comp2.getType() == "output")) { // if both components are gates (from gate to gate); opts = [ pluginNum ]
-			//setWireFromGateToGate(comp2, comp1.getPlugout(), comp2.getPlugin(opts[0]), opts[0]);	// make the connection
 			if (opts) setWireFromGateToGate(comp1, comp2, opts[0]);
 			else setWireFromGateToGate(comp1, comp2, 0);
 		}
@@ -1556,12 +1643,10 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			setWireFromGateToConnector(comp1, comp2);
 		}
 		else if (comp1.getFunc() == "connection" && comp2.getFunc() == "gate") { // if from connector to gate; opts = [ pluginNumOfGate, plugoutNumOfConnector ]
-			//comp1.setSelectedPlugout(opts[1]);	// get the selectedPlugout line
 			if (comp2.getType() == "not") setWireFromConnectorToGate(comp1, comp2, opts[0], 0);
 			else setWireFromConnectorToGate(comp1, comp2, opts[0], opts[1]);
 		}
 		else if (comp1.getFunc() == "connection" && comp2.getFunc() == "connection") { // if from connector to connector; opts = [ plugoutNumOfConnecotr ]
-			//comp1.setSelectedPlugout(opts[0]);	// get the selectedPlugout line
 			setWireFromConnectorToConnector(comp1, comp2, opts[0]);
 		}
 		
@@ -1582,7 +1667,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		components.push(orGate);
 		orGate.draw();
 		registerComponent(orGate);
-		//orGate.draw();
 		gateDragEnd(orGate);
 		
 		return orGate;
@@ -1598,7 +1682,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		components.push(andGate);
 		andGate.draw();
 		registerComponent(andGate);
-		//andGate.draw();
 		gateDragEnd(andGate);
 		
 		return andGate;
@@ -1614,7 +1697,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		components.push(notGate);
 		notGate.draw();
 		registerComponent(notGate);
-		//notGate.draw();
 		gateDragEnd(notGate);
 		
 		return notGate;
