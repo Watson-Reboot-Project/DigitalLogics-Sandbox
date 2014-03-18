@@ -87,11 +87,17 @@ function SB_Setup(container, containerNum) {
 	
 	function resetExercise(numInputs, numOutputs) {
 		var table = document.getElementById("truthTable" + containerNum);
+		var image = document.getElementById("tableDeleteIcon" + containerNum);
+		
 		if (table) {
 			table.id = "";
 			table.parentNode.removeChild(table);
 		}
 		
+		if(image){
+			image.id = '';
+			image.parentNode.removeChild(image);
+		}
 		container.innerHTML = "";
 		width = 880;
 		height = 600;
