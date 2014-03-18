@@ -2191,7 +2191,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	
 	function initTruthTableListeners() {
 		$(function() {
-			$( "#truthTableDiv" + containerNum ).draggable({ containment: "#sandbox1", scroll: false });
+			$( "#truthTableDiv" + containerNum ).draggable({ containment: "#sandbox" + containerNum, scroll: false });
 
 			$( "#truthTableDiv" + containerNum ).on("click tap", function() {
 				if (deleteMode == true) {
