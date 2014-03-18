@@ -25,11 +25,9 @@ function SB_TruthTable(containerNum) {
 		var table = document.getElementById(tableName);
 		if (table) {
 			table.id = "";
-			var deleteIcon = document.getElementById("tableDeleteIcon" + containerNum);
-			tableDiv.removeChild(deleteIcon);
+			tableDiv.removeChild(document.getElementById("tableDeleteIcon" + containerNum));
 			//tableDiv.removeChild(table);
 			tableDiv.removeChild(innerDiv);
-			tableDiv.innnerHTML = '';
 			createTable(_numIn, _numOut, _header);
 		}
 	}
@@ -67,7 +65,7 @@ function SB_TruthTable(containerNum) {
 		var tbl = document.createElement('table');								// create a table element
 		tbl.id = tableName;														// set its ID
 		tbl.style.position='absolute';	
-		tbl.style.display = 'block'; // block is visible, none is invisible
+		tbl.style.display = 'block'; // block is viisble, none is invisible
 		
 		img = document.createElement('img');
 		img.id = "tableDeleteIcon" + containerNum;
@@ -76,12 +74,11 @@ function SB_TruthTable(containerNum) {
 		img.style.width = '20px';
 		img.style.visibility = 'hidden';
 		img.style.paddingLeft = "10px";
-		img.style.marginTop = "-10px";
 		body.appendChild(img);
 		
 		innerDiv = document.createElement("div");
 		innerDiv.id = "innerDiv" + containerNum;
-		innerDiv.style.position = "absolute";
+		innerDiv.style.position = "relative";
 		innerDiv.style.overflowY = "auto";
 		//innerDiv.style.marginRight = "10px";
 		
@@ -128,8 +125,9 @@ function SB_TruthTable(containerNum) {
 		}
 		tbl.style.borderSpacing = '0px';
 		initTableValues(rows, cols);
-		
+
 		img.style.marginLeft = tbl.offsetWidth + "px";
+		img.style.marginTop = "-10px";
 	}
 
 	/*
