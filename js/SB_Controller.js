@@ -31,7 +31,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS/DEFINITIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+	var controller = this;
 	var connecting = false;						// keeps track if the controller is in "connecting mode" where one component is selected to be connected to another
 	var components = [];						// array of components on the canvas including input/output nodes
 	var inputs = [];							// array of input nodes
@@ -2086,6 +2086,40 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				return;
 			}
 		});
+		wrenchPopup.add("Save", function(target){
+			var filename = prompt("Please enter file name");
+			filename += ".txt";
+			var data = serializer.serialize(components, inputs, outputs);
+			var req = document.createElement('a');
+			req.setAttribute('href','data:text/plain;charset=utf-8,' + encodeURIComponent(data));
+			req.setAttribute('download', filename);
+			document.body.appendChild(req);
+			req.click();
+			document.body.removeChild(req);
+		});
+		
+		wrenchPopup.add("Load", function(target){
+			var load = document.getElementById('files');
+			load.click();
+			load.addEventListener('change', function(e){
+				var files = document.getElementById('files').files;
+				
+				if (!files.length) {
+					alert('Please select a file!');
+					return;
+				}	
+				
+				var reader = new FileReader();
+
+				reader.onload = function(e){
+					var text = e.target.result;
+					serializer.deserialize(controller, text);
+				};
+
+				reader.readAsText(files[0]);
+			}, false);
+		});
+		
 		wrenchPopup.setSize(140, 0);
 		wrenchPopup.showMenu(event);
 	}

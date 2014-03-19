@@ -33,14 +33,16 @@ function SB_Serializer(curExercise) {
 	}
 	
 	function deserialize(controller, str) {
+		nextToken = 0;
 		compArray = new Array();
 		tokenizeString(str);
 		
-		var numInputs = parseFloat(getNextToken());
-		var numOutputs = parseFloat(getNextToken());
+		var numInputs = parseInt(getNextToken());
+		var numOutputs = parseInt(getNextToken());
 		var inputs = controller.updateNumberOfInputs(numInputs);
 		var outputs = controller.updateNumberOfOutputs(numOutputs);
-		
+		console.log(tokArray[0]);
+		console.log(tokArray[3]);
 		for (var i = 0; i < inputs.length; i++) compArray[inputs[i].getID()] = inputs[i];
 		for (var i = 0; i < outputs.length; i++) compArray[outputs[i].getID()] = outputs[i];
 		
