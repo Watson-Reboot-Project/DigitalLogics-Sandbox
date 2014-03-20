@@ -51,7 +51,6 @@ function SB_Setup(container, containerNum) {
 	if(typeof(Storage) !== "undefined")
 	{
 		var str = localStorage.getItem("DL_SB_" + curExercise);
-		console.log(str);
 		if (str) {
 			serializer.deserialize(controller, str);
 			controller.evaluateCircuit();

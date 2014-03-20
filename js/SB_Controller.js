@@ -85,7 +85,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	this.addNotGate = addNotGate;							// add NOT gate
 	this.addConnector = addConnector;						// add CONNECTOR
 	this.deleteGate = deleteGate;							// delete a gate
-	this.deleteConnecor = deleteConnector;					// delete a connector
+	this.deleteConnector = deleteConnector;					// delete a connector
 	this.addInput = addInput;								// add an input node
 	this.addOutput = addOutput;								// add an output node
 	
@@ -2100,9 +2100,18 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 		wrenchPopup.add("Load", function(target){
 			var load = document.getElementById('files');
-			load.click();
-			load.addEventListener('change', function(e){
+			
+			var listen = function(e){
+				
 				var files = document.getElementById('files').files;
+				console.log(components.length);
+				
+				for(var i in components){
+					if(components[i].getType() == "input" || components[i].getType() == "output")
+						console.log("input/output");
+					else
+						deleteComponent(components[i]);
+				}
 				
 				if (!files.length) {
 					alert('Please select a file!');
@@ -2114,10 +2123,21 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				reader.onload = function(e){
 					var text = e.target.result;
 					serializer.deserialize(controller, text);
+					e.stopPropagation();
 				};
-
+				
 				reader.readAsText(files[0]);
-			}, false);
+				e.stopPropagation();
+			}
+			var remove = function(e){
+				load2 = document.getElementById('files');
+				load2.removeEventListener('change', listen, false)
+			}
+			load.addEventListener('click', remove, false);
+			load.click();
+			load.addEventListener('change', listen, false);
+			
+
 		});
 		
 		wrenchPopup.setSize(140, 0);
