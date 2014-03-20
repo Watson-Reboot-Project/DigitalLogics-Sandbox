@@ -31,7 +31,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS/DEFINITIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	var controller = this;
 	var connecting = false;						// keeps track if the controller is in "connecting mode" where one component is selected to be connected to another
 	var components = [];						// array of components on the canvas including input/output nodes
 	var inputs = [];							// array of input nodes
@@ -2099,43 +2098,41 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		});
 		
 		wrenchPopup.add("Load", function(target){
+		
 			var load = document.getElementById('files');
 			
 			var listen = function(e){
+			
 				
-				var files = document.getElementById('files').files;
-				console.log(components.length);
 				
+				function readText(file){
+					var reader = new FileReader();
+					
+					reader.onload = function (e) {  
+						var output= e.target.result;
+						serializer.deserialize(thisObj,output);
+					}
+					
+				    reader.readAsText(file);
+				} 
+				
+				var file = document.getElementById('files').files[0];
+				readText( file );
+			}
+			
+			var remove = function(e){
+				var load = document.getElementById('files');
 				for(var i in components){
-					if(components[i].getType() == "input" || components[i].getType() == "output")
-						console.log("input/output");
-					else
+					if(components[i].getType() != "input" && components[i].getType() != "output")
 						deleteComponent(components[i]);
 				}
-				
-				if (!files.length) {
-					alert('Please select a file!');
-					return;
-				}	
-				
-				var reader = new FileReader();
-
-				reader.onload = function(e){
-					var text = e.target.result;
-					serializer.deserialize(controller, text);
-					e.stopPropagation();
-				};
-				
-				reader.readAsText(files[0]);
-				e.stopPropagation();
+				load.removeEventListener('change', listen, false)
 			}
-			var remove = function(e){
-				load2 = document.getElementById('files');
-				load2.removeEventListener('change', listen, false)
-			}
+			
 			load.addEventListener('click', remove, false);
 			load.click();
 			load.addEventListener('change', listen, false);
+			
 			
 
 		});
