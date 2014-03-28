@@ -415,6 +415,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				var plugoutNum = selectedPlugNum				// set selectedPlugNum will be the plugout number of the connector
 				setWireFromConnectorToGate(selectedComp, gate, plugoutNum, pluginNum);	// set the connection from the connector to this gate
 				gate.setConnectorPlugin(pluginNum, plugoutNum);	// set the connector plugin value for this gate (the plugout value of the connector)
+				
+				if (gate.getType() != "not") gate.setConnectorPlugin(pluginNum, plugoutNum);	// set the connector plugin value for this gate (the plugout value of the connector)
+				else gate.setConnectorPlugin(plugoutNum);
 			}
 			
 			if (pluginNum == 0) gate.setPlugColor("plugin", "default");	// if pluginNum is 0, this gate is a NOT gate; set the plugin color to the default color
@@ -701,8 +704,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				var dist = distance(thisComp.getPlugin(trueResults[i][0]).getPoints()[0], thatComp.getPlugout(trueResults[i][1]).getPoints()[1]);
 				if (dist < shortest) {
 					dist = shortest;
-					pluginNum = i+1;
-					plugoutNum = j+1;
+					pluginNum = trueResults[i][0];
+					plugoutNum = trueResults[i][1];
 				}
 			}
 		}
@@ -711,9 +714,11 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		selectedPlugNum = pluginNum;
 		selectedPlug = "plugin" + pluginNum;
 		connecting = true;
+		
 		var res;
 		if (thatComp.getType() == "connector") res = connectorOutputBoxMouseUp(null, thatComp, plugoutNum);
-		else res = gateOutputBoxMouseUp(null, thatComp, plugoutNum);
+		else if (thatComp.getFunc() == "node") res = nodeOutputBoxMouseUp(null, thatComp);
+		else res = gateOutputBoxMouseUp(null, thatComp);
 		
 		if (res) evaluateCircuit();
 	}
@@ -757,20 +762,30 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				var dist = distance(thisComp.getPlugout(trueResults[i][1]).getPoints()[0], thatComp.getPlugin(trueResults[i][0]).getPoints()[1]);
 				if (dist < shortest) {
 					dist = shortest;
-					pluginNum = i + 1;
-					plugoutNum = j + 1;
+					//pluginNum = i + 1;
+					//plugoutNum = j + 1;
+					pluginNum = trueResults[i][0];
+					plugoutNum = trueResults[i][1];
 				}
 			}
 		}
+		
+		if (thatComp.getType() == "not" && pluginNum == 1) pluginNum = 0;
 		
 		selectedComp = thisComp;
 		selectedPlugNum = plugoutNum;
 		selectedPlug = "plugout";
 		connecting = true;
-		var res;
+		
+		if (thisComp.getType() == "connector") {
+			selectedPlug = "plugout" + selectedPlugNum;
+			thisComp.setSelectedPlugout(selectedPlugNum);
+		}
 		
 		if (thatComp.getType() == "connector") res = connectorInputBoxMouseUp(null, thatComp);
+		else if (thatComp.getFunc() == "node") res = nodeInputBoxMouseUp(null, thatComp);
 		else res = gateInputBoxMouseUp(null, thatComp, pluginNum);
+		
 		if (res) evaluateCircuit();
 	}
 	
@@ -1245,8 +1260,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 					setWireFromGateToConnector(node, selectedComp);
 				}
 			}
-			tempLine.remove();
-			tempLineLayer.draw();
+			
+			if (tempLine !== null) {
+				tempLine.remove();
+				tempLineLayer.draw();
+			}
+			
 			node.setPlugColor("plugout", "black");
 			connecting = false;
 			selectedComp = null;
@@ -1647,6 +1666,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 		else if (comp1.getFunc() == "connection" && comp2.getFunc() == "connection") { // if from connector to connector; opts = [ plugoutNumOfConnecotr ]
 			setWireFromConnectorToConnector(comp1, comp2, opts[0]);
+		}
+		else if (comp1.getFunc() == "connection" && comp2.getFunc() == "node") {
+			setWireFromConnectorToGate(comp1, comp2, opts[0], 0);
 		}
 		
 		mainLayer.draw();	// refresh the scene
