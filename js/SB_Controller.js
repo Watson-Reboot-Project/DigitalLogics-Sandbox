@@ -520,6 +520,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*	When the user mouses up on a gate's output box, the user is potentially wanting to connect this gate to another.
 	*/
 	function gateOutputBoxMouseUp(event, gate) {
+		console.log("Gate output box mouse up.");
 		if (connecting) {		// if we are in connection mode
 			
 			// if the selected component is this gate, or if this gate is already connected to something via plugout, or if the selected plug is a plugout, or if a loop is introduced .. cancel the connection
@@ -535,8 +536,11 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			}
 			
 			// if the selected component is a component with only one input, simply setWireFromGateToGate()
-			if (selectedComp.getType() == "not" || selectedComp.getType() == "output" || selectedComp.getType() == "connector") {
+			if (selectedComp.getType() == "not" || selectedComp.getType() == "output") {
 				setWireFromGateToGate(gate, selectedComp, 0);
+			}
+			else if(selectedComp.getType() == "connector") {
+				setWireFromGateToConnector(gate, selectedComp);
 			}
 			else {	// otherwise, it's either a AND or OR gate .. we must get the selecting plugin for that gate
 				var pluginNum = selectedPlugNum;							// grab the selected plugin number
@@ -1266,7 +1270,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				tempLineLayer.draw();
 			}
 			
-			node.setPlugColor("plugout", "black");
+			node.setPlugColor("plugout", "default");
 			connecting = false;
 			selectedComp = null;
 			selectedPlug = null;
