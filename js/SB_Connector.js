@@ -437,6 +437,7 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	function setPluginComp(comp)
 	{
 		pluginComp = comp;
+		console.log(comp);
 		comp.evaluate();
 	}
 	

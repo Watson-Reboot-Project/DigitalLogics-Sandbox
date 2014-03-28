@@ -1245,7 +1245,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 					setWireFromGateToConnector(node, selectedComp);
 				}
 			}
-			
+			tempLine.remove();
+			tempLineLayer.draw();
 			node.setPlugColor("plugout", "black");
 			connecting = false;
 			selectedComp = null;
@@ -1554,7 +1555,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			tempLine = null;
 			tempLineLayer.draw();
 		}
-		
 		toConnect.setPluginComp(fromGate);	// set the plugin component of the connector to the selected gate
 		fromGate.setPlugoutWire(line);	// set the plugout wire to this line of the selected gate
 		fromGate.setPlugoutComp(toConnect);	// set the plugout component of the selected gate to this connector
@@ -1589,7 +1589,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 		else {																// else, it's an AND or OR gate
 			toGate.setConnectorPlugin(pluginNum, plugoutNum);					// set the connector plugin for the gate (very important)
-			toGate.setPluginComp(pluginNum, fromConnect);					// set the plugin component of the gate
+			toGate.setPluginComp(pluginNum, fromConnect);					// set the plugin component of the gate	
 		}
 		
 		// make the line with the points computed earlier
