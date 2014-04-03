@@ -89,6 +89,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	this.addOutput = addOutput;								// add an output node
 	
 	this.initTruthTableListeners = initTruthTableListeners;
+	this.submitExercise = submitExercise;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; INITIAL SETUP ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2111,56 +2112,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				return;
 			}
 		});
-		wrenchPopup.add("Save", function(target){
-			var filename = prompt("Please enter file name");
-			filename += ".txt";
+		wrenchPopup.add("Submit", function(target){
 			var data = serializer.serialize(components, inputs, outputs);
-			var req = document.createElement('a');
-			req.setAttribute('href','data:text/plain;charset=utf-8,' + encodeURIComponent(data));
-			req.setAttribute('download', filename);
-			document.body.appendChild(req);
-			req.click();
-			document.body.removeChild(req);
-		});
-		
-		wrenchPopup.add("Load", function(target){
-		
-			var load = document.getElementById('files');
-			
-			var listen = function(e){
-			
-				
-				
-				function readText(file){
-					var reader = new FileReader();
-					
-					reader.onload = function (e) {  
-						var output= e.target.result;
-						serializer.deserialize(thisObj,output);
-					}
-					
-				    reader.readAsText(file);
-				} 
-				
-				var file = document.getElementById('files').files[0];
-				readText( file );
-			}
-			
-			var remove = function(e){
-				var load = document.getElementById('files');
-				for(var i in components){
-					if(components[i].getType() != "input" && components[i].getType() != "output")
-						deleteComponent(components[i]);
-				}
-				load.removeEventListener('change', listen, false)
-			}
-			
-			load.addEventListener('click', remove, false);
-			load.click();
-			load.addEventListener('change', listen, false);
-			
-			
-
+			submitExercise(encodeURIComponent(data));
 		});
 		
 		wrenchPopup.setSize(140, 0);
@@ -2189,15 +2143,16 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	
 	function updateNumberOfInputsMenuButton() {
 		//var res = prompt("Enter number of inputs.", numInputs);
-		openNumPad(0, null, "This is a test", "Do things", false, 10).done(function(res) {
+		var numpad = new NumberPad();
+		numpad.open(null, null, "Number Entry Pad", "How many shots to take?", true, 10, (function(res) { 
 			if (res === null) return;
 			if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
 			if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
 			res = parseFloat(res);
 			if (res + numOutputs > 25) { alert("You can't have that many inputs."); return; }
 		
-			updateNumberOfInputs(res);
-		});
+			updateNumberOfInputs(res); 
+		}));	
 	}
 	
 	function updateNumberOfInputs(res) {
@@ -2229,14 +2184,16 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	
 	function updateNumberOfOutputsMenuButton() {
 		//var res = prompt("Enter number of outputs.", numOutputs);
-		openNumPad(0, null, "This is a test", "Do things", false, 10).done(function(res) {
+		var numpad = new NumberPad();
+		numpad.open(null, null, "Number Entry Pad", "How many shots to take?", true, 10, (function(res) { 
 			if (res === null) return;
-			if (res <= "0") { alert("You can't have a negative number of outputs..."); return; }
+			if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
 			if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
 			res = parseFloat(res);
-			if (res + numInputs > 25) { alert("You can't have that many outputs."); return; }
-			updateNumberOfOutputs(res);
-		});
+			if (res + numOutputs > 25) { alert("You can't have that many inputs."); return; }
+		
+			updateNumberOfOutputs(res); 
+		}));
 	}
 	
 	function updateNumberOfOutputs(res) {
@@ -2364,5 +2321,10 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			trashLayer.draw();								// redraw the trash can layer
 		};
 		imageObj.src = image;								// set the HTML image object to the image string passed to the function
+	}
+	
+	function submitExercise(data){
+		var dataStore = new DataStore();
+		dataStore.submitExercise("mike@latech.edu", 1, 3, data);
 	}
 }
