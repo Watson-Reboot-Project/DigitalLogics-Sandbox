@@ -89,7 +89,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	this.addOutput = addOutput;								// add an output node
 	
 	this.initTruthTableListeners = initTruthTableListeners;
-	this.submitExercise = submitExercise;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; INITIAL SETUP ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2144,7 +2143,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	function updateNumberOfInputsMenuButton() {
 		//var res = prompt("Enter number of inputs.", numInputs);
 		var numpad = new NumberPad();
-		numpad.open(null, null, "Number Entry Pad", "How many shots to take?", true, 10, (function(res) { 
+		numpad.open(null, null, "Number Entry Pad", "How many inputs do you want?", true, 10, (function(res) { 
 			if (res === null) return;
 			if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
 			if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
@@ -2185,12 +2184,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	function updateNumberOfOutputsMenuButton() {
 		//var res = prompt("Enter number of outputs.", numOutputs);
 		var numpad = new NumberPad();
-		numpad.open(null, null, "Number Entry Pad", "How many shots to take?", true, 10, (function(res) { 
+		numpad.open(null, null, "Number Entry Pad", "How many outputs do you want?", true, 10, (function(res) { 
 			if (res === null) return;
-			if (res <= "0") { alert("You can't have a negative number of inputs..."); return; }
+			if (res <= "0") { alert("You can't have a negative number of outputs..."); return; }
 			if (isNaN(parseFloat(res))) { alert("Not a number!"); return; }
 			res = parseFloat(res);
-			if (res + numOutputs > 25) { alert("You can't have that many inputs."); return; }
+			if (res + numOutputs > 25) { alert("You can't have that many outputs."); return; }
 		
 			updateNumberOfOutputs(res); 
 		}));
