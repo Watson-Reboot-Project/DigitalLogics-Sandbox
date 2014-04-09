@@ -2105,6 +2105,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			var res = confirm("You are about to reset the sandbox which will result in all current progress being lost.\n\nDo you wish to continue?");
 			if (res == true) {
 				setup.resetExercise(numInputs, numOutputs);
+				location.reload();
 			}
 			else {
 				wrenchPopup = null;
