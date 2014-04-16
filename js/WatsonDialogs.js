@@ -562,7 +562,7 @@ function StringPad() {
 	 *
 	 * This function sets up this string pad and opens it for the user to see.
 	 */
-	function open(title, instruction, _callback) {
+	function open(title, instruction, _callback, div) {
 		var dialogDiv = document.createElement("div");	// dynamically create a div for the dialog
 		dialogDiv.id = "stringPadDialog" + thisID;		// give it a unique ID
 		dialogDiv.setAttribute("title", title);			// give it the associated title
@@ -574,8 +574,9 @@ function StringPad() {
 		if (instruction == null) instructDiv.innerHTML = "";						// if the instruction is null, get rid of any text
 		else instructDiv.innerHTML = '<font size="2">' + instruction + '</font>';	// if the instruction isn't null, populate it
 	
-		$( "#stringPadDialog" + thisID ).dialog({width: "400px", modal: true, resizable: false, position: "center"});	// open the dialog
-		
+		var centerAt = (div ? div : window);
+		$( "#stringPadDialog" + thisID ).dialog({width: "400px", modal: true, resizable: false, position: { my: "center", at: "center", of: centerAt } });	// open the dialog
+
 		var input = document.getElementById("stringInput" + thisID);
 		var button;
 		
@@ -766,7 +767,7 @@ function Alert() {
 	 *
 	 * Opens the alert dialog
 	 */
-	function open(title, instruction, bool, _callback) {
+	function open(title, instruction, bool, _callback, div) {
 		callback = _callback;								// store the call back function
 		
 		var dialogDiv = document.createElement("div");		// dynamically create dialog div
@@ -783,7 +784,8 @@ function Alert() {
 		var instructDiv = document.getElementById("alertInstructDiv" + thisID);
 		instructDiv.innerHTML = '<font size="2">' + instruction + '</font>';		// set the instruction div to the message
 		
-		$( "#alertDialog" + thisID ).dialog({width: "295px", modal: true, resizable: false, position: "center"}); // open the alert dialog
+		var centerAt = (div ? div : window);
+		$( "#alertDialog" + thisID ).dialog({width: "295px", modal: true, resizable: false, position: { my: "center", at: "center", of: centerAt } }); // open the alert dialog
 		
 		if (bool) {
 			var okButton = document.getElementById("alertOKButton" + thisID);

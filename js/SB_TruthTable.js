@@ -31,11 +31,13 @@ function SB_TruthTable(containerNum) {
 			tableDiv.removeChild(innerDiv);
 			tableDiv.innnerHTML = '';
 			createTable(_numIn, _numOut, _header);
+			toggleVisible();	// toggle truth table to re-initialize things
+			toggleVisible();	// toggle once again to put back to initial state
 		}
 	}
 	
 	function checkTruthTable(resultTruthTable) {
-		if (expectedTruthTable.length == 0) return; // no truth table set; scratch pad mode
+		if (expectedTruthTable.length == 0) return 0; // no truth table set; scratch pad mode
 		var correct = true;
 		for (var i = 0; i < resultTruthTable.length; i++) {
 			for (var j = 0; j < resultTruthTable[i].length; j++) {
@@ -46,7 +48,10 @@ function SB_TruthTable(containerNum) {
 		
 		if (correct) {
 			alert("You circuit functions properly.");
+			return 1;
 		}
+		
+		return 0;
 	}
 
 	function setExpectedTruthTable(truthTable) {
@@ -66,14 +71,15 @@ function SB_TruthTable(containerNum) {
 		//var body = document.getElementById('tableDiv');
 		var tbl = document.createElement('table');								// create a table element
 		tbl.id = tableName;														// set its ID
+		tbl.style.maxWidth= 'none';
 		tbl.style.position='absolute';	
 		tbl.style.display = 'block'; // block is visible, none is invisible
 		
 		img = document.createElement('img');
 		img.id = "tableDeleteIcon" + containerNum;
-		img.src = "delete.ico";
+		img.src = "images/delete.ico";
 		img.style.height = '20px';
-		img.style.width = '20px';
+		img.style.width = '29px';
 		img.style.visibility = 'hidden';
 		img.style.paddingLeft = "10px";
 		img.style.marginTop = "-10px";
@@ -101,6 +107,8 @@ function SB_TruthTable(containerNum) {
 				var td = document.createElement('td');
 				td.style.backgroundColor='rgba(255, 255, 255, 0.5)';
 				td.style.border='2px';
+				td.style.paddingLeft = "5px";
+ 				td.style.paddingRight = "5px";
 				if(j===(cols-numOut)){
 					td.style.borderLeft='2px solid black';
 				}
@@ -120,6 +128,8 @@ function SB_TruthTable(containerNum) {
 			th.style.border='2px';
 			th.style.backgroundColor='rgba(255, 255, 255, 0.5)';
 			th.style.borderBottom='2px solid black';
+			th.style.paddingLeft = "5px";
+ 			th.style.paddingRight = "5px";
 			if(k===(cols-numOut)){
 				th.style.borderLeft='2px solid black';
 			}

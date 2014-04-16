@@ -1,4 +1,4 @@
-function SB_Setup(container, containerNum) {
+function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 	var timeout = false;
 	
 	this.getMainLayer = getMainLayer;
@@ -8,6 +8,7 @@ function SB_Setup(container, containerNum) {
 	this.getBG = getBG;
 	this.resetExercise = resetExercise;
 	this.deleteComponent = deleteComponent;
+	this.saveExercise = saveExercise;
 	
 	var defaultWidth = 880;
 	var width = 880;
@@ -40,18 +41,22 @@ function SB_Setup(container, containerNum) {
 
 	resize();
 	
-	var curExercise = 0;
+	var curExercise = exerNum;
 	var truthTable = new SB_TruthTable(containerNum);
 	var serializer = new SB_Serializer(curExercise);
-	var controller = new SB_Controller(this, truthTable, serializer, 2, 1, containerNum);
-	var exercises = new SB_Exercises(stage, this, truthTable, controller, 2, 1);
+	var controller = new SB_Controller(this, truthTable, serializer, numInputs, numOutputs, containerNum);
+	var exercises = new SB_Exercises(stage, this, truthTable, controller, numInputs, numOutputs);
 
 	exercises.setExercise(curExercise);
 		
 	if(typeof(Storage) !== "undefined")
 	{
-		var str = localStorage.getItem("DL_SB_" + curExercise);
-		if (str) {
+		//var str = localStorage.getItem("DL_SB_" + curExercise);
+		var dataStore = new DataStore();
+		//dataStore.eraseExerciseData("circuits", curExercise);
+		
+		var str = dataStore.loadExerciseData("circuits", curExercise);
+		if (str !== null) {
 			serializer.deserialize(controller, str);
 			controller.evaluateCircuit();
 		}
@@ -62,6 +67,10 @@ function SB_Setup(container, containerNum) {
 		// no web storage support
 	}
 	controller.initTruthTableListeners();
+	
+	/* Watson Dialogs would mess up the truth table unless I initialized their visibility here */
+	controller.toggleTruthTableVisibility();	// toggle once for everything to initialize
+	controller.toggleTruthTableVisibility();	// toggle again for it to disappear
 	
 	$(window).resize( function() {
 		if (timeout == false) {
@@ -76,10 +85,10 @@ function SB_Setup(container, containerNum) {
 		//var width = (document.getElementById(container).offsetWidth > defaultWidth) ? defaultWidth : document.getElementById(container).offsetWidth;
 		
 		var ratio = (width / defaultWidth);
-		console.log("Ratio: " + ratio);
+		//console.log("Ratio: " + ratio);
 		stage.setScale({x: ratio, y: ratio});
 		stage.setSize(defaultWidth * ratio, 600 * ratio);
-		console.log("Size: " + stage.getWidth() + ", " + stage.getHeight());
+		//console.log("Size: " + stage.getWidth() + ", " + stage.getHeight());
 		
 		timeout = false;
 	}
@@ -139,5 +148,9 @@ function SB_Setup(container, containerNum) {
 	
 	function deleteComponent(comp) {
 		controller.deleteComponent(comp);
+	}
+	
+	function saveExercise() {
+		controller.saveExercise();
 	}
 }

@@ -87,7 +87,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	this.deleteConnector = deleteConnector;					// delete a connector
 	this.addInput = addInput;								// add an input node
 	this.addOutput = addOutput;								// add an output node
-	
+	this.saveExercise = saveExercise;
+	this.toggleTruthTableVisibility = toggleTruthTableVisibility;
 	this.initTruthTableListeners = initTruthTableListeners;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -100,9 +101,41 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	}, false);
 
 	// this event listener is used to draw the line that follows the mouse when in connecting mode
-	stage.on('mousemove touchmove', function() {
+	stage.on('mousemove', function() {
 		stageMouseMove();
 		mainLayer.draw();
+	});
+	
+	stage.on('touchmove', function(evt) {
+		stageMouseMove();
+		mainLayer.draw();
+		
+		var touch1 = evt.touches[0];
+		var touch2 = evt.touches[1];
+
+		if(touch1 && touch2) {
+		  var dist = getDistance({
+			x: touch1.clientX,
+			y: touch1.clientY
+		  }, {
+			x: touch2.clientX,
+			y: touch2.clientY
+		  });
+
+		  if(!lastDist) {
+			lastDist = dist;
+		  }
+
+		  var scale = stage.getScale().x * dist / lastDist;
+
+		  stage.setScale(scale);
+		  stage.draw();
+		  lastDist = dist;
+	  }
+	});
+	
+	stage.getContent().addEventListener('touchend', function() {
+		lastDist = 0;
 	});
 	
 	// call bgClick() when the user clicks on the background
@@ -123,8 +156,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		//mainLayer.draw();
 	});
 	
-	wrenchImg.src = "wrench.ico";						// set the HTML image source to the wrench icon
-	setTrashImage("trash_closed.bmp");					// initially set the trash can to closed
+	wrenchImg.src = "images/wrench.ico";						// set the HTML image source to the wrench icon
+	setTrashImage("images/trash_closed.bmp");					// initially set the trash can to closed
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; FUNCTION IMPLEMENTATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -167,7 +200,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			comp.getInputBox().on('mouseup touchend', function(event) {			// add the mouse up event for the connector's input box
 				connectorInputBoxMouseUp(event, comp);							// pass the event and the connector to this associated function
 				mainLayer.draw();												// update the main layer
-				setTimeout(evaluateCircuit, 50);								// in 50 milliseconds, re-evaluate the circuit (to make the lag associated with evaluating the circuit un-noticeable)
 			});
 			comp.getInputBox().on('mouseenter', function(event) {				// add the mouse enter event for the connector's input box
 				connectorInputBoxMouseEnter(event, comp);						// pass the event and the connector to this associated function
@@ -181,15 +213,15 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			// The connector has three outputs: hence three output boxes. Each output box needs a mousedown, mouseup, mouseenter, and mouseleave event associated with it.
 			// We pass the number associated with that output to the associated function
 			comp.getOutputBox(1).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 1); mainLayer.draw();});
-			comp.getOutputBox(1).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 1); mainLayer.draw(); setTimeout(evaluateCircuit, 50);});
+			comp.getOutputBox(1).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 1); mainLayer.draw(); });
 			comp.getOutputBox(1).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 1); mainLayer.draw();});
 			comp.getOutputBox(1).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 1); mainLayer.draw();});
 			comp.getOutputBox(2).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 2); mainLayer.draw();});
-			comp.getOutputBox(2).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 2); mainLayer.draw(); setTimeout(evaluateCircuit, 50);});
+			comp.getOutputBox(2).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 2); mainLayer.draw(); });
 			comp.getOutputBox(2).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 2); mainLayer.draw();});
 			comp.getOutputBox(2).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 2); mainLayer.draw();});
 			comp.getOutputBox(3).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 3); mainLayer.draw();});
-			comp.getOutputBox(3).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 3); mainLayer.draw(); setTimeout(evaluateCircuit, 50);});
+			comp.getOutputBox(3).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 3); mainLayer.draw(); });
 			comp.getOutputBox(3).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 3); mainLayer.draw();});
 			comp.getOutputBox(3).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 3); mainLayer.draw();});
 			
@@ -213,12 +245,10 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				// apply mousedown, mouseup, mouseenter, and mouseleave listeners to the input box
 				comp.getInputBox().on('mousedown touchstart', function(event) {
 					gateInputBoxMouseDown(event, comp, 0);
-					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getInputBox().on('mouseup touchend', function(event) {
 					gateInputBoxMouseUp(event, comp, 0);
 					mainLayer.draw();
-					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getInputBox().on('mouseenter', function(event) {
 					gateInputBoxMouseEnter(event, comp, 0);
@@ -239,7 +269,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				comp.getInputBox(1).on('mouseup touchend', function(event) {
 					gateInputBoxMouseUp(event, comp, 1);
 					mainLayer.draw();
-					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getInputBox(1).on('mouseenter', function(event) {
 					gateInputBoxMouseEnter(event, comp, 1);
@@ -257,7 +286,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				comp.getInputBox(2).on('mouseup touchend', function(event) {
 					gateInputBoxMouseUp(event, comp, 2);
 					mainLayer.draw();
-					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getInputBox(2).on('mouseenter', function(event) {
 					gateInputBoxMouseEnter(event, comp, 2);
@@ -277,7 +305,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			comp.getOutputBox().on('mouseup touchend', function(event) {
 				gateOutputBoxMouseUp(event, comp);
 				mainLayer.draw();
-				setTimeout(evaluateCircuit, 50);
 			});
 			comp.getOutputBox().on('mouseenter', function(event) {
 				gateOutputBoxMouseEnter(event, comp);
@@ -313,7 +340,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				comp.getOutputBox().on('mouseup touchend', function (event) {
 					nodeOutputBoxMouseUp(event, comp);
 					mainLayer.draw();
-					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getOutputBox().on('mouseenter', function (event) {
 					nodeOutputBoxMouseEnter(event, comp);
@@ -332,7 +358,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				comp.getInputBox().on('mouseup touchend', function (event) {
 					nodeInputBoxMouseUp(event, comp);
 					mainLayer.draw();
-					setTimeout(evaluateCircuit, 50);
 				});
 				comp.getInputBox().on('mouseenter', function (event) {
 					nodeInputBoxMouseEnter(event, comp);
@@ -425,6 +450,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			
 			connecting = false;		// we are no longer in connection mode
 			selectedComp = null;	// null the selected component
+			
+			setTimeout(evaluateCircuit, 50);
 			
 			return true;			// return true; this connection was successful
 		}
@@ -553,6 +580,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			tempLine = null;		// set the temp line to null
 			connecting = false;		// we are no longer in connection mode
 			selectedComp = null;	// null the selected component
+			
+			setTimeout(evaluateCircuit, 50);
 			
 			return true;			// return true as this connection was successful
 		}
@@ -724,7 +753,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		else if (thatComp.getFunc() == "node") res = nodeOutputBoxMouseUp(null, thatComp);
 		else res = gateOutputBoxMouseUp(null, thatComp);
 		
-		if (res) evaluateCircuit();
+		//if (res) setTimeout(evaluateCircuit, 50);
 	}
 	
 	/*
@@ -790,7 +819,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		else if (thatComp.getFunc() == "node") res = nodeInputBoxMouseUp(null, thatComp);
 		else res = gateInputBoxMouseUp(null, thatComp, pluginNum);
 		
-		if (res) evaluateCircuit();
+		//if (res) setTimeout(evaluateCircuit();
 	}
 	
 	/*
@@ -807,7 +836,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 		gate.drawBoxes();
 		if (deleteMode == true) {
-			gate.setDeleteIcon("delete.ico");
+			gate.setDeleteIcon("images/delete.ico");
 		}
 		
 		if (gate.getPlugoutWire() !== null) {	// check to see if this gate has a plug out wire, if so, set its points to the new location
@@ -950,6 +979,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			selectedComp = null;
 			selectedPlug = null;
 			
+			setTimeout(evaluateCircuit, 50);
+			
 			return true;	// a successful connection
 		}
 	}
@@ -1077,6 +1108,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			connecting = false;
 			selectedComp = null;
 			
+			setTimeout(evaluateCircuit, 50);
+			
 			return true;
 		}
 	}
@@ -1171,7 +1204,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 		connect.drawBoxes();
 		if (deleteMode == true) {
-			connect.setDeleteIcon("delete.ico");
+			connect.setDeleteIcon("images/delete.ico");
 		}
 		
 		if (connect.getPluginComp() !== null) {		// if this connector has an input component
@@ -1274,6 +1307,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			connecting = false;
 			selectedComp = null;
 			selectedPlug = null;
+			
+			setTimeout(evaluateCircuit, 50);
 		}
 	}
 	
@@ -1345,6 +1380,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			node.setPlugColor("plugin", "default");
 			connecting = false;
 			selectedComp = null;
+			
+			setTimeout(evaluateCircuit, 50);
 		}
 	}
 	
@@ -1433,7 +1470,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (deleteMode == true) { 																// if in delete mode, exit delete mode
 			deleteMode = false;
 			toggleComponentDeleteIcons(false);
-			setTrashImage("trash_closed.bmp");
+			setTrashImage("images/trash_closed.bmp");
 			return;
 		}
 		
@@ -2025,7 +2062,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 		mainLayer.draw();
 		truthTable.setTable(truthTableArr);
-		truthTable.checkTruthTable(truthTableArr);	
+		mail = truthTable.checkTruthTable(truthTableArr);
 	}
 	
 	function showAddMenu(event, pos) {
@@ -2114,6 +2151,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		});
 		wrenchPopup.add("Submit", function(target){
 			var data = serializer.serialize(components, inputs, outputs);
+			data += mail;
 			submitExercise(encodeURIComponent(data));
 		});
 		
@@ -2307,12 +2345,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				if (deleteMode == false) {					// if delete mode is false, set the delete mode to true and open the trash can
 					deleteMode = true;						// delete mode = true
 					toggleComponentDeleteIcons(true);		// toggle the component delete mode icons (make the red X's visible for gates)
-					setTrashImage("trash_open.bmp");		// set the trash can image to the open trash can
+					setTrashImage("images/trash_open.bmp");		// set the trash can image to the open trash can
 				}
 				else {										// if delete mode is true, set the delete mode to false and close the trash can
 					deleteMode = false;						// delete mode = false
 					toggleComponentDeleteIcons(false);		// toggle the component delete mode icons (make the red X's hidden for gates)
-					setTrashImage("trash_closed.bmp");		// set the trash can image to the closed trash can
+					setTrashImage("images/trash_closed.bmp");		// set the trash can image to the closed trash can
 				}
 			});
 				
@@ -2326,5 +2364,17 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	function submitExercise(data){
 		var dataStore = new DataStore();
 		dataStore.submitExercise("mike@latech.edu", 1, 3, data);
+	}
+	
+	function saveExercise() {
+		serializer.serialize(components, inputs, outputs);
+		
+		var alert = new Alert();
+		alert.open("Exercise Saved", "The exercise has been saved.", true, (function() { }), document.getElementById("sandbox" + containerNum));
+	}
+	
+	function toggleTruthTableVisibility() {
+		truthTable.setTableOffset((stage.getWidth() / 2) * 0.3, 600);
+		truthTable.toggleVisible();
 	}
 }

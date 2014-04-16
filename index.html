@@ -10,18 +10,18 @@
 	<!-- <script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.7.4.min.js"></script> -->
 	<!-- <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script> -->
 	<!-- <script src="http://code.jquery.com/jquery-1.9.1.js"></script> -->
+
+	<script src="js/kinetic.js"></script>
+	<!-- <script src="js/jquery.js"></script> -->
+	<script src="js/jquery-1.10.2.js"></script>
+	<script src="js/jquery-ui-1.10.4.custom.js"></script>
+	<script src="js/jquery.ui.touch-punch.min.js"></script>
+	<script src="js/bootstrap.js"></script>
+	<script src="js/WatsonDialogs.js"></script>
+	<script src="js/WatsonDataStore.js"></script>
 	
 	<link rel="stylesheet" href="css/bootstrap.css">
-
 	<link rel="stylesheet" href="css/jquery-ui-1.10.4.custom.css">
-	<script src="js/kinetic.js"></script>
-	<script src="js/jquery.js"></script>
-	<script src="js/jquery-1.10.2.js"></script>
-	<script src="js/WatsonDialogs.js"></script>
-
-	<script src="js/bootstrap.js"></script>
-	<script src="js/jquery-ui-1.10.4.custom.js"></script>
-	<script src="js/WatsonDataStore.js"></script>
 	<link rel="stylesheet" href="css/Dialogs.css">
 	
 </head>
@@ -46,24 +46,9 @@
 		<div id="truthTableDiv1" class="ui-widget-content" style="position: relative; visibility: hidden;"></div>
 		
 		<script>
-			var lab = new DigitalLogicsLab(1);
-			
-			function detectMobile() { 
-				 if( navigator.userAgent.match(/Android/i)
-				 || navigator.userAgent.match(/webOS/i)
-				 || navigator.userAgent.match(/iPhone/i)
-				 || navigator.userAgent.match(/iPad/i)
-				 || navigator.userAgent.match(/iPod/i)
-				 || navigator.userAgent.match(/BlackBerry/i)
-				 || navigator.userAgent.match(/Windows Phone/i)
-				 ) {
-					return true;
-				 }
-				 else {
-					return false;
-				  }
-			}
-			
+			$(document).ready(function() {
+				var lab = new DigitalLogicsLab(1, 0, 3, 1);
+			});
 		</script>
 	</body>
 

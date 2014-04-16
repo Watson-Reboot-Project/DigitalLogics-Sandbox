@@ -167,7 +167,7 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 		if (mouseOver !== "crosshair") document.body.style.cursor = 'default';
 	});
 	
-	setDeleteIcon("empty.bmp");
+	setDeleteIcon("images/empty.bmp");
 	
 	iconLayer.on('mouseover', function() { document.body.style.cursor = 'pointer'; });
 	iconLayer.on('mouseout', function() { document.body.style.cursor = 'default'; });
@@ -281,8 +281,8 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 	function setMouseOver(str) { mouseOver = str; }
 	
 	function toggleDeleteIcon(bool) {
-		if (bool) setDeleteIcon("delete.ico");
-		else setDeleteIcon("empty.bmp");
+		if (bool) setDeleteIcon("images/delete.ico");
+		else setDeleteIcon("images/empty.bmp");
 	}
 	
 	function getInputBox(num) {

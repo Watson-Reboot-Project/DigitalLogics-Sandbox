@@ -27,14 +27,17 @@ function SB_Serializer(curExercise) {
 			}
 		}
 		
-		localStorage.setItem("DL_SB_" + curExercise, str);
+		//localStorage.setItem("DL_SB_" + curExercise, str);
+		var dataStore = new DataStore();
+
+		dataStore.saveExerciseData("circuits", curExercise, str);
 		
 		return str;
 	}
 	
 	function deserialize(controller, str) {
 		nextToken = 0;
-		console.log(str);
+
 		compArray = new Array();
 		tokenizeString(str);
 		
@@ -58,7 +61,7 @@ function SB_Serializer(curExercise) {
 			comp1 = controller.addComponent(arr[0], parseFloat(arr[1]), parseFloat(arr[2]), parseFloat(arr[3]));
 			compArray[arr[3]] = comp1;
 		}
-		console.log(numComps);
+
 		tok = getNextToken();
 		while (tok !== null) {
 			arr = tok.split(",");
