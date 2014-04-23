@@ -1,5 +1,6 @@
 function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 	var timeout = false;
+	var ratio;
 	
 	this.getMainLayer = getMainLayer;
 	this.getWrenchLayer = getWrenchLayer;
@@ -22,8 +23,9 @@ function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 		});
 
 	var mainLayer = new Kinetic.Layer();
+	mainLayer.setDraggable("draggable");
 	stage.add(mainLayer);
-
+	
 	var wrenchLayer = new Kinetic.Layer();
 	stage.add(wrenchLayer);
 	
@@ -48,11 +50,12 @@ function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 	var exercises = new SB_Exercises(stage, this, truthTable, controller, numInputs, numOutputs);
 
 	exercises.setExercise(curExercise);
-		
+	
+	var dataStore;
 	if(typeof(Storage) !== "undefined")
 	{
 		//var str = localStorage.getItem("DL_SB_" + curExercise);
-		var dataStore = new DataStore();
+		dataStore = new DataStore();
 		//dataStore.eraseExerciseData("circuits", curExercise);
 		
 		var str = dataStore.loadExerciseData("circuits", curExercise);
@@ -80,20 +83,22 @@ function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 	});
 	
 	function resize() {
-		var width = (window.innerWidth > defaultWidth) ? defaultWidth : window.innerWidth;
+		//var width = (window.innerWidth > defaultWidth) ? defaultWidth : window.innerWidth;
 		// Burt, uncomment the next line (line 54) and comment the previous line (line 52)
-		//var width = (document.getElementById(container).offsetWidth > defaultWidth) ? defaultWidth : document.getElementById(container).offsetWidth;
+		var width = (document.getElementById(container).offsetWidth > defaultWidth) ? defaultWidth : document.getElementById(container).offsetWidth;
 		
-		var ratio = (width / defaultWidth);
+		ratio = (width / defaultWidth);
 		//console.log("Ratio: " + ratio);
 		stage.setScale({x: ratio, y: ratio});
 		stage.setSize(defaultWidth * ratio, 600 * ratio);
+		//stage.setSize(defaultWidth, 600 * ratio);
 		//console.log("Size: " + stage.getWidth() + ", " + stage.getHeight());
 		
 		timeout = false;
 	}
 	
 	function resetExercise(numInputs, numOutputs) {
+		dataStore.eraseExerciseData("circuits", curExercise);
 		var table = document.getElementById("truthTable" + containerNum);
 		var image = document.getElementById("tableDeleteIcon" + containerNum);
 		
@@ -153,4 +158,5 @@ function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 	function saveExercise() {
 		controller.saveExercise();
 	}
+	
 }

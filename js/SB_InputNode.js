@@ -202,6 +202,7 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	
 	function getPlugout() {
 		var line;
+		//points: [group.getX() + plugout.getPoints()[0].x, group.getY() + plugout.getPoints()[0].y, group.getX() + plugout.getPoints()[1].x, group.getY() + plugout.getPoints()[1].y]
 		line = new Kinetic.Line({
 			points: [group.getX() + plugout.getPoints()[0].x, group.getY() + plugout.getPoints()[0].y, group.getX() + plugout.getPoints()[1].x, group.getY() + plugout.getPoints()[1].y]
 		});

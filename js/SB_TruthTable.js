@@ -25,8 +25,11 @@ function SB_TruthTable(containerNum) {
 		var table = document.getElementById(tableName);
 		if (table) {
 			table.id = "";
-			var deleteIcon = document.getElementById("tableDeleteIcon" + containerNum);
-			tableDiv.removeChild(deleteIcon);
+			try {
+				var deleteIcon = document.getElementById("tableDeleteIcon" + containerNum);
+				tableDiv.removeChild(deleteIcon);
+			}
+			catch (err) { }
 			//tableDiv.removeChild(table);
 			tableDiv.removeChild(innerDiv);
 			tableDiv.innnerHTML = '';
@@ -74,7 +77,8 @@ function SB_TruthTable(containerNum) {
 		tbl.style.maxWidth= 'none';
 		tbl.style.position='absolute';	
 		tbl.style.display = 'block'; // block is visible, none is invisible
-		
+
+		/*
 		img = document.createElement('img');
 		img.id = "tableDeleteIcon" + containerNum;
 		img.src = "images/delete.ico";
@@ -84,7 +88,8 @@ function SB_TruthTable(containerNum) {
 		img.style.paddingLeft = "10px";
 		img.style.marginTop = "-10px";
 		body.appendChild(img);
-		
+		*/
+			
 		innerDiv = document.createElement("div");
 		innerDiv.id = "innerDiv" + containerNum;
 		innerDiv.style.position = "absolute";
@@ -106,6 +111,7 @@ function SB_TruthTable(containerNum) {
 			for (var j = 0; j < cols; j++) {
 				var td = document.createElement('td');
 				td.style.backgroundColor='rgba(255, 255, 255, 0.5)';
+				td.className += " ttTD";
 				td.style.border='2px';
 				td.style.paddingLeft = "5px";
  				td.style.paddingRight = "5px";
@@ -120,12 +126,15 @@ function SB_TruthTable(containerNum) {
 		tbl.appendChild(tbdy);
 		innerDiv.appendChild(tbl);
 		
+		tableDiv.style.backgroundColor='rgba(255, 255, 255, 0.5)';
+		
 		var thead = document.createElement('thead');							// create element for header
 		tbl.appendChild(thead);													// append head to table
 
 		for(var k=0;k<header.length;k++){										// append elements to header
 			var th = document.createElement('th');
 			th.style.border='2px';
+			th.className += " ttTD";
 			th.style.backgroundColor='rgba(255, 255, 255, 0.5)';
 			th.style.borderBottom='2px solid black';
 			th.style.paddingLeft = "5px";
@@ -137,9 +146,10 @@ function SB_TruthTable(containerNum) {
 			thead.appendChild(th);
 		}
 		tbl.style.borderSpacing = '0px';
+		tbl.className += " truthTable";
 		initTableValues(rows, cols);
 		
-		img.style.marginLeft = tbl.offsetWidth + "px";
+		//img.style.marginLeft = tbl.offsetWidth + "px";
 	}
 
 	/*
@@ -185,9 +195,9 @@ function SB_TruthTable(containerNum) {
 				myTable.rows[i].cells[j].align='center';				// center the text
 			}
 		}
-		
-		innerDiv.style.width = (document.getElementById(tableName).offsetWidth + 15) + "px";
-		tableDiv.style.width = (document.getElementById(tableName).offsetWidth + 40) + "px";
+		//15,40
+		innerDiv.style.width = (document.getElementById(tableName).offsetWidth + 20) + "px";
+		tableDiv.style.width = (document.getElementById(tableName).offsetWidth + 20) + "px";
 	}
 	
 	function getTableWidth() { return tableDiv.offsetWidth; }
@@ -197,16 +207,30 @@ function SB_TruthTable(containerNum) {
 			tableDiv.style.left = x + "px";
 			tableDiv.style.top = -y + "px";
 			//tableDiv.style.width=document.getElementById(tableName).offsetWidth + "px";
-			tableDiv.style.width = (document.getElementById(tableName).offsetWidth + 40) + "px";
+			//tableDiv.style.width = (document.getElementById(tableName).offsetWidth + 45) + "px";
 		}
 	}
 	
 	function setDeleteIcon(bool) {
 		if (bool && tableDiv.style.visibility == 'visible') {
+			img = document.createElement('img');
+			img.id = "tableDeleteIcon" + containerNum;
+			img.src = "images/delete.ico";
+			img.style.height = '20px';
+			img.style.width = '20px';
 			img.style.visibility = 'visible';
+			img.style.marginTop = "-25px";
+			tableDiv.appendChild(img);
+			img.style.marginLeft = document.getElementById(tableName).offsetWidth + "px";
 		}
 		else {
-			img.style.visibility = 'hidden';
+			try {
+				var deleteIcon = document.getElementById("tableDeleteIcon" + containerNum);
+				tableDiv.removeChild(deleteIcon);
+			}
+			catch(err) { }
+			
+			if (img) img.style.visibility = 'hidden';
 		}
 	}
 

@@ -195,8 +195,8 @@ function SB_Connector(initX, initY, setName, id, setup) {
          var imageObj = new Image();
          imageObj.onload = function (){
          var deleteImg = new Kinetic.Image({
-			  x: group.getX() + 35,
-			  y: group.getY() + -10,
+			  x: group.getX() + mainLayer.getX() + 35,
+			  y: group.getY() + mainLayer.getY() + -10,
 			  image: imageObj,
 			  scaleX: 0.4,
 			  scaleY: 0.4

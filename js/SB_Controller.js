@@ -50,19 +50,24 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	var truthTableOpen = false;					// boolean value to indicate if the truth table is currently open
 	var thisObj = this;							// stores the object of the controller class
 	var wrenchImg = new Image();				// make an image object for the wrench
-	
+	var mouseMoved = false;
+	var mouseDown = false;
 	var mainLayer = setup.getMainLayer();		// get the main layer from the setup class
 	var stage = setup.getStage();				// get the stage object from the setup class
 	var bg = setup.getBG();						// get the background rectangle from the setup class
-	
+	var draggable = true;
+	var bgClickPos;
 	var wrenchLayer = setup.getWrenchLayer();	// get the wrench image layer from the setup class
 	var trashLayer = setup.getTrashLayer();		// get the trash can image layer from the setup class
+	var lastDist;
+	var initPos;
+	var lastPos;
 	
-	var tempLineLayer = new Kinetic.Layer();	// create a layer to place the temp line on
-	stage.add(tempLineLayer);					// add the temp line layer to the stage
+	//var tempLineLayer = new Kinetic.Layer();	// create a layer to place the temp line on
+	//stage.add(tempLineLayer);					// add the temp line layer to the stage
 	tempLine = new Kinetic.Line();				// create an object for the temp line
 	tempLine.setPoints([0, 0, 0, 0]);			// ... with the start and end points (0, 0)
-	tempLineLayer.add(tempLine);				// add the temp line to the temp line layer
+	mainLayer.add(tempLine);				// add the temp line to the temp line layer
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; PUBLIC FUNCTION DECLARATIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -100,13 +105,56 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	   serializer.serialize(components, inputs, outputs);
 	}, false);
 
+	stage.on("tap", function(event) {
+		console.log("Stage tap.");
+	});
+	
 	// this event listener is used to draw the line that follows the mouse when in connecting mode
 	stage.on('mousemove', function() {
+		mouseMoved = true;
 		stageMouseMove();
 		mainLayer.draw();
 	});
 	
-	stage.on('touchmove', function(evt) {
+	bg.on('mousedown touchstart', function(e) {
+		initPos = { x: mainLayer.getX(), y: mainLayer.getY() };
+		
+		var pos;
+		if (e.changedTouches) {
+			pos = { x: e.targetTouches[0].pageX, y: e.targetTouches[0].pageY };
+			
+		}
+		else pos = stage.getPointerPosition();
+
+		bgClickPos = { x: pos.x - mainLayer.getX(), y: pos.y - mainLayer.getY() };
+	});
+	
+	bg.on('mouseup touchend', function(e) {
+		lastPos = { x: mainLayer.getX(), y: mainLayer.getY() };
+		
+		var dist = getDistance(initPos, lastPos);
+		
+		if (dist < 10 && !connecting) {
+			console.log("Less than 10: " + dist);
+			if (mouseMoved == true) { mouseMoved = false; return; }
+			bgClick(event);
+		}
+	});
+	
+	mainLayer.on('dragmove', function(evt) {
+		
+		console.log("Main layer drag move.");
+		
+		if (deleteMode != false) {		
+			for (var i = 0; i < components.length; i++) {
+				if (components[i].getFunc() != "node") {
+					components[i].setDeleteIcon("images/delete.ico");
+				}
+			}
+		}
+	});
+	
+	stage.getContent().addEventListener('touchmove', function(evt) {
 		stageMouseMove();
 		mainLayer.draw();
 		
@@ -126,11 +174,15 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			lastDist = dist;
 		  }
 
-		  var scale = stage.getScale().x * dist / lastDist;
-
-		  stage.setScale(scale);
-		  stage.draw();
+		  var scale = mainLayer.getScale().x * dist / lastDist;
+		  
+		  if (scale < 1) return;
+		  
+		  mainLayer.setScale(scale);
+		  mainLayer.draw();
 		  lastDist = dist;
+		  evt.preventDefault();
+		  evt.cancelBubble = true;
 	  }
 	});
 	
@@ -138,11 +190,17 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		lastDist = 0;
 	});
 	
+	bg.on('mousedown', function() { bgMouseDown(); });
+	
+	/*
 	// call bgClick() when the user clicks on the background
 	bg.on('click tap', function(event) {
+		console.log("BG clicked.");
+		if (mouseMoved == true) { mouseMoved = false; return; }
 		bgClick(event);
 	});
-
+	*/
+	
 	// call bgMouseUp() when the user mouse ups on the background
 	bg.on('mouseup touchend', function() {
 		bgMouseUp();
@@ -151,7 +209,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (tempLine !== null) {
 			tempLine.remove();
 			tempLine = null;
-			tempLineLayer.draw();
+			mainLayer.draw();
 		}
 		//mainLayer.draw();
 	});
@@ -188,7 +246,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				tempLine = null;
 				selectedComp = null;
 				connecting = false;
-				tempLineLayer.draw();
+				mainLayer.draw();
 			}
 		});
 		
@@ -212,16 +270,16 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			
 			// The connector has three outputs: hence three output boxes. Each output box needs a mousedown, mouseup, mouseenter, and mouseleave event associated with it.
 			// We pass the number associated with that output to the associated function
-			comp.getOutputBox(1).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 1); mainLayer.draw();});
-			comp.getOutputBox(1).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 1); mainLayer.draw(); });
+			comp.getOutputBox(1).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 1); mainLayer.draw(); mainLayer.setDraggable(false);});
+			comp.getOutputBox(1).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 1); mainLayer.draw(); mainLayer.setDraggable(true); });
 			comp.getOutputBox(1).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 1); mainLayer.draw();});
 			comp.getOutputBox(1).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 1); mainLayer.draw();});
-			comp.getOutputBox(2).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 2); mainLayer.draw();});
-			comp.getOutputBox(2).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 2); mainLayer.draw(); });
+			comp.getOutputBox(2).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 2); mainLayer.draw(); mainLayer.setDraggable(false);});
+			comp.getOutputBox(2).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 2); mainLayer.draw(); mainLayer.setDraggable(true); });
 			comp.getOutputBox(2).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 2); mainLayer.draw();});
 			comp.getOutputBox(2).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 2); mainLayer.draw();});
-			comp.getOutputBox(3).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 3); mainLayer.draw();});
-			comp.getOutputBox(3).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 3); mainLayer.draw(); });
+			comp.getOutputBox(3).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 3); mainLayer.draw();  mainLayer.setDraggable(false); });
+			comp.getOutputBox(3).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 3); mainLayer.draw();  mainLayer.setDraggable(true);  });
 			comp.getOutputBox(3).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 3); mainLayer.draw();});
 			comp.getOutputBox(3).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 3); mainLayer.draw();});
 			
@@ -244,9 +302,11 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			
 				// apply mousedown, mouseup, mouseenter, and mouseleave listeners to the input box
 				comp.getInputBox().on('mousedown touchstart', function(event) {
+					mainLayer.setDraggable(false);
 					gateInputBoxMouseDown(event, comp, 0);
 				});
 				comp.getInputBox().on('mouseup touchend', function(event) {
+					mainLayer.setDraggable(true);
 					gateInputBoxMouseUp(event, comp, 0);
 					mainLayer.draw();
 				});
@@ -263,10 +323,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			
 				// apply the four event listeners to both input boxes
 				comp.getInputBox(1).on('mousedown touchstart', function(event) {
+					mainLayer.setDraggable(false);
 					gateInputBoxMouseDown(event, comp, 1);
 					mainLayer.draw();
 				});
 				comp.getInputBox(1).on('mouseup touchend', function(event) {
+					mainLayer.setDraggable(true);
 					gateInputBoxMouseUp(event, comp, 1);
 					mainLayer.draw();
 				});
@@ -280,10 +342,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				});
 				
 				comp.getInputBox(2).on('mousedown touchstart', function(event) {
+					mainLayer.setDraggable(false);
 					gateInputBoxMouseDown(event, comp, 2);
 					mainLayer.draw();
 				});
 				comp.getInputBox(2).on('mouseup touchend', function(event) {
+					mainLayer.setDraggable(true);	
 					gateInputBoxMouseUp(event, comp, 2);
 					mainLayer.draw();
 				});
@@ -299,10 +363,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			
 			// regardless if AND, OR, or NOT gate, they all have one output; apply the four event listeners to the output boxes
 			comp.getOutputBox().on('mousedown touchstart', function(event) {
+				mainLayer.setDraggable(false);
 				gateOutputBoxMouseDown(event, comp);
 				mainLayer.draw();
 			});
 			comp.getOutputBox().on('mouseup touchend', function(event) {
+				mainLayer.setDraggable(true);
 				gateOutputBoxMouseUp(event, comp);
 				mainLayer.draw();
 			});
@@ -334,10 +400,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 			if (comp.getType() == "input") {							// an input node as only an output box; apply event listeners to it
 				comp.getOutputBox().on('mousedown touchstart', function (event) {
+					mainLayer.setDraggable(false);
 					nodeOutputBoxMouseDown(event, comp);
 					mainLayer.draw();
 				});
 				comp.getOutputBox().on('mouseup touchend', function (event) {
+					mainLayer.setDraggable(true);
 					nodeOutputBoxMouseUp(event, comp);
 					mainLayer.draw();
 				});
@@ -352,10 +420,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			}
 			if (comp.getType() == "output") {						// an output node as only an input box; apply the event listeners to it
 				comp.getInputBox().on('mousedown touchstart', function (event) {
+					mainLayer.setDraggable(false);
 					nodeInputBoxMouseDown(event, comp);
 					mainLayer.draw();
 				});
 				comp.getInputBox().on('mouseup touchend', function (event) {
+					mainLayer.setDraggable(true);
 					nodeInputBoxMouseUp(event, comp);
 					mainLayer.draw();
 				});
@@ -368,12 +438,17 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 					mainLayer.draw();
 				});
 			}
-	
+			/*
 			comp.getGroup().on('dragmove touchmove', function() {	// unused since you can't drag nodes
 				nodeDrag(comp);
 				mainLayer.draw();
 			});
+			*/
 			comp.getGroup().on('click tap', function() {			// for when you boolean probe/toggle input node values
+				nodeClick(comp);
+				mainLayer.draw();
+			});
+			comp.getGroup().on('dragmove touchmove', function() {
 				nodeClick(comp);
 				mainLayer.draw();
 			});
@@ -405,7 +480,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			points = [gate.getPlugin(inputNum).getPoints()[0].x, gate.getPlugin(inputNum).getPoints()[0].y, gate.getPlugin(inputNum).getPoints()[0].x, gate.getPlugin(inputNum).getPoints()[0].y];			// set the points array from (0,0) to (0, 0); they will be set later
 			
 			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});	// make a new line with these points
-			tempLineLayer.add(tempLine);			// add the temp line to the temp line layer
+			mainLayer.add(tempLine);			// add the temp line to the temp line layer
 			selectedComp = gate;					// set this gate as the selected component
 			selectedPlugNum = inputNum;				// set the selected plug number to this plugin
 			selectedPlug = "plugin" + inputNum;		// set the selected plug variable
@@ -424,7 +499,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			if (selectedComp == gate || gate.getPluginComp(pluginNum) !== null || selectedPlug.indexOf("plugin") >= 0 || selectedComp.loopCheckBackward(gate) == true) {
 				if (tempLine !== null) {	// remove the temporary line
 					tempLine.remove();
-					tempLineLayer.draw();
+					mainLayer.draw();
 				}
 				connecting = false;			// connecting is now false
 				selectedComp = null;
@@ -533,7 +608,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			points = [gate.getPlugout().getPoints()[1].x, gate.getPlugout().getPoints()[1].y, gate.getPlugout().getPoints()[1].x, gate.getPlugout().getPoints()[1].y];			// set the points array from (0,0) to (0, 0); they will be set later
 			
 			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});	// make a new line with these points
-			tempLineLayer.add(tempLine);					// add this line to the temp line layer so it can be drawn
+			mainLayer.add(tempLine);					// add this line to the temp line layer so it can be drawn
 			selectedComp = gate;							// set this gate as the selected component
 			selectedPlug = "plugout";						// set the selected plug string
 			gate.setPlugColor("plugout", "default");		// set the plug color of this plugout to its default color
@@ -554,7 +629,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			if (selectedComp == gate || gate.getPlugoutComp() !== null || selectedPlug.indexOf("plugout") >= 0 || selectedComp.loopCheckForward(gate)) {
 				if (tempLine !== null) {		// if there is a temp line, make it go away
 					tempLine.remove();
-					tempLineLayer.draw();
+					mainLayer.draw();
 				}
 				connecting = false;				// no longer in connection mode
 				selectedComp = null;			// selected component to null
@@ -576,7 +651,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 			gate.setPlugColor("plugout", "default");	// default will set the plugout to its appropriate color
 		
-			tempLineLayer.draw();	// redraw the temp line layer
+			mainLayer.draw();	// redraw the temp line layer
 			tempLine = null;		// set the temp line to null
 			connecting = false;		// we are no longer in connection mode
 			selectedComp = null;	// null the selected component
@@ -937,7 +1012,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 			// set these points in the constructor to tempLine
 			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
-			tempLineLayer.add(tempLine);	// add the temp line
+			mainLayer.add(tempLine);	// add the temp line
 			selectedPlug = "plugin";		// the selectedPlug is a plugin
 			selectedComp = connect;			// set this gate as the selected component
 			connecting = true;				// set the controller to connecting mode
@@ -957,7 +1032,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			if (selectedComp == connect || connect.getPluginComp() !== null || selectedComp.loopCheckBackward(connect) == true) {
 				if (tempLine !== null) {	// remove the temp line
 					tempLine.remove();
-					tempLineLayer.draw();
+					mainLayer.draw();
 				}
 				connecting = false;			// no longer connecting
 				selectedComp = null;		// selected comp is null
@@ -1067,7 +1142,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			connect.setSelectedPlugout(plugoutNum);			// set this plugout selected within this connector (very important)
 			
 			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
-			tempLineLayer.add(tempLine);				// add the temp line to the temp line layer
+			mainLayer.add(tempLine);				// add the temp line to the temp line layer
 			selectedPlug = "plugout" + plugoutNum;		// set selected plug string
 			selectedPlugNum = plugoutNum;
 			selectedComp = connect;						// set this gate as the selected component
@@ -1080,7 +1155,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			if (selectedComp == connect || connect.getPlugoutComp(plugoutNum) !== null || connect.loopCheckBackward(selectedComp) == true) {
 				if (tempLine !== null) {
 					tempLine.remove();
-					tempLineLayer.draw();
+					mainLayer.draw();
 				}
 				connecting = false;
 				selectedComp = null;
@@ -1271,7 +1346,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			points = [node.getPlugout().getPoints()[1].x, node.getPlugout().getPoints()[1].y, node.getPlugout().getPoints()[1].x, node.getPlugout().getPoints()[1].y];
 			
 			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
-			tempLineLayer.add(tempLine);		// add this line to the main layer so it can be drawn
+			mainLayer.add(tempLine);		// add this line to the main layer so it can be drawn
 			selectedComp = node;			// set this gate as the selected component
 			selectedPlug = "plugout";
 			connecting = true;				// set the controller to connecting mode
@@ -1282,7 +1357,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (connecting) {
 			if (selectedComp == node || node.getPlugoutComp() !== null) {
 				tempLine.remove();
-				tempLineLayer.draw();
+				mainLayer.draw();
 				connecting = false;
 				selectedComp = null;
 				selectedPlug = null;
@@ -1300,7 +1375,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			
 			if (tempLine !== null) {
 				tempLine.remove();
-				tempLineLayer.draw();
+				mainLayer.draw();
 			}
 			
 			node.setPlugColor("plugout", "default");
@@ -1361,7 +1436,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (connecting) {
 			if (selectedComp == node || node.getPluginComp() !== null) {
 				tempLine.remove();
-				tempLineLayer.draw();
+				mainLayer.draw();
 				connecting = false;
 				selectedComp = null;
 				
@@ -1502,7 +1577,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		return { x: x, y: y }
 	}
 	
-	function getRelativePointerPosition() {
+	function getMousePos() {
 		var pointer = stage.getPointerPosition();
 		var pos = stage.getPosition();
 		var offset = stage.getOffset();
@@ -1513,6 +1588,21 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			y : ((pointer.y - pos.y + offset.y) / scale.y)
 		};
 	}
+	
+	function getRelativePointerPosition() {
+		var pointer = stage.getPointerPosition();
+		var pos = stage.getPosition();
+		var offset = stage.getOffset();
+		var scale = stage.getScale();
+		var scale2 = mainLayer.getScale();
+		
+		return {
+			x : (((pointer.x - pos.x + offset.x) / scale.x) - mainLayer.getX()) / scale2.x,
+			y : (((pointer.y - pos.y + offset.y) / scale.x) - mainLayer.getY()) / scale2.y
+		};
+	}
+	
+
 	
 	//------------------------------------
 	//--------- STAGE LISTENERS ----------
@@ -1529,8 +1619,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	function stageMouseMove() {
 		if (connecting) {
 			var mPos = getRelativePointerPosition();
+			//var mPos = getMousePos();
 			mPos.x = mPos.x;
-			mPos.y = mPos.y - 5;
+			mPos.y = mPos.y - 10;
 			
 			if (selectedComp.getType() == "connector" && selectedPlug.indexOf("plugout") >= 0) {
 				if (selectedPlugNum == 1 || selectedPlugNum == 3) points = getWirePoints2(tempLine.getPoints()[0], mPos);
@@ -1546,8 +1637,13 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			}
 			
 			tempLine.setPoints(points);
-			tempLineLayer.draw();
+			mainLayer.draw();
 		}
+	}
+	
+	function bgMouseDown() {
+		mouseDown = true;
+		mouseMoved = false;
 	}
 	
 	function bgMouseUp() {
@@ -1556,6 +1652,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 		else {
 			connecting = false;
+			mainLayer.setDraggable(true);
 		}
 	}
 	
@@ -1585,7 +1682,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (tempLine !== null) {		// if the tempLine does not equal null, disable it and set it null
 			tempLine.remove();
 			tempLine = null;
-			tempLineLayer.draw();
+			mainLayer.draw();
 		}
 		
 		if (toGate.getType() == "not" || toGate.getFunc() == "node") toGate.setPluginComp(fromGate);	// only one input for a not gate or node
@@ -1613,7 +1710,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (tempLine !== null) {		// if temp line does not equal null, make it null and disable it
 			tempLine.remove();
 			tempLine = null;
-			tempLineLayer.draw();
+			mainLayer.draw();
 		}
 		toConnect.setPluginComp(fromGate);	// set the plugin component of the connector to the selected gate
 		fromGate.setPlugoutWire(line);	// set the plugout wire to this line of the selected gate
@@ -1640,7 +1737,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (tempLine !== null) {		// if the temp line is not null, disable it
 			tempLine.remove();
 			tempLine = null;
-			tempLineLayer.draw();
+			mainLayer.draw();
 		}
 		
 		if (pluginNum == 0) {
@@ -1678,7 +1775,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (tempLine !== null) {		// if the temp line isn't null, disable it
 			tempLine.remove();
 			tempLine = null;
-			tempLineLayer.draw();
+			mainLayer.draw();
 		}
 		
 		toConnect.setPluginComp(fromConnect);							// set the plugin component of the second connector
@@ -2069,6 +2166,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		addPopup = new SB_PopupMenu();
 		
 		addPopup.add('And Gate', function(target) {
+			console.log("Adding at: " + pos.x + ", " + pos.y);
 			addAndGate(pos.x, pos.y);
 			addPopup = null;
 		});
@@ -2115,7 +2213,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		wrenchPopup.add(truthTableMenu, function(target) {
 			if (numInputs > 5) { alert("The truth table feature has been disabled because you have more than 5 inputs."); return; }
 			else {
-				truthTable.setTableOffset((stage.getWidth() / 2) * 0.3, 600);
+				truthTable.setTableOffset((stage.getWidth() / 2) * 0.8, (stage.getHeight()) * 0.8);
 				truthTable.toggleVisible();
 				
 				if (deleteMode == true) truthTable.setDeleteIcon(true);
@@ -2190,7 +2288,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			if (res + numOutputs > 25) { alert("You can't have that many inputs."); return; }
 		
 			updateNumberOfInputs(res); 
-		}));	
+		}), document.getElementById("sandbox" + containerNum));	
 	}
 	
 	function updateNumberOfInputs(res) {
@@ -2212,11 +2310,22 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 		
 		truthTable.resetTruthTable(res, numOutputs, header);
-		numInputs = res;
+		
+		truthTable.toggleVisible();
+		truthTable.setDeleteIcon(false);
+		
 		if (deleteMode) {
 			truthTable.setDeleteIcon(true);
 		}
+
+		truthTable.setTableOffset((stage.getWidth() / 2) * 0.8, (stage.getHeight()) * 0.8);
+		truthTable.toggleVisible();
 		
+		if (deleteMode == true) truthTable.setDeleteIcon(true);
+		else truthTable.setDeleteIcon(false);
+
+		
+		numInputs = res;
 		return inputs;
 	}
 	
@@ -2231,7 +2340,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			if (res + numOutputs > 25) { alert("You can't have that many outputs."); return; }
 		
 			updateNumberOfOutputs(res); 
-		}));
+		}), document.getElementById("sandbox" + containerNum));
 	}
 	
 	function updateNumberOfOutputs(res) {
@@ -2307,15 +2416,26 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	}
 	
 	wrenchImg.onload = function() {						// set an onload function for the wrench image
-
-		var wrench = new Kinetic.Image({				// create a Kinetic Image
-			x: 805,										// assign them a fixed x and y coord
-			y: 10,
-			image: wrenchImg,							// set the image to the HTML wrench image
-			scaleX: 0.3,								// set the x and y scale to 0.3
-			scaleY: 0.3
-		});
-
+		var wrench;
+		
+		if ($(window).width() > 350) {
+			wrench = new Kinetic.Image({				// create a Kinetic Image
+				x: 805,										// assign them a fixed x and y coord
+				y: 10,
+				image: wrenchImg,							// set the image to the HTML wrench image
+				scaleX: 0.3,								// set the x and y scale to 0.3
+				scaleY: 0.3
+			});
+		}
+		else {
+			wrench = new Kinetic.Image({				// create a Kinetic Image
+				x: 770,										// assign them a fixed x and y coord
+				y: 5,
+				image: wrenchImg,							// set the image to the HTML wrench image
+				scaleX: 0.7,								// set the x and y scale to 0.3
+				scaleY: 0.7
+			});
+		}
 		wrench.on('click tap', function(event) {			// when the user taps the wrench...
 			if (wrenchPopup !== null) return;				// if the wrench popup is already shown, return
 
@@ -2327,19 +2447,34 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 
 		wrenchLayer.add(wrench);						// add the wrench to the wrench layer
 		wrenchLayer.draw();								// redraw the wrench layer
+		//mainLayer.add(wrench);
+		//mainLayer.draw();
 	};
 	
 	// setTrashImage() sets a new image for the trash can (open and closed)
 	function setTrashImage (image) {
 		var imageObj = new Image();							// create a new HTML image object
 		imageObj.onload = function (){						// populate the onload function for the trash can image
-			var trashImg = new Kinetic.Image({				// create a Kinetic Image for trash can
-				x: 805,										// set the image at a fixed x and y coordinate
-				y: 600 - 55,
-				image: imageObj,							// set the image to the HTML image object
-				scaleX: 0.3,								// set the image scale to 0.3
-				scaleY: 0.3
-			});
+			var trashImg;
+			
+			if ($(window).width() > 350) {
+				trashImg = new Kinetic.Image({				// create a Kinetic Image for trash can
+					x: 805,										// set the image at a fixed x and y coordinate
+					y: 535,
+					image: imageObj,							// set the image to the HTML image object
+					scaleX: 0.3,								// set the image scale to 0.3
+					scaleY: 0.3
+				});
+			}
+			else {
+				trashImg = new Kinetic.Image({
+					x: 765,										// set the image at a fixed x and y coordinate
+					y: 490,
+					image: imageObj,							// set the image to the HTML image object
+					scaleX: 0.7,								// set the image scale to 0.3
+					scaleY: 0.7
+				});
+			}
 			
 			trashImg.on('click tap', function() {			// set a click listener for the trash can
 				if (deleteMode == false) {					// if delete mode is false, set the delete mode to true and open the trash can
@@ -2357,6 +2492,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			trashLayer.destroyChildren();					// erase all children on the trash layer (the current trash can image)
 			trashLayer.add(trashImg);						// add the new image to the trash layer
 			trashLayer.draw();								// redraw the trash can layer
+			//mainLayer.add(trashImg);
+			//mainLayer.draw();
 		};
 		imageObj.src = image;								// set the HTML image object to the image string passed to the function
 	}
@@ -2374,7 +2511,11 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	}
 	
 	function toggleTruthTableVisibility() {
-		truthTable.setTableOffset((stage.getWidth() / 2) * 0.3, 600);
+		truthTable.setTableOffset((stage.getWidth() / 2) * 0.8, (stage.getHeight()) * 0.8);
 		truthTable.toggleVisible();
+	}
+	
+	function getDistance(p1, p2) {
+        return Math.sqrt(Math.pow((p2.x - p1.x), 2) + Math.pow((p2.y - p1.y), 2));
 	}
 }

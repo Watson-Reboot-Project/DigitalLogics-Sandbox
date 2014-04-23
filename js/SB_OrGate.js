@@ -195,8 +195,8 @@ function SB_OrGate(initX, initY, setName, id, setup) {
          var imageObj = new Image();
          imageObj.onload = function (){
          var deleteImg = new Kinetic.Image({
-			  x: group.getX() + scale * 90,
-			  y: group.getY() + scale * -15,
+			  x: group.getX() + mainLayer.getX() + scale * 90,
+			  y: group.getY() + mainLayer.getY() + scale * -15,
 			  image: imageObj,
 			  scaleX: 0.4,
 			  scaleY: 0.4
