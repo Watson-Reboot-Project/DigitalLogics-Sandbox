@@ -54,6 +54,7 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 	this.loopCheckBackward = loopCheckBackward;
 	this.loopCheckForward = loopCheckForward;
 	this.getSerialStringDeclaration = getSerialStringDeclaration;
+	this.toggleHitBoxes = toggleHitBoxes;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -141,19 +142,29 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 		var plug;
 		if (inputBox) {
 			plug = getPlugin();
-			inputBox.setPosition(plug.getPoints()[0].x - scale * 0, plug.getPoints()[0].y - scale * 20);
+			inputBox.setPosition({ x: plug.getPoints()[0] - scale * 0, y: plug.getPoints()[1] - scale * 20 });
 		}
 		else {
 			plug = getPlugin();
 			inputBox = new Kinetic.Rect({
-				x: plug.getPoints()[0].x - scale * 0,
-				y: plug.getPoints()[0].y - scale * 20,
-				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				x: plug.getPoints()[0] - scale * 0,
+				y: plug.getPoints()[1] - scale * 20,
+				width: (plug.getPoints()[2] - plug.getPoints()[0]) + 5,
 				height: scale * 40
 			});
 			
 			mainLayer.add(inputBox);
 			stage.draw();
+		}
+	}
+	
+	function toggleHitBoxes(bool) {
+		if (bool == true) {
+			inputBox.setStroke("green");
+			inputBox.setStrokeWidth(1);
+		}
+		else {
+			inputBox.disableStroke("green");
 		}
 	}
 	
@@ -189,7 +200,7 @@ function SB_OutputNode(initX, initY, setText, setName, id, setup) {
 	function getPlugin() {
 		var line;
 		line = new Kinetic.Line({
-			points: [group.getX() + plugin.getPoints()[0].x, group.getY() + plugin.getPoints()[0].y, group.getX() + plugin.getPoints()[1].x, group.getY() + plugin.getPoints()[1].y]
+			points: [group.position().x + plugin.getPoints()[0], group.position().y + plugin.getPoints()[1], group.position().x + plugin.getPoints()[2], group.position().y + plugin.getPoints()[3]]
 		});
 		return line;
 	}

@@ -62,6 +62,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	var lastDist;
 	var initPos;
 	var lastPos;
+	var mainLayerPos;
 	
 	//var tempLineLayer = new Kinetic.Layer();	// create a layer to place the temp line on
 	//stage.add(tempLineLayer);					// add the temp line layer to the stage
@@ -104,16 +105,14 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	window.addEventListener("beforeunload", function(e){
 	   serializer.serialize(components, inputs, outputs);
 	}, false);
-
-	stage.on("tap", function(event) {
-		console.log("Stage tap.");
-	});
 	
 	// this event listener is used to draw the line that follows the mouse when in connecting mode
-	stage.on('mousemove', function() {
+	stage.on('mousemove touchmove', function(event) {
+		mainLayerScale = true;
 		mouseMoved = true;
 		stageMouseMove();
-		mainLayer.draw();
+		//mainLayer.draw();
+		stage.draw();
 	});
 	
 	bg.on('mousedown touchstart', function(e) {
@@ -128,78 +127,20 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 
 		bgClickPos = { x: pos.x - mainLayer.getX(), y: pos.y - mainLayer.getY() };
 	});
-	
-	bg.on('mouseup touchend', function(e) {
-		lastPos = { x: mainLayer.getX(), y: mainLayer.getY() };
-		
-		var dist = getDistance(initPos, lastPos);
-		
-		if (dist < 10 && !connecting) {
-			console.log("Less than 10: " + dist);
-			if (mouseMoved == true) { mouseMoved = false; return; }
-			bgClick(event);
-		}
-	});
-	
-	mainLayer.on('dragmove', function(evt) {
-		
-		console.log("Main layer drag move.");
-		
-		if (deleteMode != false) {		
-			for (var i = 0; i < components.length; i++) {
-				if (components[i].getFunc() != "node") {
-					components[i].setDeleteIcon("images/delete.ico");
-				}
-			}
-		}
-	});
-	
-	stage.getContent().addEventListener('touchmove', function(evt) {
-		stageMouseMove();
-		mainLayer.draw();
-		
-		var touch1 = evt.touches[0];
-		var touch2 = evt.touches[1];
 
-		if(touch1 && touch2) {
-		  var dist = getDistance({
-			x: touch1.clientX,
-			y: touch1.clientY
-		  }, {
-			x: touch2.clientX,
-			y: touch2.clientY
-		  });
+	var mainLayerScale = false;
 
-		  if(!lastDist) {
-			lastDist = dist;
-		  }
-
-		  var scale = mainLayer.getScale().x * dist / lastDist;
-		  
-		  if (scale < 1) return;
-		  
-		  mainLayer.setScale(scale);
-		  mainLayer.draw();
-		  lastDist = dist;
-		  evt.preventDefault();
-		  evt.cancelBubble = true;
-	  }
-	});
-	
-	stage.getContent().addEventListener('touchend', function() {
-		lastDist = 0;
-	});
-	
 	bg.on('mousedown', function() { bgMouseDown(); });
 	
-	/*
+	
 	// call bgClick() when the user clicks on the background
 	bg.on('click tap', function(event) {
-		console.log("BG clicked.");
+		//if (mainLayerScale == true) { mainLayerScale = false; return; }
 		if (mouseMoved == true) { mouseMoved = false; return; }
 		bgClick(event);
+		mainLayer.drawScene();
 	});
-	*/
+	
 	
 	// call bgMouseUp() when the user mouse ups on the background
 	bg.on('mouseup touchend', function() {
@@ -252,10 +193,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 		if (comp.getFunc() == "connection") {									// if this component is a connector
 			comp.getInputBox().on('mousedown touchstart', function(event) {		// add the mouse down event for the connector's input box
+				mainLayer.setDraggable(false);
 				connectorInputBoxMouseDown(event, comp);						// pass the event and the connector to this associated function
 				mainLayer.draw();												// update the main layer after the function
 			});
 			comp.getInputBox().on('mouseup touchend', function(event) {			// add the mouse up event for the connector's input box
+				mainLayer.setDraggable(true);
 				connectorInputBoxMouseUp(event, comp);							// pass the event and the connector to this associated function
 				mainLayer.draw();												// update the main layer
 			});
@@ -279,7 +222,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			comp.getOutputBox(2).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 2); mainLayer.draw();});
 			comp.getOutputBox(2).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 2); mainLayer.draw();});
 			comp.getOutputBox(3).on('mousedown touchstart', function(event) { connectorOutputBoxMouseDown(event, comp, 3); mainLayer.draw();  mainLayer.setDraggable(false); });
-			comp.getOutputBox(3).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 3); mainLayer.draw();  mainLayer.setDraggable(true);  });
+			comp.getOutputBox(3).on('mouseup touchend', function (event) { connectorOutputBoxMouseUp(event, comp, 3); mainLayer.draw();  mainLayer.setDraggable(true); });
 			comp.getOutputBox(3).on('mouseenter touchend', function(event) { connectorOutputBoxMouseEnter(event, comp, 3); mainLayer.draw();});
 			comp.getOutputBox(3).on('mouseleave touchend', function(event) { connectorOutputBoxMouseLeave(event, comp, 3); mainLayer.draw();});
 			
@@ -295,6 +238,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			
 			comp.getGroup().on('dragend', function() {							// add a dragend event to the connector (for connecting components whose input/output boxes overlap)
 				connectorDragEnd(comp);
+				serializer.serialize(components, inputs, outputs);
 			});
 		}
 		else if (comp.getFunc() == "gate") {									// if the component is a gate...
@@ -385,14 +329,23 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				gateClick(event, comp);
 				mainLayer.draw();
 			});
+			
+			comp.getGroup().on('dragstart', function () {
+				//toggleHitBoxes(true);
+			});
+			
+			comp.getGroup().on('dragend', function() {
+				//toggleHitBoxes(false);
+			});
 	
-			comp.getGroup().on('dragmove touchmove', function() {		// for updating wires
-				gateDrag(comp);
+			comp.getGroup().on('dragmove touchmove', function(event) {		// for updating wires
+				gateDrag(comp, event);
 				mainLayer.draw();
 			});
 			
 			comp.getGroup().on('dragend', function() {					// for connecting components whose input/output boxes overlap
 				gateDragEnd(comp);
+				serializer.serialize(components, inputs, outputs);
 			});
 			
 		}
@@ -448,6 +401,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				nodeClick(comp);
 				mainLayer.draw();
 			});
+			
 			comp.getGroup().on('dragmove touchmove', function() {
 				nodeClick(comp);
 				mainLayer.draw();
@@ -466,18 +420,21 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*/
 	function gateInputBoxMouseDown(event, gate, inputNum) {
 		if (!connecting) {													// we really can't be in connecting mode if we mouse down on an input box, but we check anyway
+			//toggleHitBoxes(true);
 			if (gate.getPluginComp(inputNum) !== null) {					// if the gate's plugin component isn't null, it's already connected to something; we must get rid of it first
 				var connComp = gate.getPluginComp(inputNum);				// grab the connected component at this gate's plugin (number passed by parameter); if it's a NOT gate, this is ignored
 				if (connComp.getType() == "connector") {					// if the connected component is a connector, we must get the plugout number that is connected to this gate
 					var plugoutNum = gate.getConnectorPlugin(inputNum);		// grab the plugout number that this gate is connected to on the CONNECTOR
 					connComp.deleteOutputConnection(plugoutNum);			// delete this connection
+					ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+					//serializer.serialize(components, inputs, outputs);
 				}
 				else connComp.deleteOutputConnection();						// otherwise, just delete the connection, because all other components just have one output
 				evaluateCircuit();											// re-evaluate the circuit
 			}
 			
 			// set the points array to the end point of this gate's plugin
-			points = [gate.getPlugin(inputNum).getPoints()[0].x, gate.getPlugin(inputNum).getPoints()[0].y, gate.getPlugin(inputNum).getPoints()[0].x, gate.getPlugin(inputNum).getPoints()[0].y];			// set the points array from (0,0) to (0, 0); they will be set later
+			points = [gate.getPlugin(inputNum).getPoints()[0], gate.getPlugin(inputNum).getPoints()[1], gate.getPlugin(inputNum).getPoints()[0], gate.getPlugin(inputNum).getPoints()[1]];			// set the points array from (0,0) to (0, 0); they will be set later
 			
 			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});	// make a new line with these points
 			mainLayer.add(tempLine);			// add the temp line to the temp line layer
@@ -495,6 +452,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*/
 	function gateInputBoxMouseUp(event, gate, pluginNum) {
 		if (connecting) {	// ensure that we are in connecting mode
+			//toggleHitBoxes(false);
 			// if the selected component is this gate, the gate already has a component connected to this plugin, or if a loop will be introduced with this connection, cancel this connection
 			if (selectedComp == gate || gate.getPluginComp(pluginNum) !== null || selectedPlug.indexOf("plugin") >= 0 || selectedComp.loopCheckBackward(gate) == true) {
 				if (tempLine !== null) {	// remove the temporary line
@@ -599,15 +557,18 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*/
 	function gateOutputBoxMouseDown(event, gate) {
 		if (!connecting) {							// if we are not connecting already
-			
+			//toggleHitBoxes(true);
 			if (gate.getPlugoutComp() !== null) {	// if this gate's output is already connecting to something, get rid of it first
 				gate.deleteOutputConnection();		// delete the plugout wire and plugout comp; continue drawing temp line
+				ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+				serializer.serialize(components, inputs, outputs);
 				evaluateCircuit();					// re-evaluate the circuit for the truth table
 			}
-			// set the points array to the endpoint of this gate's plugout
-			points = [gate.getPlugout().getPoints()[1].x, gate.getPlugout().getPoints()[1].y, gate.getPlugout().getPoints()[1].x, gate.getPlugout().getPoints()[1].y];			// set the points array from (0,0) to (0, 0); they will be set later
 			
-			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});	// make a new line with these points
+			// set the points array to the endpoint of this gate's plugout
+			points = [gate.getPlugout().getPoints()[2], gate.getPlugout().getPoints()[3], gate.getPlugout().getPoints()[2], gate.getPlugout().getPoints()[3]];			// set the points array from (0,0) to (0, 0); they will be set later
+			
+			tempLine = new Kinetic.Line({points : points, stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});	// make a new line with these points
 			mainLayer.add(tempLine);					// add this line to the temp line layer so it can be drawn
 			selectedComp = gate;							// set this gate as the selected component
 			selectedPlug = "plugout";						// set the selected plug string
@@ -622,9 +583,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*	When the user mouses up on a gate's output box, the user is potentially wanting to connect this gate to another.
 	*/
 	function gateOutputBoxMouseUp(event, gate) {
-		console.log("Gate output box mouse up.");
 		if (connecting) {		// if we are in connection mode
-			
+			//toggleHitBoxes(false);
 			// if the selected component is this gate, or if this gate is already connected to something via plugout, or if the selected plug is a plugout, or if a loop is introduced .. cancel the connection
 			if (selectedComp == gate || gate.getPlugoutComp() !== null || selectedPlug.indexOf("plugout") >= 0 || selectedComp.loopCheckForward(gate)) {
 				if (tempLine !== null) {		// if there is a temp line, make it go away
@@ -904,19 +864,22 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*	to the new location. We first check to see if the dragged gate has an output. If it does, then we must redraw the plugout wire. If
 	*	the dragged gate has a component on plugin1, we must redraw the wire connected to plugin1. The same goes for plugin2.
 	*/
-	function gateDrag(gate)
+	function gateDrag(gate, event)
 	{
 		var connectedComps;
 		var plugins;
 		
 		gate.drawBoxes();
-		if (deleteMode == true) {
-			gate.setDeleteIcon("images/delete.ico");
-		}
+		//if (deleteMode == true)	gate.setDeleteIcon("images/delete.ico");
+		//else gate.setDeleteIcon("images/empty.bmp");
 		
 		if (gate.getPlugoutWire() !== null) {	// check to see if this gate has a plug out wire, if so, set its points to the new location
-			points = getWirePoints(gate.getPlugout().getPoints()[1], gate.getPlugoutWire().getPoints()[3]); // get points for the new line
-			gate.getPlugoutWire().setPoints(points);	// set the points for the plugout wire that we just computed above.
+			//points = getWirePoints(gate.getPlugout().getPoints()[1], gate.getPlugoutWire().getPoints()[3]); // get points for the new line
+			var start = gate.getPlugout().points();
+			var end = gate.getPlugoutWire().points();
+			
+			points = getWirePoints( { x: start[2], y: start[3] }, { x: end[6], y: end[7] } ); // get points for the new line
+			gate.getPlugoutWire().points(points);	// set the points for the plugout wire that we just computed above.
 		}
 		
 		// by this point, we have taken care of the output wire, now lets take care of input wires
@@ -955,11 +918,22 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		// we have one special case we must take care of where two outputs on a connector goes to the same gate
 		if (connectedComps.length == 2 && connectedComps[0] == connectedComps[1]) { // two outputs on a connector goes to one gate
 			var plugoutNum;
+			var start;
+			var end;
+			
 			for (var i = 1; i < 3; i++) {					// iterate throughout the plugin wires for the connector
 				plugoutNum = gate.getConnectorPlugin(i);	// grab the connector plugin within the gate that tells what plugout wire the connector is using for this input
-				if (plugoutNum == 2) points = getWirePoints(connectedComps[0].getPlugout(plugoutNum).getPoints()[1], gate.getPlugin(i).getPoints()[0]);	// compute the points for this wire
-				else points = getWirePoints2(connectedComps[0].getPlugout(plugoutNum).getPoints()[1], gate.getPlugin(i).getPoints()[0]);
-				connectedComps[0].getPlugoutWire(plugoutNum).setPoints(points);														// set the plugout wire points
+				
+				start = connectedComps[0].getPlugout(plugoutNum).points();
+				end = gate.getPlugin(i).points();
+				
+				if (plugoutNum == 2) points = getWirePoints( { x: start[2], y: start[3] }, { x: end[0], y: end[1] } ); // compute the points for this wire
+				else points = getWirePoints2( { x: start[2], y: start[3] }, { x: end[0], y: end[1] } );
+
+				//if (plugoutNum == 2) points = getWirePoints(connectedComps[0].getPlugout(plugoutNum).getPoints()[1], gate.getPlugin(i).getPoints()[0]);	
+				//else points = getWirePoints2(connectedComps[0].getPlugout(plugoutNum).getPoints()[1], gate.getPlugin(i).getPoints()[0]);
+				
+				connectedComps[0].getPlugoutWire(plugoutNum).points(points);														// set the plugout wire points
 			}
 			
 			return;
@@ -972,15 +946,25 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			if (connectedComps[i].getType() == "connector") {					// if the connected component is a connector
 				var plugoutNums = connectedComps[i].getPlugoutToComp(gate);		// get the plugout number used to go to this gate (only one value will be returned in the array)
 				
-				// if the plugout number is 2, we call getWirePoints(); if its 1 or 3, we call getWirePoints2(); .. go looks on those functions for descriptions as to why
-				if (plugoutNums[0] == 2) points = getWirePoints(connectedComps[i].getPlugout(plugoutNums[0]).getPoints()[1], plugins[i].getPoints()[0]);
-				else points = getWirePoints2(connectedComps[i].getPlugout(plugoutNums[0]).getPoints()[1], plugins[i].getPoints()[0]);
+				var start = connectedComps[i].getPlugout(plugoutNums[0]).points();
+				var end = plugins[i].points();
 				
-				connectedComps[i].getPlugoutWire(plugoutNums[0]).setPoints(points);	// set the points for the wire we just computed
+				if (plugoutNums[0] == 2) points = getWirePoints( { x: start[2], y: start[3] }, { x: end[0], y: end[1] } );
+				else points = getWirePoints2( { x: start[2], y: start[3] }, { x: end[0], y: end[1] } );
+				
+				// if the plugout number is 2, we call getWirePoints(); if its 1 or 3, we call getWirePoints2(); .. go looks on those functions for descriptions as to why
+				//if (plugoutNums[0] == 2) points = getWirePoints(connectedComps[i].getPlugout(plugoutNums[0]).getPoints()[1], plugins[i].getPoints()[0]);
+				//else points = getWirePoints2(connectedComps[i].getPlugout(plugoutNums[0]).getPoints()[1], plugins[i].getPoints()[0]);
+				
+				connectedComps[i].getPlugoutWire(plugoutNums[0]).points(points);	// set the points for the wire we just computed
 			}
 			else {	// if the connected component is not a connector
-				points = getWirePoints(connectedComps[i].getPlugout().getPoints()[1], plugins[i].getPoints()[0]);	// compute the points for the line
-				connectedComps[i].getPlugoutWire().setPoints(points);												// set the points we just computed
+				var start = connectedComps[i].getPlugout().points();
+				var end = plugins[i].points();
+				
+				//points = getWirePoints(connectedComps[i].getPlugout().getPoints()[1], plugins[i].getPoints()[0]);	// compute the points for the line
+				points = getWirePoints( { x: start[2], y: start[3] }, { x: end[0], y: end[1] } );
+				connectedComps[i].getPlugoutWire().points(points);												// set the points we just computed
 			}
 		}
 	}
@@ -1004,14 +988,17 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				}
 				else connComp.deleteOutputConnection();							// if the connected component is not a connector, simply call deleteOutputConnection() as all other components have only one output
 				
+				ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+				serializer.serialize(components, inputs, outputs);
+				
 				evaluateCircuit();												// we need to re-evaluate the truth table
 			}
 
 			// fill the points array with the end point of this connectors plugin
-			points = [ connect.getPlugin().getPoints()[0].x, connect.getPlugin().getPoints()[0].y, connect.getPlugin().getPoints()[0].x, connect.getPlugin().getPoints()[0].y ];
+			points = [ connect.getPlugin().points()[0], connect.getPlugin().points()[1], connect.getPlugin().points()[0], connect.getPlugin().points()[1] ];
 		
 			// set these points in the constructor to tempLine
-			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
+			tempLine = new Kinetic.Line({points : points, stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
 			mainLayer.add(tempLine);	// add the temp line
 			selectedPlug = "plugin";		// the selectedPlug is a plugin
 			selectedComp = connect;			// set this gate as the selected component
@@ -1138,10 +1125,10 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			}
 			
 			// fill the points array to the endpoint of this plugout
-			points = [ connect.getPlugout(plugoutNum).getPoints()[1].x, connect.getPlugout(plugoutNum).getPoints()[1].y, connect.getPlugout(plugoutNum).getPoints()[1].x, connect.getPlugout(plugoutNum).getPoints()[1].y ];
+			points = [ connect.getPlugout(plugoutNum).points()[2], connect.getPlugout(plugoutNum).points()[3], connect.getPlugout(plugoutNum).points()[2], connect.getPlugout(plugoutNum).points()[3] ];
 			connect.setSelectedPlugout(plugoutNum);			// set this plugout selected within this connector (very important)
 			
-			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
+			tempLine = new Kinetic.Line({points : points, stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
 			mainLayer.add(tempLine);				// add the temp line to the temp line layer
 			selectedPlug = "plugout" + plugoutNum;		// set selected plug string
 			selectedPlugNum = plugoutNum;
@@ -1276,7 +1263,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	
 	function connectorDrag(connect) {
 		var connectedComps;
-		
 		connect.drawBoxes();
 		if (deleteMode == true) {
 			connect.setDeleteIcon("images/delete.ico");
@@ -1284,16 +1270,25 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 		if (connect.getPluginComp() !== null) {		// if this connector has an input component
 			if (connect.getPluginComp().getType() != "connector") {	// if the component connected to the input line is not connector
-				points = getWirePoints(connect.getPluginComp().getPlugout().getPoints()[1], connect.getPlugin().getPoints()[0]);	// compute the points
-				connect.getPluginComp().getPlugoutWire().setPoints(points);															// set the points		
+			
+				var start = connect.getPluginComp().getPlugout().points();
+				var end = connect.getPlugin().points();
+				
+				points = getWirePoints({ x: start[2], y: start[3] }, { x: end[0], y: end[1] });
+				//points = getWirePoints(connect.getPluginComp().getPlugout().getPoints()[1], connect.getPlugin().getPoints()[0]);	// compute the points
+				connect.getPluginComp().getPlugoutWire().points(points);															// set the points		
 			}
 			else {									// else, the component that is plugged into the connector is a connector
 				var plugoutNum = connect.getPluginComp().getPlugoutToComp(connect);		// get the plugout number of that connector that connects to this connector
 				
+				var start = connect.getPluginComp().getPlugout(plugoutNum).points();
+				var end = connect.getPlugin().points();
+				
 				// if the plugout is the top plugout, use getWirePoints(), else use getWirePoints2() -- go look at those functions to see why
-				if (plugoutNum == 2) points = getWirePoints(connect.getPluginComp().getPlugout(plugoutNum).getPoints()[1], connect.getPlugin().getPoints()[0]);
-				else points = getWirePoints2(connect.getPluginComp().getPlugout(plugoutNum).getPoints()[1], connect.getPlugin().getPoints()[0]);	
-				connect.getPluginComp().getPlugoutWire(plugoutNum).setPoints(points); // set the points we just computed
+				if (plugoutNum == 2) points = getWirePoints({ x: start[2], y: start[3] }, { x: end[0], y: end[1] });
+				else points = getWirePoints2({ x: start[2], y: start[3] }, { x: end[0], y: end[1] });
+				
+				connect.getPluginComp().getPlugoutWire(plugoutNum).points(points); // set the points we just computed
 			}
 		}
 		
@@ -1301,10 +1296,17 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		for (var i = 0; i < 3; i++) {
 			if (connect.getPlugoutComp(i) !== null) {	// if this output line has a component connected to it
 				
+				var start = connect.getPlugout(i).points();
+				var end = connect.getPlugoutWire(i).points();
+				
 				// same idea, if the plugout number is 2, use getWirePoints(); else use getWirePoints2() -- go see why if you haven't already
-				if (i == 2) points = getWirePoints(connect.getPlugout(i).getPoints()[1], connect.getPlugoutWire(i).getPoints()[3]);
-				else points = getWirePoints2(connect.getPlugout(i).getPoints()[1], connect.getPlugoutWire(i).getPoints()[2]);
-				connect.getPlugoutWire(i).setPoints(points);	// set the points we just computed
+				if (i == 2) points = getWirePoints({ x: start[2], y: start[3] }, { x: end[6], y: end[7] });
+				else points = getWirePoints2({ x: start[2], y: start[3] }, { x: end[4], y: end[5] });
+				
+				//if (i == 2) points = getWirePoints(connect.getPlugout(i).getPoints()[1], connect.getPlugoutWire(i).getPoints()[3]);
+				//else points = getWirePoints2(connect.getPlugout(i).getPoints()[1], connect.getPlugoutWire(i).getPoints()[2]);
+				
+				connect.getPlugoutWire(i).points(points);	// set the points we just computed
 			}
 		}
 	}
@@ -1340,12 +1342,16 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			if (node.getPlugoutWire() !== null) {
 				// delete the output wire
 				node.deleteOutputConnection();
+				ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+				serializer.serialize(components, inputs, outputs);
 				evaluateCircuit();
 			}
 			
-			points = [node.getPlugout().getPoints()[1].x, node.getPlugout().getPoints()[1].y, node.getPlugout().getPoints()[1].x, node.getPlugout().getPoints()[1].y];
+			//toggleHitBoxes(true);
 			
-			tempLine = new Kinetic.Line({points : points,stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
+			points = [node.getPlugout().points()[2], node.getPlugout().points()[3], node.getPlugout().points()[2], node.getPlugout().points()[3]];
+	
+			tempLine = new Kinetic.Line({points : points, stroke : "black",strokeWidth : 1,lineCap : 'round',lineJoin : 'round'});
 			mainLayer.add(tempLine);		// add this line to the main layer so it can be drawn
 			selectedComp = node;			// set this gate as the selected component
 			selectedPlug = "plugout";
@@ -1353,8 +1359,17 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 	}
 	
+	function toggleHitBoxes(bool) {
+		for (var i = 0; i < components.length; i++) {
+			components[i].toggleHitBoxes(bool);
+		}
+		
+		mainLayer.draw();
+	}
+	
 	function nodeOutputBoxMouseUp(event, node) {
 		if (connecting) {
+			//toggleHitBoxes(false);
 			if (selectedComp == node || node.getPlugoutComp() !== null) {
 				tempLine.remove();
 				mainLayer.draw();
@@ -1434,6 +1449,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	
 	function nodeInputBoxMouseUp(event, node) {
 		if (connecting) {
+			//toggleHitBoxes(false);
+			
 			if (selectedComp == node || node.getPluginComp() !== null) {
 				tempLine.remove();
 				mainLayer.draw();
@@ -1554,7 +1571,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 		
 		if (connecting) {							// if we are in connecting mode
-			tempLine.disableStroke();				// disable the tempLine's stroke
+			tempLine.stroke(null);				// disable the tempLine's stroke
 			tempLine = null;						// set the tempLine to NULL
 			connecting = false;						// we are not longer in connecting mode
 			selectedComp = null;
@@ -1622,12 +1639,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			//var mPos = getMousePos();
 			mPos.x = mPos.x;
 			mPos.y = mPos.y - 10;
-			
+
 			if (selectedComp.getType() == "connector" && selectedPlug.indexOf("plugout") >= 0) {
-				if (selectedPlugNum == 1 || selectedPlugNum == 3) points = getWirePoints2(tempLine.getPoints()[0], mPos);
-				else points = getWirePoints(tempLine.getPoints()[0], mPos);
+				if (selectedPlugNum == 1 || selectedPlugNum == 3) points = getWirePoints2({ x: tempLine.points()[0], y: tempLine.points()[1] }, mPos);
+				else points = getWirePoints({ x: tempLine.points()[0], y: tempLine.points()[1] }, mPos);
 			}
-			else points = getWirePoints(tempLine.getPoints()[0], mPos);
+			else points = getWirePoints({ x: tempLine.points()[0], y: tempLine.points()[1] }, mPos);
 			
 			if (tempLine.getStroke() != "green" && selectedPlug.indexOf("plugout") >= 0) {
 				var state = selectedComp.getOutputValue();
@@ -1636,7 +1653,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				else tempLine.setStroke("blue");
 			}
 			
-			tempLine.setPoints(points);
+			//console.log(points);
+			
+			tempLine.points([points[0], points[1], points[2], points[3], points[4], points[5], points[6], points[7]]);
 			mainLayer.draw();
 		}
 	}
@@ -1653,6 +1672,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		else {
 			connecting = false;
 			mainLayer.setDraggable(true);
+			tempLine.stroke(null);
+			mainLayer.draw();
+			//toggleHitBoxes(false);
 		}
 	}
 	
@@ -1670,8 +1692,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*	if the gate is an AND or OR gate.
 	*/
 	function setWireFromGateToGate(fromGate, toGate, pluginNum) {
-		start = fromGate.getPlugout().getPoints()[1];					// the starting point of the wire
-		end = toGate.getPlugin(pluginNum).getPoints()[0];				// the end point of the wire
+		start = { x: fromGate.getPlugout().points()[2], y: fromGate.getPlugout().points()[3] };					// the starting point of the wire
+		end = { x: toGate.getPlugin(pluginNum).points()[0], y: toGate.getPlugin(pluginNum).points()[1] };				// the end point of the wire
+		
 		points = getWirePoints(start, end);								// compute the wire points
 		
 		// make a new line with the points computed earlier
@@ -1690,6 +1713,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 		fromGate.setPlugoutWire(line);		// set the plugoutWire of the selectedComp to this new line
 		fromGate.setPlugoutComp(toGate);	// set the plugoutComp for the selectedComp
+		
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 	}
 	
 	/*
@@ -1698,8 +1724,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*	This function is called to set a connection from a gate to a connector.
 	*/
 	function setWireFromGateToConnector(fromGate, toConnect) {
-		start = fromGate.getPlugout().getPoints()[1];			// get the end point of the start line
-		end = toConnect.getPlugin().getPoints()[0];				// get the start point of the end line
+		start = { x: fromGate.getPlugout().points()[2], y: fromGate.getPlugout().points()[3] };
+		end = { x: toConnect.getPlugin().points()[0], y: toConnect.getPlugin().points()[1] };
+
 		points = getWirePoints(start, end);		// get the wire points
 		
 		// make the line with the points computed earlier
@@ -1715,6 +1742,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		toConnect.setPluginComp(fromGate);	// set the plugin component of the connector to the selected gate
 		fromGate.setPlugoutWire(line);	// set the plugout wire to this line of the selected gate
 		fromGate.setPlugoutComp(toConnect);	// set the plugout component of the selected gate to this connector
+		
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 	}
 	
 	/*
@@ -1723,9 +1753,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*	This function is called to set a connection from a connector to a gate.
 	*/
 	function setWireFromConnectorToGate(fromConnect, toGate, plugoutNum, pluginNum) {
-		start = fromConnect.getPlugout(plugoutNum).getPoints()[1];										// get the end point of the start line
-		end = toGate.getPlugin(pluginNum).getPoints()[0];											// get the start point of the end line
-		
+		start = { x: fromConnect.getPlugout(plugoutNum).points()[2], y: fromConnect.getPlugout(plugoutNum).points()[3] };
+		end = { x: toGate.getPlugin(pluginNum).points()[0], y: toGate.getPlugin(pluginNum).points()[1] };
+
 		// if the plugoutNum of the connector is 2, use getWirePoins(); else use getWirePoints2() -- see documentation
 		if (plugoutNum == 2) points = getWirePoints(start, end);
 		else points = getWirePoints2(start, end);
@@ -1753,6 +1783,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		
 		fromConnect.setPlugoutWire(plugoutNum, line);	// set plugout wire of the connector to this line
 		fromConnect.setPlugoutComp(plugoutNum, toGate);						// set the plugout component of the connector to the gate
+		
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 	}
 	
 	/*
@@ -1761,8 +1794,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	*	This function is called to set a connection from a connector to another connector.
 	*/
 	function setWireFromConnectorToConnector(fromConnect, toConnect, plugoutNum) {
-		start = fromConnect.getPlugout(plugoutNum).getPoints()[1];									// get the end point of the start line
-		end = toConnect.getPlugin().getPoints()[0];										// get the start point of the end line
+		start = { x: fromConnect.getPlugout(plugoutNum).points()[2], y: fromConnect.getPlugout(plugoutNum).points()[3] };
+		end = { x: toConnect.getPlugin().points()[0], y: toConnect.getPlugin().points()[1] };
 		
 		// if the plugoutNum of the connector is 2, use getWirePoins(); else use getWirePoints2() -- see documentation
 		if (plugoutNum == 2) points = getWirePoints(start, end);
@@ -1781,6 +1814,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		toConnect.setPluginComp(fromConnect);							// set the plugin component of the second connector
 		fromConnect.setPlugoutWire(plugoutNum, line);		// set the plugout wire of the given plugout to the line we just created
 		fromConnect.setPlugoutComp(plugoutNum, toConnect);				// set the plugout component of the selected connector
+		
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 	}
 	
 	/*
@@ -1826,8 +1862,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		components.push(orGate);
 		orGate.draw();
 		registerComponent(orGate);
-		gateDragEnd(orGate);
-		
+		//gateDragEnd(orGate);
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 		return orGate;
 	}
 	
@@ -1841,8 +1878,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		components.push(andGate);
 		andGate.draw();
 		registerComponent(andGate);
-		gateDragEnd(andGate);
-		
+		//gateDragEnd(andGate);
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 		return andGate;
 	}
 	
@@ -1856,8 +1894,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		components.push(notGate);
 		notGate.draw();
 		registerComponent(notGate);
-		gateDragEnd(notGate);
-		
+		//gateDragEnd(notGate);
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 		return notGate;
 	}
 	
@@ -1871,7 +1910,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		components.push(conn);
 		conn.draw();
 		registerComponent(conn);
-		
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 		return conn;
 	}
 	
@@ -1910,6 +1950,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		evaluateCircuit();
 		stage.draw();
 		document.body.style.cursor = "default";
+		
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 	}
 	
 	function deleteANDORGate(gate) {
@@ -1922,7 +1965,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 					var plugoutNum = comp.getPlugoutToComp(gate);
 					if (plugoutNum.length == 2) {
 						for (var j = 0; j < 2; j++) {
-							comp.getPlugoutWire(plugoutNum[j]).disableStroke();
+							comp.getPlugoutWire(plugoutNum[j]).stroke(null);
 							comp.setPlugoutWire(plugoutNum[j], null);
 							comp.setPlugoutComp(plugoutNum[j], null);
 							comp.evaluate();
@@ -1930,14 +1973,14 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 						}
 					}
 					else {
-						comp.getPlugoutWire(plugoutNum[0]).disableStroke();
+						comp.getPlugoutWire(plugoutNum[0]).stroke(null);
 						comp.setPlugoutWire(plugoutNum[0], null);
 						comp.setPlugoutComp(plugoutNum[0], null);
 						comp.evaluate();
 					}
 				}
 				else {
-					comp.getPlugoutWire().disableStroke();
+					comp.getPlugoutWire().stroke(null);
 					comp.setPlugoutWire(null);
 					comp.setPlugoutComp(null);
 				}
@@ -1955,12 +1998,13 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			else {
 				comp.setPluginCompNull();
 			}
-			gate.getPlugoutWire().disableStroke();
+			gate.getPlugoutWire().stroke(null);
 		}
 		
 		gate.deleteSelf();
 		removeComp(gate);
 		mainLayer.draw();
+		
 	}
 	
 	function deleteNotGate(gate) {
@@ -1968,13 +2012,13 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (comp !== null) {
 			if (comp.getType() == "connector") {
 				var plugout = comp.getPlugoutToComp(gate);
-				comp.getPlugoutWire(plugout).disableStroke();
+				comp.getPlugoutWire(plugout).stroke(null);
 				comp.setPlugoutWire(plugout, null);
 				comp.setPlugoutComp(plugout, null);
 				comp.evaluate();
 			}
 			else {
-				comp.getPlugoutWire().disableStroke();
+				comp.getPlugoutWire().stroke(null);
 				comp.setPlugoutWire(null);
 				comp.setPlugoutComp(null);
 				comp.evaluate();
@@ -1990,7 +2034,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				comp.setPluginCompNull();
 			}
 			comp.evaluate();
-			gate.getPlugoutWire().disableStroke();
+			gate.getPlugoutWire().stroke(null);
 		}
 		
 		gate.deleteSelf();
@@ -2003,12 +2047,12 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		if (comp !== null) {
 			if (comp.getType() == "connector") {
 				var plugout = comp.getPlugoutToComp(connect);
-				comp.getPlugoutWire(plugout).disableStroke();
+				comp.getPlugoutWire(plugout).stroke(null);
 				comp.setPlugoutWire(plugout, null);
 				comp.setPlugoutComp(plugout, null);
 			}
 			else {
-				comp.getPlugoutWire().disableStroke();
+				comp.getPlugoutWire().stroke(null);
 				comp.setPlugoutWire(null);
 				comp.setPlugoutComp(null);
 			}
@@ -2024,7 +2068,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				else {
 					comp.setPluginCompNull();
 				}
-				connect.getPlugoutWire(i).disableStroke();
+				connect.getPlugoutWire(i).stroke(null);
 				comp.evaluate();
 			}
 		}
@@ -2033,6 +2077,9 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		removeComp(connect);
 		evaluateCircuit();
 		stage.draw();
+		
+		ga("send", "event", "circuits", "edit", "sandbox-" + containerNum);
+		serializer.serialize(components, inputs, outputs);
 	}
 	
 	function addInput(initX, initY, text, value) {
@@ -2166,7 +2213,6 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		addPopup = new SB_PopupMenu();
 		
 		addPopup.add('And Gate', function(target) {
-			console.log("Adding at: " + pos.x + ", " + pos.y);
 			addAndGate(pos.x, pos.y);
 			addPopup = null;
 		});

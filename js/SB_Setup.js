@@ -22,9 +22,10 @@ function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 			height : height
 		});
 
-	var mainLayer = new Kinetic.Layer();
-	mainLayer.setDraggable("draggable");
-	stage.add(mainLayer);
+	//var mainLayer = new Kinetic.Layer();
+	var mainLayer = new Kinetic.PinchLayer({ container: stage, width: stage.getWidth(), height: stage.getHeight() });
+	//mainLayer.setDraggable("draggable");
+	//stage.add(mainLayer);
 	
 	var wrenchLayer = new Kinetic.Layer();
 	stage.add(wrenchLayer);
@@ -60,6 +61,7 @@ function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 		
 		var str = dataStore.loadExerciseData("circuits", curExercise);
 		if (str !== null) {
+			console.log(str);
 			serializer.deserialize(controller, str);
 			controller.evaluateCircuit();
 		}
@@ -89,8 +91,8 @@ function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 		
 		ratio = (width / defaultWidth);
 		//console.log("Ratio: " + ratio);
-		stage.setScale({x: ratio, y: ratio});
-		stage.setSize(defaultWidth * ratio, 600 * ratio);
+		stage.scale({x: ratio, y: ratio});
+		stage.size({ width: defaultWidth * ratio, height: 600 * ratio });
 		//stage.setSize(defaultWidth, 600 * ratio);
 		//console.log("Size: " + stage.getWidth() + ", " + stage.getHeight());
 		

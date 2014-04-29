@@ -93,6 +93,7 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	this.getSerialStringDeclaration = getSerialStringDeclaration;
 	this.getSerialStringConnections = getSerialStringConnections;
 	this.getPluginNumber = getPluginNumber;
+	this.toggleHitBoxes = toggleHitBoxes;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -146,8 +147,8 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	transFg = new Kinetic.Rect({
 		x:  scale * 50,
 		y:  -3,
-		width: 50 - plugin1.getPoints()[0].x,
-		height: scale * plugin2.getPoints()[0].y + scale * 26
+		width: 50 - plugin1.points()[0],
+		height: scale * plugin2.points()[1] + scale * 26
 	});
 
 	// create the group for the components that make up the AND gate; place it at the x,y coords passed to the object
@@ -166,7 +167,8 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 		if (mouseOver !== "crosshair") document.body.style.cursor = 'default';
 	});
 	
-	setDeleteIcon("images/empty.bmp");
+	//setDeleteIcon("images/delete.ico");
+	//setDeleteIcon("images/empty.bmp");
 	
 	iconLayer.on('mouseover', function() { document.body.style.cursor = 'pointer'; });
 	iconLayer.on('mouseout', function() { document.body.style.cursor = 'default'; });
@@ -192,18 +194,32 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	
 	function setDeleteIcon (image){
          var imageObj = new Image();
+
+		 if (deleteImg) {
+			deleteImg.remove();
+			deleteImg.destroy();
+			mainLayer.draw();
+		 }
+		
+		 if (image == "images/empty.bmp" && deleteImg) {
+			deleteImg = null;
+			return;
+		}
+		
          imageObj.onload = function (){
          deleteImg = new Kinetic.Image({
-			  x: group.getX() + mainLayer.getX() + scale * 90,
-			  y: group.getY() + mainLayer.getY() + scale * -15,
+			  x: scale * 90,
+			  y: scale * -15,
 			  image: imageObj,
 			  scaleX: 0.4,
 			  scaleY: 0.4
 		 });
 
-         iconLayer.destroyChildren();
-         iconLayer.add(deleteImg);
-         iconLayer.draw();
+         //iconLayer.destroyChildren();
+         //iconLayer.add(deleteImg);
+         //iconLayer.draw();
+		 group.add(deleteImg);
+		 group.draw();
 		};
 		imageObj.src = image;
     }
@@ -214,6 +230,7 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 		input2Box.remove();
 		outputBox.remove();
 		iconLayer.remove();
+		setDeleteIcon("images/empty.bmp");
 	}
 	
 	function getInputBoxCoords(num) {
@@ -236,38 +253,35 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 		var plug;
 		if (input1Box) {
 			plug = getPlugin(1);
-			input1Box.setPosition(plug.getPoints()[0].x - (scale * 10), plug.getPoints()[0].y - (scale * 15));
+			input1Box.position({ x: plug.points()[0] - (scale * 10), y: plug.points()[1] - (scale * 15) });
 			plug = getPlugin(2);
-			input2Box.setPosition(plug.getPoints()[0].x - (scale * 10), plug.getPoints()[0].y - (scale * 9));
+			input2Box.position({ x: plug.points()[0] - (scale * 10), y: plug.points()[1] - (scale * 9) });
 			plug = getPlugout();
-			outputBox.setPosition(plug.getPoints()[0].x - (scale * 0), plug.getPoints()[0].y - (scale * 20));
+			outputBox.position({ x: plug.points()[0] - (scale * 0), y: plug.points()[1] - (scale * 20) });
 		}
 		else {
 			plug = getPlugin(1);
 			input1Box = new Kinetic.Rect({
-				x: plug.getPoints()[0].x - (scale * 10) - mainLayer.getX(),
-				y: plug.getPoints()[0].y - (scale * 15) - mainLayer.getY(),
-				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				x: plug.points()[0] - (scale * 10),
+				y: plug.points()[1] - (scale * 15),
+				width: (plug.points()[2] - plug.points()[0]) + 5,
 				height: scale * 24
-				//fill : 'black'
 			});
 			
 			plug = getPlugin(2);
 			input2Box = new Kinetic.Rect({
-				x: plug.getPoints()[0].x - (scale * 10),
-				y: plug.getPoints()[0].y - (scale * 9),
-				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				x: plug.points()[0] - (scale * 10),
+				y: plug.points()[1] - (scale * 9),
+				width: (plug.points()[2] - plug.points()[0]) + 5,
 				height: scale * 24
-				//fill : 'black'
 			});
 			
 			plug = getPlugout();
 			outputBox = new Kinetic.Rect({
-				x: plug.getPoints()[0].x - (scale * 0),
-				y: plug.getPoints()[0].y - (scale * 20),
-				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				x: plug.points()[0] - (scale * 0),
+				y: plug.points()[1] - (scale * 20),
+				width: (plug.points()[2] - plug.points()[0]) + 5,
 				height: scale * 40
-				//fill : 'black'
 			});
 			
 			
@@ -275,6 +289,22 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 			mainLayer.add(input2Box);
 			mainLayer.add(outputBox);
 			stage.draw();
+		}
+	}
+	
+	function toggleHitBoxes(bool) {
+		if (bool == true) {
+			input1Box.setStroke("green");
+			input1Box.setStrokeWidth(1);
+			input2Box.setStroke("green");
+			input2Box.setStrokeWidth(1);
+			outputBox.setStroke("green");
+			outputBox.setStrokeWidth(1);
+		}
+		else {
+			input1Box.setStroke('rgba(0,0,0,0)');
+			input2Box.setStroke('rgba(0,0,0,0)');
+			outputBox.setStroke('rgba(0,0,0,0)');
 		}
 	}
 
@@ -315,16 +345,16 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 		if (num == 1) {
 			line = new Kinetic.Line({
 				// make a new line and transform the line's coordinates to global coordinates; we do this by adding the group's coordinates to the line's coordinates
-				//points: [mainLayer.getX() + group.getX() + plugin1.getPoints()[0].x, mainLayer.getY() + group.getY() + plugin1.getPoints()[0].y, mainLayer.getX() + group.getX() + plugin1.getPoints()[1].x, mainLayer.getY() +  group.getY() + plugin1.getPoints()[1].y]
-				points: [group.getX() + plugin1.getPoints()[0].x, group.getY() + plugin1.getPoints()[0].y, group.getX() + plugin1.getPoints()[1].x, group.getY() + plugin1.getPoints()[1].y]
+				//points: [mainLayer.getX() + group.getX() + plugin1.points()[0].x, mainLayer.getY() + group.getY() + plugin1.points()[0].y, mainLayer.getX() + group.getX() + plugin1.points()[1].x, mainLayer.getY() +  group.getY() + plugin1.points()[1].y]
+				points: [group.position().x + plugin1.points()[0], group.position().y + plugin1.points()[1], group.position().x + plugin1.points()[2], group.position().y + plugin1.points()[3]]
 
 			});
 		}
 		else {
 			line = new Kinetic.Line({
 				// same concept as above; must transform coordinates to global coordinates
-				//points: [mainLayer.getX() + group.getX() + plugin2.getPoints()[0].x, mainLayer.getY() + group.getY() + plugin2.getPoints()[0].y, mainLayer.getX() + group.getX() + plugin2.getPoints()[1].x, mainLayer.getY() + group.getY() + plugin2.getPoints()[1].y]
-				points: [group.getX() + plugin2.getPoints()[0].x, group.getY() + plugin2.getPoints()[0].y, group.getX() + plugin2.getPoints()[1].x, group.getY() + plugin2.getPoints()[1].y]
+				//points: [mainLayer.getX() + group.getX() + plugin2.points()[0].x, mainLayer.getY() + group.getY() + plugin2.points()[0].y, mainLayer.getX() + group.getX() + plugin2.points()[1].x, mainLayer.getY() + group.getY() + plugin2.points()[1].y]
+				points: [group.position().x + plugin2.points()[0], group.position().y + plugin2.points()[1], group.position().x + plugin2.points()[2], group.position().y + plugin2.points()[3]]
 
 			});
 		}
@@ -353,8 +383,8 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	// return the line for the plugout in GLOBAL coordinates; same concept as plugin lines
 	function getPlugout() {
 		var line = new Kinetic.Line({
-			//points: [mainLayer.getX() * mainLayer.getScale().x + group.getX() + plugout.getPoints()[0].x, mainLayer.getY()  * mainLayer.getScale().y + group.getY() + plugout.getPoints()[0].y, mainLayer.getX() * mainLayer.getScale().x + group.getX() + plugout.getPoints()[1].x, mainLayer.getY() * mainLayer.getScale().y + group.getY() + plugout.getPoints()[1].y]
-			points: [group.getX() + plugout.getPoints()[0].x, group.getY() + plugout.getPoints()[0].y, group.getX() + plugout.getPoints()[1].x, group.getY() + plugout.getPoints()[1].y]
+			//points: [mainLayer.getX() * mainLayer.getScale().x + group.getX() + plugout.points()[0].x, mainLayer.getY()  * mainLayer.getScale().y + group.getY() + plugout.points()[0].y, mainLayer.getX() * mainLayer.getScale().x + group.getX() + plugout.points()[1].x, mainLayer.getY() * mainLayer.getScale().y + group.getY() + plugout.points()[1].y]
+				points: [group.position().x + plugout.points()[0], group.position().y + plugout.points()[1], group.position().x + plugout.points()[2], group.position().y + plugout.points()[3]]
 		});
 				
 		return line;
@@ -497,7 +527,7 @@ function SB_AndGate(initX, initY, setName, id, setup) {
 	function deleteOutputConnection() {
 		plugoutComp.setPluginVal(thisObj, -1);
 		plugoutComp.setPluginCompNull(thisObj);
-		plugoutWire.disableStroke();
+		plugoutWire.stroke(null);
 		plugoutComp = null;
 		plugoutWire = null;
 	}

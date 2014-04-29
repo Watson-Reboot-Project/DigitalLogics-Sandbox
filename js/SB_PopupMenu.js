@@ -72,20 +72,22 @@ SB_PopupMenu.prototype = {
 		
         var x, y;
         if (window.opera) {
-            x = e.clientX;
-            y = e.clientY;
+            x = e.evt.clientX;
+            y = e.evt.clientY;
         } else if (document.all) {
-            x = document.body.scrollLeft + event.clientX;
-            y = document.body.scrollTop + event.clientY;
-		} else if (e.changedTouches) {
-			x = event.changedTouches[0].pageX;
-			y = event.changedTouches[0].pageY;
+            x = document.body.scrollLeft + e.clientX;
+            y = document.body.scrollTop + e.clientY;
+		} else if (e.evt.changedTouches) {
+			x = e.evt.changedTouches[0].pageX;
+			y = e.evt.changedTouches[0].pageY;
         } else if (document.layers || document.getElementById) {
-            x = e.pageX;
-            y = e.pageY;
+            x = e.evt.pageX;
+            y = e.evt.pageY;
        }
         this.element.style.top  = y + 'px';
         this.element.style.left = x + 'px';
+		
+		console.log(x + ", " + y);
     },
 	setManPos: function(e, pos) {
         if (!this.element) return;
@@ -93,17 +95,17 @@ SB_PopupMenu.prototype = {
 		
         var x, y;
         if (window.opera) {
-            x = e.clientX;
-            y = e.clientY;
+            x = e.evt.clientX;
+            y = e.evt.clientY;
         } else if (document.all) {
-            x = document.body.scrollLeft + event.clientX;
-            y = document.body.scrollTop + event.clientY;
+            x = document.body.scrollLeft + e.evt.clientX;
+            y = document.body.scrollTop + e.evt.clientY;
 		} else if (e.changedTouches) {
-			x = event.changedTouches[0].pageX;
-			y = event.changedTouches[0].pageY;
+			x = e.evt.changedTouches[0].pageX;
+			y = e.evt.changedTouches[0].pageY;
         } else if (document.layers || document.getElementById) {
-            x = e.pageX;
-            y = e.pageY;
+            x = e.evt.pageX;
+            y = e.evt.pageY;
        }
         this.element.style.top  = (y + 15) + 'px';
         this.element.style.left = (x - 150) + 'px';

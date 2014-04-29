@@ -56,6 +56,7 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	this.loopCheckBackward = loopCheckBackward;
 	this.loopCheckForward = loopCheckForward;
 	this.getSerialStringConnections = getSerialStringConnections;
+	this.toggleHitBoxes = toggleHitBoxes;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -154,19 +155,31 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 		var plug;
 		if (outputBox) {
 			plug = getPlugout();
-			outputBox.setPosition(plug.getPoints()[0].x + scale * 7, plug.getPoints()[0].y - scale * 20);
+			outputBox.setPosition({ x: plug.points()[0] + scale * 7, y: plug.points()[1] - scale * 20 });
 		}
 		else {
 			plug = getPlugout();
+			
 			outputBox = new Kinetic.Rect({
-				x: plug.getPoints()[0].x + scale * 7,
-				y: plug.getPoints()[0].y - scale * 20,
-				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 5,
+				x: plug.points()[0] + scale * 3,
+				y: plug.points()[1] - scale * 20,
+				width: (plug.points()[2] - plug.points()[0]) + 5,
 				height: scale * 40
 			});
 			
+			
 			mainLayer.add(outputBox);
 			stage.draw();
+		}
+	}
+	
+	function toggleHitBoxes(bool) {
+		if (bool == true) {
+			outputBox.setStroke("green");
+			outputBox.setStrokeWidth(1);
+		}
+		else {
+			outputBox.setStroke('rgba(0,0,0,0)');
 		}
 	}
 	
@@ -202,9 +215,10 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	
 	function getPlugout() {
 		var line;
+		
 		//points: [group.getX() + plugout.getPoints()[0].x, group.getY() + plugout.getPoints()[0].y, group.getX() + plugout.getPoints()[1].x, group.getY() + plugout.getPoints()[1].y]
 		line = new Kinetic.Line({
-			points: [group.getX() + plugout.getPoints()[0].x, group.getY() + plugout.getPoints()[0].y, group.getX() + plugout.getPoints()[1].x, group.getY() + plugout.getPoints()[1].y]
+			points: [group.position().x + plugout.points()[0], group.position().y + plugout.points()[1], group.position().x + plugout.points()[2], group.position().y + plugout.points()[3]]
 		});
 		return line;
 	}
@@ -276,7 +290,7 @@ function SB_InputNode(initX, initY, setText, initValue, setName, id, setup) {
 	
 	function deleteOutputConnection() {
 		plugoutComp.setPluginCompNull(thisObj);
-		plugoutWire.disableStroke();
+		plugoutWire.stroke(null);
 		plugoutComp = null;
 		plugoutWire = null;
 	}

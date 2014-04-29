@@ -92,6 +92,7 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	this.getSerialStringDeclaration = getSerialStringDeclaration;
 	this.getSerialStringConnections = getSerialStringConnections;
 	this.getPluginNumber = getPluginNumber;
+	this.toggleHitBoxes = toggleHitBoxes;
 	
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE ASSIGNMENTS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -165,7 +166,7 @@ function SB_Connector(initX, initY, setName, id, setup) {
 		if (mouseOver !== "crosshair") document.body.style.cursor = 'default';
 	});
 	
-	setDeleteIcon("images/empty.bmp");
+	//setDeleteIcon("images/empty.bmp");
 	
 	iconLayer.on('mouseover', function() { document.body.style.cursor = 'pointer'; });
 	iconLayer.on('mouseout', function() { document.body.style.cursor = 'default'; });
@@ -193,18 +194,32 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	
 	function setDeleteIcon (image){
          var imageObj = new Image();
+		 
+		 if (deleteImg) {
+			deleteImg.remove();
+			deleteImg.destroy();
+			mainLayer.draw();
+		 }
+		 
+		 if (image == "images/empty.bmp" && deleteImg) {
+			deleteImg = null;
+			return;
+		}
+		
          imageObj.onload = function (){
-         var deleteImg = new Kinetic.Image({
-			  x: group.getX() + mainLayer.getX() + 35,
-			  y: group.getY() + mainLayer.getY() + -10,
+         deleteImg = new Kinetic.Image({
+			  x: 35,
+			  y: -10,
 			  image: imageObj,
 			  scaleX: 0.4,
 			  scaleY: 0.4
 		 });
 
-         iconLayer.destroyChildren();
-         iconLayer.add(deleteImg);
-         iconLayer.draw();
+         //iconLayer.destroyChildren();
+         //iconLayer.add(deleteImg);
+         //iconLayer.draw();
+			group.add(deleteImg);
+			group.draw();
 		};
 		imageObj.src = image;
     }
@@ -216,6 +231,7 @@ function SB_Connector(initX, initY, setName, id, setup) {
 		output2Box.remove();
 		output3Box.remove();
 		iconLayer.remove();
+		setDeleteIcon("images/empty.bmp");
 	}
 	
 
@@ -242,49 +258,45 @@ function SB_Connector(initX, initY, setName, id, setup) {
 		var plug;
 		if (inputBox) {
 			plug = getPlugin();
-			inputBox.setPosition(plug.getPoints()[0].x - 16, plug.getPoints()[0].y - 10);
+			inputBox.position({ x: plug.points()[0] - 16, y: plug.points()[1] - 10 });
 			plug = getPlugout(1);
-			output1Box.setPosition(plug.getPoints()[0].x - 10, plug.getPoints()[0].y - 27);
+			output1Box.position({ x: plug.points()[0] - 10, y: plug.points()[1] - 27 });
 			plug = getPlugout(2);
-			output2Box.setPosition(plug.getPoints()[0].x + 8, plug.getPoints()[0].y - 10);
+			output2Box.position({ x: plug.points()[0] + 8, y: plug.points()[1] - 10 });
 			plug = getPlugout(3);
-			output3Box.setPosition(plug.getPoints()[0].x - 10, plug.getPoints()[0].y + 6);
+			output3Box.position({ x: plug.points()[0] - 10, y: plug.points()[1] + 6 });
 		}
 		else {
 			plug = getPlugin();
 			inputBox = new Kinetic.Rect({
-				x: plug.getPoints()[0].x - 16,
-				y: plug.getPoints()[0].y - 10,
-				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 8,
+				x: plug.points()[0] - 16,
+				y: plug.points()[1] - 10,
+				width: (plug.points()[2] - plug.points()[0]) + 8,
 				height: 18
-				//fill : 'black'
 			});
 			
 			plug = getPlugout(1);
 			output1Box = new Kinetic.Rect({
-				x: plug.getPoints()[0].x - 10,
-				y: plug.getPoints()[0].y - 27,
-				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 20,
+				x: plug.points()[0] - 10,
+				y: plug.points()[1] - 27,
+				width: (plug.points()[2] - plug.points()[0]) + 20,
 				height: 20
-				//fill : 'black'
 			});
 			
 			plug = getPlugout(2);
 			output2Box = new Kinetic.Rect({
-				x: plug.getPoints()[0].x + 8,
-				y: plug.getPoints()[0].y - 10,
-				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 8,
+				x: plug.points()[0] + 8,
+				y: plug.points()[1] - 10,
+				width: (plug.points()[2] - plug.points()[0]) + 8,
 				height: 18
-				//fill : 'black'
 			});
 			
 			plug = getPlugout(3);
 			output3Box = new Kinetic.Rect({
-				x: plug.getPoints()[0].x - 10,
-				y: plug.getPoints()[0].y + 6,
-				width: (plug.getPoints()[1].x - plug.getPoints()[0].x) + 20,
+				x: plug.points()[0] - 10,
+				y: plug.points()[1] + 6,
+				width: (plug.points()[2] - plug.points()[0]) + 20,
 				height: 20
-				//fill : 'black'
 			});
 			
 			mainLayer.add(inputBox);
@@ -292,6 +304,25 @@ function SB_Connector(initX, initY, setName, id, setup) {
 			mainLayer.add(output2Box);
 			mainLayer.add(output3Box);
 			stage.draw();
+		}
+	}
+	
+	function toggleHitBoxes(bool) {
+		if (bool == true) {
+			inputBox.setStroke("green");
+			inputBox.setStrokeWidth(1);
+			output1Box.setStroke("green");
+			output1Box.setStrokeWidth(1);
+			output2Box.setStroke("green");
+			output2Box.setStrokeWidth(1);
+			output3Box.setStroke("green");
+			output3Box.setStrokeWidth(1);
+		}
+		else {
+			inputBox.setStroke('rgba(0,0,0,0)');
+			outputBox1.setStroke('rgba(0,0,0,0)');
+			outputBox2.setStroke('rgba(0,0,0,0)');
+			outputBox3.setStroke('rgba(0,0,0,0)');
 		}
 	}
 	
@@ -330,7 +361,7 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	function getPlugin() {
 		var line;
 		line = new Kinetic.Line({
-			points: [group.getX() + plugin.getPoints()[0].x, group.getY() + plugin.getPoints()[0].y, group.getX() + plugin.getPoints()[1].x, group.getY() + plugin.getPoints()[1].y]
+			points: [group.position().x + plugin.points()[0], group.position().y + plugin.points()[1], group.position().x + plugin.points()[2], group.position().y + plugin.points()[3]]
 		});
 		return line;
 	}
@@ -344,17 +375,17 @@ function SB_Connector(initX, initY, setName, id, setup) {
 		var line;
 		if (num == 1) {
 			line = new Kinetic.Line({
-				points: [group.getX() + plugout1.getPoints()[0].x, group.getY() + plugout1.getPoints()[0].y, group.getX() + plugout1.getPoints()[1].x, group.getY() + plugout1.getPoints()[1].y]
+			points: [group.position().x + plugout1.points()[0], group.position().y + plugout1.points()[1], group.position().x + plugout1.points()[2], group.position().y + plugout1.points()[3]]
 			});
 		}
 		else if (num == 2) {
 			line = new Kinetic.Line({
-				points: [group.getX() + plugout2.getPoints()[0].x, group.getY() + plugout2.getPoints()[0].y, group.getX() + plugout2.getPoints()[1].x, group.getY() + plugout2.getPoints()[1].y]
+			points: [group.position().x + plugout2.points()[0], group.position().y + plugout2.points()[1], group.position().x + plugout2.points()[2], group.position().y + plugout2.points()[3]]
 			});
 		}
 		else {
 			line = new Kinetic.Line({
-				points: [group.getX() + plugout3.getPoints()[0].x, group.getY() + plugout3.getPoints()[0].y, group.getX() + plugout3.getPoints()[1].x, group.getY() + plugout3.getPoints()[1].y]
+			points: [group.position().x + plugout3.points()[0], group.position().y + plugout3.points()[1], group.position().x + plugout3.points()[2], group.position().y + plugout3.points()[3]]
 			});
 		}
 		return line;
@@ -537,9 +568,9 @@ function SB_Connector(initX, initY, setName, id, setup) {
 	function deleteOutputConnection(plugoutNum) {
 		var plugoutComp;
 		var plugoutWire;
-		if (plugoutNum == 1) { plugoutComp = plugout1Comp; plugout1Comp = null; plugout1Wire.disableStroke(); plugout1Wire = null }
-		else if (plugoutNum == 2) { plugoutComp = plugout2Comp; plugout2Comp = null; plugout2Wire.disableStroke(); plugout2Wire = null }
-		else if (plugoutNum == 3) { plugoutComp = plugout3Comp; plugout3Comp = null; plugout3Wire.disableStroke(); plugout3Wire = null }
+		if (plugoutNum == 1) { plugoutComp = plugout1Comp; plugout1Comp = null; plugout1Wire.stroke(null); plugout1Wire = null }
+		else if (plugoutNum == 2) { plugoutComp = plugout2Comp; plugout2Comp = null; plugout2Wire.stroke(null); plugout2Wire = null }
+		else if (plugoutNum == 3) { plugoutComp = plugout3Comp; plugout3Comp = null; plugout3Wire.stroke(null); plugout3Wire = null }
 		
 		if (plugoutComp.getType() == "not" || plugoutComp.getType() == "output" || plugoutComp.getType() == "connector") {
 			if (plugoutComp.getType() != "connector") plugoutComp.setConnectorPlugin(-1);
