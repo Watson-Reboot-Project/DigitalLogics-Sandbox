@@ -1,4 +1,4 @@
-function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
+function SB_Setup(container, containerNum, exerNum) {
 	var timeout = false;
 	var ratio;
 	
@@ -47,8 +47,8 @@ function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 	var curExercise = exerNum;
 	var truthTable = new SB_TruthTable(containerNum);
 	var serializer = new SB_Serializer(curExercise);
-	var controller = new SB_Controller(this, truthTable, serializer, numInputs, numOutputs, containerNum);
-	var exercises = new SB_Exercises(stage, this, truthTable, controller, numInputs, numOutputs);
+	var controller = new SB_Controller(this, truthTable, serializer, containerNum);
+	var exercises = new SB_Exercises(stage, this, truthTable, controller);
 
 	exercises.setExercise(curExercise);
 	
@@ -65,6 +65,7 @@ function SB_Setup(container, containerNum, exerNum, numInputs, numOutputs) {
 			serializer.deserialize(controller, str);
 			controller.evaluateCircuit();
 		}
+		else controller.evaluateCircuit();
 	}
 	else
 	{

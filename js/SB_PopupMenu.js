@@ -89,7 +89,7 @@ SB_PopupMenu.prototype = {
 		
 		console.log(x + ", " + y);
     },
-	setManPos: function(e, pos) {
+	setManPos: function(e) {
         if (!this.element) return;
         if (!e) e = window.event;
 		
@@ -98,28 +98,32 @@ SB_PopupMenu.prototype = {
             x = e.evt.clientX;
             y = e.evt.clientY;
         } else if (document.all) {
-            x = document.body.scrollLeft + e.evt.clientX;
-            y = document.body.scrollTop + e.evt.clientY;
-		} else if (e.changedTouches) {
+            x = document.body.scrollLeft + e.clientX;
+            y = document.body.scrollTop + e.clientY;
+		} else if (e.evt.changedTouches) {
 			x = e.evt.changedTouches[0].pageX;
 			y = e.evt.changedTouches[0].pageY;
         } else if (document.layers || document.getElementById) {
             x = e.evt.pageX;
             y = e.evt.pageY;
        }
-        this.element.style.top  = (y + 15) + 'px';
-        this.element.style.left = (x - 150) + 'px';
+        //this.element.style.top  = y + 'px';
+        //this.element.style.left = x + 'px';
+        this.element.style.top  = (y + 5) + 'px';
+        this.element.style.left = (x - 135) + 'px';
+		
+		console.log(x + ", " + y);
     },
-	showMenu: function(e, pos) {
+	showMenu: function(e) {
         if (SB_PopupMenu.current && SB_PopupMenu.current != this) return;
 		if (!e) e = window.event;
         SB_PopupMenu.current = this;
         if (this.element) {
-            this.setManPos(e, pos);
+            this.setManPos(e);
             this.element.style.display = '';
         } else {
             this.element = this.createMenu(this.items);
-            this.setManPos(e, pos);
+            this.setManPos(e);
             document.body.appendChild(this.element);
         }
     },

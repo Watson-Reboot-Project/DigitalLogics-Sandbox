@@ -575,8 +575,8 @@ function SB_OrGate(initX, initY, setName, id, setup) {
 	
 	function getPluginNumber(comp, plugoutNum) {
 		if (comp.getType() == "connector") {
-			if (connectorPlugin1 == plugoutNum) return 1;
-			else if (connectorPlugin2 = plugoutNum) return 2;
+			if (comp == plugin1Comp && connectorPlugin1 == plugoutNum) return 1;
+			else if (comp == plugin2Comp && connectorPlugin2 == plugoutNum) return 2;
 		}
 		else {
 			if (plugin1Comp !== null && plugin1Comp == comp) return 1;

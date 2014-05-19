@@ -26,7 +26,7 @@
 *								in terms of digital circuits.
 ***************************************************************************************/
 
-function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, containerNum) {
+function SB_Controller(setup, truthTable, serializer, containerNum) {
 
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	//;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; VARIABLE DECLARATIONS/DEFINITIONS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -63,6 +63,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	var initPos;
 	var lastPos;
 	var mainLayerPos;
+	var numInputs = 0;
+	var numOutputs = 0;
 	
 	//var tempLineLayer = new Kinetic.Layer();	// create a layer to place the temp line on
 	//stage.add(tempLineLayer);					// add the temp line layer to the stage
@@ -114,6 +116,8 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		//mainLayer.draw();
 		stage.draw();
 	});
+	
+	stage.on('touchend', function(event) { setTimeout(function() { if (mouseMoved) mouseMoved = false; }, 500); });
 	
 	bg.on('mousedown touchstart', function(e) {
 		initPos = { x: mainLayer.getX(), y: mainLayer.getY() };
@@ -345,6 +349,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			
 			comp.getGroup().on('dragend', function() {					// for connecting components whose input/output boxes overlap
 				gateDragEnd(comp);
+				mouseMoved = false;
 				serializer.serialize(components, inputs, outputs);
 			});
 			
@@ -1316,9 +1321,10 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	//------------------------------------
 	
 	function probe(comp) {
+		var alert = new Alert();
 		var str = comp.probe();
-		if (str !== null) alert(str);
-		else alert("Part of your circuit is not connected to an input!");
+		if (str !== null) alert.open("Boolean Probe", str, true, (function() { }), document.getElementById("sandbox" + containerNum));
+		else alert.open("Boolean Probe", str, true, (function() { }), document.getElementById("sandbox" + containerNum));
 	}
 	
 	//------------------------------------
@@ -2087,6 +2093,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		components.push(input);
 		inputs.push(input);
 		input.draw();
+		numInputs++;
 		registerComponent(input);
 	}
 	
@@ -2095,6 +2102,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		components.push(output);
 		outputs.push(output);
 		output.draw();
+		numOutputs++;
 		registerComponent(output);
 	}
 	
@@ -2160,6 +2168,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	}
 	
 	function evaluateCircuit() {
+		console.log("Evaluating.");
 		if (numInputs > 5) return;
 		
 		var flag = false;
@@ -2205,7 +2214,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 		}
 		
 		mainLayer.draw();
-		truthTable.setTable(truthTableArr);
+		truthTable.setTableArray(truthTableArr);
 		mail = truthTable.checkTruthTable(truthTableArr);
 	}
 	
@@ -2254,13 +2263,21 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			wrenchPopup = null;
 		});
 		var truthTableMenu = "Truth Table";
-		if (truthTableOpen) truthTableMenu = ".Truth Table";
-		
+		try {
+			if (truthTable.isOpen() == true) truthTableMenu = ".Truth Table";
+		}
+		catch (exc) {
+		}
 		wrenchPopup.add(truthTableMenu, function(target) {
 			if (numInputs > 5) { alert("The truth table feature has been disabled because you have more than 5 inputs."); return; }
 			else {
-				truthTable.setTableOffset((stage.getWidth() / 2) * 0.8, (stage.getHeight()) * 0.8);
-				truthTable.toggleVisible();
+				//truthTable.setTableOffset((stage.getWidth() / 2) * 0.8, (stage.getHeight()) * 0.8);
+				//truthTable.toggleVisible();
+				truthTable.createTable();
+				
+				//document.getElementById("truthDialog").style.display = 'block';
+				//$( "#truthDialog" ).dialog({ width: (document.getElementById("truthTableDiv1").style.width + 35) + "px", modal: false, resizable: false });			// open the dialog
+				//$( "#truthDialog" ).dialog("open");	// open the dialog
 				
 				if (deleteMode == true) truthTable.setDeleteIcon(true);
 				else truthTable.setDeleteIcon(false);
@@ -2355,23 +2372,20 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			addInput(5, ((600 / (res + 1)) * (i + 1)), header[ind++], 0);
 		}
 		
-		truthTable.resetTruthTable(res, numOutputs, header);
-		
-		truthTable.toggleVisible();
-		truthTable.setDeleteIcon(false);
-		
-		if (deleteMode) {
-			truthTable.setDeleteIcon(true);
-		}
-
-		truthTable.setTableOffset((stage.getWidth() / 2) * 0.8, (stage.getHeight()) * 0.8);
-		truthTable.toggleVisible();
-		
-		if (deleteMode == true) truthTable.setDeleteIcon(true);
-		else truthTable.setDeleteIcon(false);
-
-		
 		numInputs = res;
+
+		if (truthTable.isOpen()) {
+			truthTable.close();
+			evaluateCircuit();
+			//truthTable.setupTable(numInputs, numOutputs, header);
+			truthTable.resetTruthTable(res, numOutputs, header);
+			truthTable.createTable();
+		}
+		else {
+			evaluateCircuit();
+			truthTable.resetTruthTable(res, numOutputs, header);
+		}
+		
 		return inputs;
 	}
 	
@@ -2407,8 +2421,20 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 			addOutput(820, ((550 / (res + 1)) * (i + 1)), header[ind++]);
 		}
 		
-		truthTable.resetTruthTable(numInputs, res, header);
 		numOutputs = res;
+		
+		if (truthTable.isOpen()) {
+			truthTable.close();
+			evaluateCircuit();
+			truthTable.resetTruthTable(res, numOutputs, header);
+			truthTable.createTable();
+		}
+		else {
+			evaluateCircuit();
+			truthTable.resetTruthTable(res, numOutputs, header);
+		}
+		
+		truthTable.resetTruthTable(numInputs, res, header);
 		if (deleteMode) {
 			truthTable.setDeleteIcon(true);
 		}
@@ -2418,7 +2444,7 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 	
 	function initTruthTableListeners() {
 		$(function() {
-			$( "#truthTableDiv" + containerNum ).draggable({ containment: "#sandbox" + containerNum, scroll: false });
+			//$( "#truthTableDiv" + containerNum ).draggable({ containment: "#sandbox" + containerNum, scroll: false });
 
 			$( "#truthTableDiv" + containerNum ).on("click tap", function() {
 				if (deleteMode == true) {
@@ -2482,12 +2508,16 @@ function SB_Controller(setup, truthTable, serializer, numInputs, numOutputs, con
 				scaleY: 0.7
 			});
 		}
+		
 		wrench.on('click tap', function(event) {			// when the user taps the wrench...
 			if (wrenchPopup !== null) return;				// if the wrench popup is already shown, return
-
+			console.log("Wrench click/tap.");
+			
 			var mPos = getRelativePointerPosition(event);	// get the relative position of the click
-			mPos.x = mPos.x - 150;							// offset the position a bit as this is where the menu will show
-			mPos.y = mPos.y + 15;
+			//mPos.x = mPos.x - 300;							// offset the position a bit as this is where the menu will show
+			//mPos.y = mPos.y + 15;
+			
+			console.log(mPos.x + ", " + mPos.y);
 			showWrenchMenu(event, mPos);					// pass the position we just calculated to the showWrenchMenu() function
 		});
 

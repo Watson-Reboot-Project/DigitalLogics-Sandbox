@@ -74,6 +74,8 @@ function SB_Serializer(curExercise) {
 			
 			tok = getNextToken();
 		}
+		
+		controller.evaluateCircuit();
 	}
 	
 	function tokenizeString(string) {

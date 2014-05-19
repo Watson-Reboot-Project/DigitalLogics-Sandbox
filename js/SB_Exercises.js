@@ -1,4 +1,4 @@
-function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutputs) {
+function SB_Exercises(stage, setup, truthTable, controller) {
 	var stage = setup.getStage();
 	var alphabet = [ "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" ];
 	
@@ -259,14 +259,7 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 			[1, 1, 1, 0, 0],
 			[1, 1, 1, 1, 0] ];
 			
-			var header = ["A1","A0","B1","B0", "Z"];
-			truthTable.createTable(4, 1, header);
-
-			controller.addInput(50, 150, "A1", 0);
-			controller.addInput(50, 50, "A0", 0);
-			controller.addInput(50, 350, "B1", 0);
-			controller.addInput(50, 250, "B0", 0);
-			controller.addOutput(1300, 200, "Z");
+			adjustInputsAndOutputs(4, 1);
 		}
 		else if(exerciseNum == 12) { //one-bit comparator for greater than
 			expectedTruthTable = [
@@ -275,12 +268,7 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 			[1, 0, 1],
 			[1, 1, 0] ];
 
-			var header = ["A","B","Z"];
-			truthTable.createTable(2, 1, header);
-
-			controller.addInput(50, 50, "A", 0);
-			controller.addInput(50, 250, "B", 0);
-			controller.addOutput(1350, 150, "Z");
+			adjustInputsAndOutputs(2, 1);
 		}
 		else if(exerciseNum == 13) { //two-bit comparator for greater than
 			expectedTruthTable = [
@@ -301,14 +289,7 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 			[1, 1, 1, 0, 1],
 			[1, 1, 1, 1, 0] ];
 			
-			var header = ["A1","A0","B1","B0", "O"];
-			truthTable.createTable(4, 1, header);
-
-			controller.addInput(50, 150, "A1", 0);
-			controller.addInput(50, 50, "A0", 0);
-			controller.addInput(50, 350, "B1", 0);
-			controller.addInput(50, 250, "B0", 0);
-			controller.addOutput(1300, 200, "0");
+			adjustInputsAndOutputs(4, 1);
 		}
 		else if(exerciseNum == 14) { //one-bit full adder
 			expectedTruthTable = [
@@ -321,14 +302,7 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 			[1, 1, 0, 1, 0],
 			[1, 1, 1, 1, 1] ];
 			
-			var header = ["Cin","A","B","Cout", "S"];
-			truthTable.createTable(3, 2, header);
-
-			controller.addInput(50, 50, "Cin", 0);
-			controller.addInput(50, 150, "A", 0);
-			controller.addInput(50, 250, "B", 0);
-			controller.addOutput(1300, 50, "Cout", 0);
-			controller.addOutput(1300, 150, "S", 0);
+			adjustInputsAndOutputs(4, 1);
 		}
 		else if(exerciseNum == 15) { //four-bit adder
 			expectedTruthTable = [
@@ -349,16 +323,7 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 			[1, 1, 1, 0, 1, 1, 1],
 			[1, 1, 1, 1, 1, 1, 1] ];
 			
-			var header = ["A1","A0","B1","B0","Ov","S1","S0"];
-			truthTable.createTable(4, 3, header);
-			
-			controller.addInput(50, 50, "A1", 0);
-			controller.addInput(50, 150, "A0", 0);
-			controller.addInput(50, 300, "B1", 0);
-			controller.addInput(50, 400, "B0", 0);
-			controller.addOutput(1250, 150, "Ov", 0);
-			controller.addOutput(1250, 250, "S1", 0);
-			controller.addOutput(1250, 350, "S2", 0);
+			adjustInputsAndOutputs(4, 3);
 		}
 		else if(exerciseNum == 16) { //2-to-4 decoder
 			expectedTruthTable = [
@@ -367,15 +332,7 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 			[1, 0, 0, 0, 1, 0],
 			[1, 1, 0, 0, 0, 1] ];
 		
-			var header = ["A1","A0","D3","D2","D1","D0"];
-			truthTable.createTable(2, 4, header);
-			
-			controller.addInput(50, 50, "A1", 0);
-			controller.addInput(50, 150, "A0", 0);
-			controller.addOutput(1300, 150, "D3", 0);
-			controller.addOutput(1300, 250, "D2", 0);
-			controller.addOutput(1300, 350, "D1", 0);
-			controller.addOutput(1300, 450, "D0", 0);
+			adjustInputsAndOutputs(2, 4);
 		}
 		else if(exerciseNum == 17) { //4-to-2 encoder
 			expectedTruthTable = [
@@ -384,15 +341,7 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 			[0, 0, 1, 0, 1, 0],
 			[0, 0, 0, 1, 1, 1] ];
 
-			var header = ["D0","D1","D2","D3","A1","A0"];
-			truthTable.createTable(4, 2, header);
-			
-			controller.addInput(50, 50, "D0", 0);
-			controller.addInput(50, 150, "D1", 0);
-			controller.addInput(50, 250, "D2", 0);
-			controller.addInput(50, 350, "D3", 0);
-			controller.addOutput(1300, 150, "A1", 0);
-			controller.addOutput(1300, 250, "A0", 0);
+			adjustInputsAndOutputs(4, 2);
 		}
 		else if(exerciseNum == 18) { //8-output demultiplexor
 			expectedTruthTable = [
@@ -405,22 +354,7 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 			[1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0],
 			[1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0] ];
 			
-			var header = ["A2","A1","A0","D7","D6","D5","D4","D3","D2","D1","D0"];
-			truthTable.createTable(3, 8, header);
-			
-			truthTable.setExpectedTruthTable(expectedTruthTable);
-
-			controller.addInput(50, 105, "A2", 0);
-			controller.addInput(50, 55, "A1", 0);
-			controller.addInput(50, 5, "A0", 0);
-			controller.addOutput(1125, 450, "D7");
-			controller.addOutput(1125, 400, "D6");
-			controller.addOutput(1125, 350, "D5");
-			controller.addOutput(1125, 300, "D4");
-			controller.addOutput(1125, 250, "D3");
-			controller.addOutput(1125, 200, "D2");
-			controller.addOutput(1125, 150, "D1");
-			controller.addOutput(1125, 100, "D0");
+			adjustInputsAndOutputs(3, 8);
 		}
 		
 		truthTable.setExpectedTruthTable(expectedTruthTable);
@@ -433,7 +367,7 @@ function SB_Exercises(stage, setup, truthTable, controller, numInputs, numOutput
 		for (var i = 0; i < numOutputs; i++) header.push(alphabet[25 - i]);
 			
 		if (numInputs <= 5) {
-			truthTable.createTable(numInputs, numOutputs, header);
+			truthTable.setupTable(numInputs, numOutputs, header);
 		}
 		
 		var ind = 0;
